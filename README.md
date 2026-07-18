@@ -7,12 +7,13 @@ Screener saham Bursa Efek Indonesia (IDX) berbasis Python dengan **data gratis**
 | Sumber | Gratis? | API Key | Catatan |
 |---|---|---|---|
 | **Yahoo Finance** (via library `yfinance`) | ✅ Ya, tanpa batas resmi | ❌ Tidak perlu | Dipakai proyek ini. Ticker IDX memakai suffix `.JK` (misal `BBCA.JK`). Ada harga historis, PER, PBV, ROE, dividen, market cap, dll. Tidak resmi (scraping API publik Yahoo), sesekali bisa berubah. |
+| **Sectors.app** ⭐ | ✅ Free tier | ✅ Perlu (gratis) | **API pilihan untuk IDX.** Khusus Indonesia (& Singapura), coverage ~99% emiten tercatat. Fundamental, laporan keuangan, valuasi, sektor, indeks (IHSG). API-first, dokumentasi rapi. Kuota free tier terbatas — cek [sectors.app](https://sectors.app/). |
 | **GoAPI** (goapi.io) | ✅ Free tier | ✅ Perlu (gratis) | Buatan Indonesia, ada endpoint khusus IDX: harga, profil emiten, indeks. Kuota terbatas di paket gratis. |
-| **Sectors.app** | ✅ Free tier | ✅ Perlu (gratis) | Fokus data fundamental IDX (laporan keuangan, valuasi, kepemilikan). Free tier cukup untuk eksperimen. |
-| **Alpha Vantage / Twelve Data / Finnhub** | ✅ Free tier | ✅ Perlu | Global, tapi cakupan saham IDX terbatas/tidak lengkap. |
+| **Finnhub** | ⚠️ Free tier ≠ IDX | ✅ Perlu | Free tier **hanya saham AS** — akses bursa internasional (termasuk IDX) butuh paket berbayar. Tidak cocok untuk screener gratis IDX. |
+| **Alpha Vantage** | ⚠️ 25 request/hari | ✅ Perlu | Limit free tier cuma 25 request/hari — satu run screening LQ45 saja tidak cukup. Fundamental praktis hanya saham AS; cakupan IDX tidak jelas. |
 | **Situs IDX (idx.co.id)** | ✅ | ❌ | Data resmi (ringkasan perdagangan, laporan keuangan) tapi tidak ada API publik resmi — biasanya diunduh manual/scraping. |
 
-**Rekomendasi:** mulai dengan `yfinance` (paling mudah, tanpa registrasi), lalu pertimbangkan GoAPI/Sectors kalau butuh data fundamental yang lebih dalam atau real-time.
+**Rekomendasi:** pakai `yfinance` sebagai sumber data utama (gratis, tanpa registrasi, semua kolom screener tersedia), dan **Sectors.app** sebagai API pelengkap terbaik saat butuh data yang yfinance lemah: laporan keuangan detail, emiten kecil di luar LQ45, dan breakdown sektor. Finnhub dan Alpha Vantage **tidak direkomendasikan** untuk IDX — free tier Finnhub tidak mencakup IDX sama sekali, dan limit 25 request/hari Alpha Vantage terlalu kecil untuk screening.
 
 ## Instalasi
 
