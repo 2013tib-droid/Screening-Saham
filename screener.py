@@ -123,9 +123,15 @@ def main():
                    help="file daftar ticker, satu per baris")
     p.add_argument("--demo", action="store_true",
                    help="pakai data contoh offline (data/sample_data.csv), tanpa internet")
+    p.add_argument("--dari-csv", metavar="FILE",
+                   help="baca data dari CSV hasil screening sebelumnya, "
+                        "tanpa mengambil ulang dari internet")
     p.add_argument("--output", default="hasil_screening.csv", help="file CSV hasil")
     p.add_argument("--urut", default="PER",
-                   help=f"kolom pengurutan hasil, salah satu dari: {', '.join(KOLOM[2:])}")
+                   # argparse memformat help dengan %-formatting, jadi '%' pada
+                   # nama kolom (ROE%, Dividen%) harus di-escape jadi '%%'
+                   help="kolom pengurutan hasil, salah satu dari: "
+                        + ", ".join(KOLOM[2:]).replace("%", "%%"))
     f = p.add_argument_group("filter fundamental")
     f.add_argument("--max-per", type=float, help="PER maksimal (dan harus > 0)")
     f.add_argument("--max-pbv", type=float, help="PBV maksimal (dan harus > 0)")
@@ -144,6 +150,10 @@ def main():
         print(f"Mode demo: memakai data contoh {sumber} (BUKAN data pasar riil).\n",
               file=sys.stderr)
         df = pd.read_csv(sumber)
+    elif args.dari_csv:
+        print(f"Membaca data dari {args.dari_csv} (tanpa fetch ulang).\n",
+              file=sys.stderr)
+        df = pd.read_csv(args.dari_csv)
     else:
         tickers = baca_daftar_ticker(args.tickers)
         print(f"Mengambil data {len(tickers)} saham dari Yahoo Finance ...",
@@ -162,8 +172,11 @@ def main():
         print("Tidak ada saham yang memenuhi seluruh kriteria.")
     else:
         print(hasil.to_string(index=False))
-        hasil.to_csv(args.output, index=False)
-        print(f"\nDisimpan ke {args.output}")
+    # CSV selalu ditulis (walau kosong) agar hasil lama tidak tertinggal
+    # saat dijalankan otomatis tiap malam.
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    hasil.to_csv(args.output, index=False)
+    print(f"\nDisimpan ke {args.output}")
 
 
 if __name__ == "__main__":

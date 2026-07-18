@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screening Saham IDX</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #fcfcfb;
+    --surface-raised: #ffffff;
+    --border: #e4e3df;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #8a8984;
+    --accent: #2a78d6;
+    --accent-soft: #e8f0fb;
+    --chip-bg: #efeeea;
+    --row-hover: #f4f3f0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --surface: #1a1a19;
+      --surface-raised: #232322;
+      --border: #3a3936;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #8a8984;
+      --accent: #3987e5;
+      --accent-soft: #1e3350;
+      --chip-bg: #32312f;
+      --row-hover: #2a2a28;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--text-primary);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 20px 16px 48px; }
+  header h1 { font-size: 1.35rem; margin: 0 0 2px; }
+  header p { margin: 0; color: var(--text-secondary); font-size: .9rem; }
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin: 18px 0;
+  }
+  .tile {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .tile .label { font-size: .78rem; color: var(--text-secondary); }
+  .tile .value { font-size: 1.55rem; font-weight: 650; line-height: 1.2; }
+  .tile .sub { font-size: .78rem; color: var(--text-muted); }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs button {
+    border: 1px solid var(--border);
+    background: var(--surface-raised);
+    color: var(--text-secondary);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: .88rem;
+    cursor: pointer;
+  }
+  .tabs button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  #cari {
+    flex: 1;
+    min-width: 160px;
+    max-width: 280px;
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    font-size: .9rem;
+  }
+  #cari:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .tablewrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-raised);
+  }
+  table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: .88rem; }
+  thead th {
+    position: sticky; top: 0;
+    background: var(--surface-raised);
+    border-bottom: 2px solid var(--border);
+    padding: 9px 10px;
+    text-align: right;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th:first-child, thead th:nth-child(2) { text-align: left; }
+  thead th:hover { color: var(--accent); }
+  thead th .arah { font-size: .7rem; color: var(--accent); }
+  tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  tbody td:first-child, tbody td:nth-child(2) { text-align: left; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--row-hover); }
+  td.ticker { font-weight: 650; }
+  td .nama { color: var(--text-secondary); }
+  .chip {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: .7rem;
+    font-weight: 600;
+    background: var(--chip-bg);
+    color: var(--text-secondary);
+  }
+  .chip.oversold { background: var(--accent-soft); color: var(--accent); }
+  .kosong, .gagal {
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: .92rem;
+  }
+
+  details { margin-top: 16px; font-size: .85rem; color: var(--text-secondary); }
+  details summary { cursor: pointer; color: var(--accent); }
+  details dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 8px 0 0; }
+  details dt { font-weight: 600; }
+  details dd { margin: 0; }
+  footer { margin-top: 22px; font-size: .78rem; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>📈 Screening Saham IDX</h1>
+    <p id="pembaruan">Memuat data …</p>
+  </header>
+
+  <div class="tiles" id="tiles" hidden>
+    <div class="tile"><div class="label">Lolos filter swing</div><div class="value" id="t-swing">–</div><div class="sub">RSI ≤ 35, di atas MA200</div></div>
+    <div class="tile"><div class="label">Lolos filter value</div><div class="value" id="t-value">–</div><div class="sub">PER ≤ 15, PBV ≤ 2, ROE ≥ 15%</div></div>
+    <div class="tile"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">konstituen LQ45</div></div>
+  </div>
+
+  <div class="controls">
+    <div class="tabs" role="tablist">
+      <button data-tab="swing" class="active">Swing</button>
+      <button data-tab="value">Value</button>
+      <button data-tab="semua">Semua</button>
+    </div>
+    <input id="cari" type="search" placeholder="Cari ticker / nama …" autocomplete="off">
+  </div>
+
+  <div class="tablewrap" id="tabel"><div class="kosong">Memuat data …</div></div>
+
+  <details>
+    <summary>Arti kolom &amp; cara pakai</summary>
+    <dl>
+      <dt>PER</dt><dd>Price-to-Earnings Ratio — makin kecil makin murah relatif terhadap laba.</dd>
+      <dt>PBV</dt><dd>Price-to-Book Value — harga dibanding nilai buku.</dd>
+      <dt>ROE%</dt><dd>Return on Equity — efisiensi perusahaan menghasilkan laba.</dd>
+      <dt>Dividen%</dt><dd>Dividend yield setahun terakhir.</dd>
+      <dt>MCap (T)</dt><dd>Kapitalisasi pasar dalam triliun rupiah.</dd>
+      <dt>RSI14</dt><dd>Relative Strength Index 14 hari — ≤ 30 oversold, ≥ 70 overbought.</dd>
+      <dt>MA50 / MA200</dt><dd>Rata-rata harga 50 / 200 hari terakhir.</dd>
+    </dl>
+    <p>Klik judul kolom untuk mengurutkan. Data diperbarui otomatis tiap malam hari bursa
+    dari harga penutupan (sumber: Yahoo Finance, delay ±15 menit).</p>
+  </details>
+
+  <footer>Bukan rekomendasi investasi — selalu lakukan analisis sendiri sebelum membeli.
+  Dibuat dengan <a href="https://github.com/2013tib-droid/Screening-Saham">Screening-Saham</a>.</footer>
+</div>
+
+<script>
+"use strict";
+
+const KOLOM = [
+  { k: "Ticker",       label: "Ticker" },
+  { k: "Nama",         label: "Nama" },
+  { k: "Harga",        label: "Harga",     angka: true },
+  { k: "PER",          label: "PER",       angka: true, desimal: 1 },
+  { k: "PBV",          label: "PBV",       angka: true, desimal: 2 },
+  { k: "ROE%",         label: "ROE%",      angka: true, desimal: 1 },
+  { k: "Dividen%",     label: "Dividen%",  angka: true, desimal: 2 },
+  { k: "MarketCap(T)", label: "MCap (T)",  angka: true, desimal: 1 },
+  { k: "RSI14",        label: "RSI14",     angka: true, desimal: 1 },
+  { k: "MA50",         label: "MA50",      angka: true },
+  { k: "MA200",        label: "MA200",     angka: true },
+];
+
+const fmt = new Map();
+function angka(n, desimal = 0) {
+  if (n === null || n === undefined || n === "" || Number.isNaN(n)) return "–";
+  const kunci = desimal;
+  if (!fmt.has(kunci)) fmt.set(kunci, new Intl.NumberFormat("id-ID",
+    { minimumFractionDigits: desimal, maximumFractionDigits: desimal }));
+  return fmt.get(kunci).format(n);
+}
+
+// Parser CSV kecil dengan dukungan tanda kutip (nama emiten bisa memuat koma).
+function parseCSV(teks) {
+  const baris = [];
+  let sel = "", row = [], dalamKutip = false;
+  for (let i = 0; i < teks.length; i++) {
+    const c = teks[i];
+    if (dalamKutip) {
+      if (c === '"' && teks[i + 1] === '"') { sel += '"'; i++; }
+      else if (c === '"') dalamKutip = false;
+      else sel += c;
+    } else if (c === '"') dalamKutip = true;
+    else if (c === ",") { row.push(sel); sel = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && teks[i + 1] === "\n") i++;
+      row.push(sel); sel = "";
+      if (row.length > 1 || row[0] !== "") baris.push(row);
+      row = [];
+    } else sel += c;
+  }
+  if (sel !== "" || row.length) { row.push(sel); baris.push(row); }
+  if (!baris.length) return [];
+  const header = baris[0];
+  return baris.slice(1).map(r => {
+    const obj = {};
+    header.forEach((h, i) => {
+      const mentah = r[i] ?? "";
+      const kol = KOLOM.find(k => k.k === h);
+      obj[h] = kol && kol.angka ? (mentah === "" ? null : Number(mentah)) : mentah;
+    });
+    return obj;
+  });
+}
+
+const state = {
+  tab: "swing",
+  cari: "",
+  data: { swing: null, value: null, semua: null },
+  urut: { kolom: null, naik: true },
+  gagal: false,
+};
+
+function barisTerlihat() {
+  const rows = state.data[state.tab] || [];
+  const q = state.cari.trim().toUpperCase();
+  let hasil = !q ? rows.slice() : rows.filter(r =>
+    String(r.Ticker || "").toUpperCase().includes(q) ||
+    String(r.Nama || "").toUpperCase().includes(q));
+  const { kolom, naik } = state.urut;
+  if (kolom) {
+    const numerik = KOLOM.find(k => k.k === kolom)?.angka;
+    hasil.sort((a, b) => {
+      const va = a[kolom], vb = b[kolom];
+      if (va === null || va === undefined || va === "") return 1;   // kosong selalu di bawah
+      if (vb === null || vb === undefined || vb === "") return -1;
+      const cmp = numerik ? va - vb : String(va).localeCompare(String(vb));
+      return naik ? cmp : -cmp;
+    });
+  }
+  return hasil;
+}
+
+function render() {
+  const wadah = document.getElementById("tabel");
+  if (state.gagal) {
+    wadah.innerHTML = '<div class="gagal">Gagal memuat data. Coba muat ulang halaman — ' +
+      'kalau masih gagal, cek run terakhir di tab Actions repo.</div>';
+    return;
+  }
+  if (!state.data[state.tab]) {
+    wadah.innerHTML = '<div class="kosong">Memuat data …</div>';
+    return;
+  }
+  const rows = barisTerlihat();
+  if (!rows.length) {
+    wadah.innerHTML = '<div class="kosong">' + (state.cari
+      ? "Tidak ada yang cocok dengan pencarian."
+      : "Tidak ada saham yang lolos filter ini malam ini.") + "</div>";
+    return;
+  }
+  const th = KOLOM.map(k => {
+    const aktif = state.urut.kolom === k.k;
+    const arah = aktif ? '<span class="arah">' + (state.urut.naik ? " ▲" : " ▼") + "</span>" : "";
+    return `<th data-kolom="${k.k}">${k.label}${arah}</th>`;
+  }).join("");
+  const td = rows.map(r => {
+    let chip = "";
+    if (r.RSI14 !== null && r.RSI14 <= 30) chip = '<span class="chip oversold">oversold</span>';
+    else if (r.RSI14 !== null && r.RSI14 >= 70) chip = '<span class="chip">overbought</span>';
+    return "<tr>" + KOLOM.map(k => {
+      if (k.k === "Ticker") return `<td class="ticker">${r.Ticker}</td>`;
+      if (k.k === "Nama") return `<td><span class="nama">${r.Nama || "–"}</span></td>`;
+      const isi = angka(r[k.k], k.desimal || 0);
+      return "<td>" + isi + (k.k === "RSI14" ? chip : "") + "</td>";
+    }).join("") + "</tr>";
+  }).join("");
+  wadah.innerHTML = `<table><thead><tr>${th}</tr></thead><tbody>${td}</tbody></table>`;
+  wadah.querySelectorAll("th").forEach(el => el.addEventListener("click", () => {
+    const kol = el.dataset.kolom;
+    if (state.urut.kolom === kol) state.urut.naik = !state.urut.naik;
+    else state.urut = { kolom: kol, naik: true };
+    render();
+  }));
+}
+
+document.querySelectorAll(".tabs button").forEach(btn =>
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.tab = btn.dataset.tab;
+    render();
+  }));
+
+document.getElementById("cari").addEventListener("input", e => {
+  state.cari = e.target.value;
+  render();
+});
+
+async function muat() {
+  const t = Date.now();
+  try {
+    const [semua, swing, value, meta] = await Promise.all([
+      fetch(`hasil/semua.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
+      fetch(`hasil/swing.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
+      fetch(`hasil/value.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
+      fetch(`hasil/meta.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    state.data.semua = parseCSV(semua);
+    state.data.swing = parseCSV(swing);
+    state.data.value = parseCSV(value);
+
+    document.getElementById("t-swing").textContent = state.data.swing.length;
+    document.getElementById("t-value").textContent = state.data.value.length;
+    document.getElementById("t-semua").textContent = state.data.semua.length;
+    document.getElementById("tiles").hidden = false;
+
+    const p = document.getElementById("pembaruan");
+    if (meta && meta.diperbarui) {
+      const kapan = new Intl.DateTimeFormat("id-ID", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric",
+        hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta",
+      }).format(new Date(meta.diperbarui));
+      p.textContent = `Data penutupan terakhir · diperbarui ${kapan} WIB`;
+    } else {
+      p.textContent = "Data penutupan terakhir";
+    }
+  } catch {
+    state.gagal = true;
+    document.getElementById("pembaruan").textContent = "Data belum tersedia";
+  }
+  render();
+}
+muat();
+</script>
+</body>
+</html>

@@ -15,6 +15,8 @@ Screener saham Bursa Efek Indonesia (IDX) berbasis Python dengan **data gratis**
 
 **Rekomendasi:** pakai `yfinance` sebagai sumber data utama (gratis, tanpa registrasi, semua kolom screener tersedia), dan **Sectors.app** sebagai API pelengkap terbaik saat butuh data yang yfinance lemah: laporan keuangan detail, emiten kecil di luar LQ45, dan breakdown sektor. Finnhub dan Alpha Vantage **tidak direkomendasikan** untuk IDX — free tier Finnhub tidak mencakup IDX sama sekali, dan limit 25 request/hari Alpha Vantage terlalu kecil untuk screening.
 
+**Catatan kesegaran data:** untuk swing trading, data penutupan H-1 sudah cukup — screening dilakukan malam hari setelah pasar tutup, keputusan dieksekusi besok paginya. Delay 10–15 menit yfinance dan update harian Sectors.app sama sekali tidak jadi masalah untuk pola ini. Data real-time hanya relevan untuk scalping/intraday, dan untuk IDX praktis hanya tersedia lewat [layanan data berbayar BEI](https://www.idx.co.id/id/produk/layanan-data-bei/) atau GoAPI (kuota gratis kecil).
+
 ## Instalasi
 
 ```bash
@@ -39,6 +41,9 @@ python screener.py --max-rsi 35 --di-atas-ma200
 # Pakai daftar ticker sendiri
 python screener.py --tickers tickers/lq45.txt
 
+# Filter ulang dari CSV hasil sebelumnya, tanpa fetch ulang dari internet
+python screener.py --dari-csv hasil_screening.csv --min-dividen 5
+
 # Mode demo offline (data contoh, BUKAN data pasar riil)
 python screener.py --demo --max-per 15 --min-roe 15
 ```
@@ -57,10 +62,48 @@ Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
 | `--max-rsi N` / `--min-rsi N` | Batas RSI-14 (≤30 oversold, ≥70 overbought) |
 | `--di-atas-ma50` / `--di-atas-ma200` | Harga di atas moving average 50/200 hari |
 | `--urut KOLOM` | Urutkan hasil (default: PER) |
+| `--dari-csv FILE` | Baca data dari CSV hasil sebelumnya, tanpa fetch ulang |
 
 ## Daftar Ticker
 
 `tickers/lq45.txt` berisi konstituen LQ45. Buat file sendiri (satu ticker per baris, suffix `.JK` opsional) dan arahkan dengan `--tickers`.
+
+## Otomasi Screening Malam (GitHub Actions)
+
+Workflow [`.github/workflows/screening-malam.yml`](.github/workflows/screening-malam.yml) menjalankan screening otomatis **setiap hari bursa (Senin–Jumat) pukul ±18:17 WIB** — beberapa jam setelah IDX tutup (15:50 WIB), pas untuk pola swing trade: data penutupan dikumpulkan malam ini, keputusan dieksekusi besok pagi.
+
+Setiap malam workflow:
+
+1. Mengambil data seluruh LQ45 dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter).
+2. Memfilter ulang dari CSV itu (tanpa fetch ulang, pakai `--dari-csv`) menjadi dua daftar siap pakai:
+   - `hasil/swing.csv` — oversold tapi masih uptrend (RSI ≤ 35, harga di atas MA200).
+   - `hasil/value.csv` — value stock (PER ≤ 15, PBV ≤ 2, ROE ≥ 15%).
+3. Meng-commit hasilnya ke repo, jadi tiap pagi tinggal buka ketiga file di folder `hasil/`. Riwayat screening malam-malam sebelumnya tersimpan otomatis di git history.
+4. Men-deploy **dashboard web** ke GitHub Pages (lihat di bawah).
+
+**Mengubah kriteria:** edit langkah-langkah screening di file workflow — argumennya sama persis dengan CLI `screener.py`. Mau menambah profil screening ketiga? Duplikat saja salah satu langkah `--dari-csv` dengan filter dan nama output berbeda.
+
+**Menjalankan manual:** buka tab **Actions → Screening Malam → Run workflow** di GitHub.
+
+### Dashboard Web
+
+Hasil screening bisa dilihat lewat dashboard di:
+
+**<https://2013tib-droid.github.io/Screening-Saham/>**
+
+Fitur dashboard:
+
+- Tiga tab: **Swing**, **Value**, dan **Semua** (tabel lengkap 45 saham), plus ringkasan jumlah saham yang lolos tiap filter.
+- Klik judul kolom untuk mengurutkan (misalnya urutkan per RSI atau dividen), kotak pencarian untuk mencari ticker/nama.
+- Nyaman dibuka di HP, mendukung mode gelap, dan menampilkan waktu pembaruan terakhir (WIB).
+
+Dashboard di-deploy otomatis di akhir setiap run workflow — sumbernya file statis [`dashboard/index.html`](dashboard/index.html), datanya dibaca langsung dari folder `hasil/`. GitHub Pages diaktifkan otomatis pada run pertama; kalau gagal di langkah "Aktifkan & konfigurasi GitHub Pages", aktifkan manual sekali lewat **Settings → Pages → Source: GitHub Actions**, lalu jalankan ulang workflow-nya.
+
+Catatan penting:
+
+- Jadwal cron hanya aktif di **branch default** repo — pastikan workflow ini sudah ter-merge ke branch utama. Workflow juga otomatis jalan sekali setiap ada push ke branch utama, jadi begitu di-merge, hasil pertama dan dashboard langsung tersedia tanpa menunggu malam.
+- GitHub menonaktifkan cron otomatis jika repo tidak ada aktivitas selama 60 hari; karena workflow ini meng-commit hasil tiap malam, repo tetap "aktif" dengan sendirinya.
+- Yahoo Finance sesekali membatasi request dari server GitHub. Kalau run gagal, coba **Run workflow** ulang, atau jalankan screening di komputer sendiri.
 
 ## Disclaimer
 

@@ -1,0 +1,89 @@
+name: Screening Malam
+
+on:
+  schedule:
+    # 18:17 WIB (11:17 UTC), Senin-Jumat — beberapa jam setelah IDX tutup
+    # (15:50 WIB). Menit 17 dipilih agar tidak antre di puncak beban cron
+    # GitHub (menit 00), yang sering menunda eksekusi.
+    - cron: "17 11 * * 1-5"
+  workflow_dispatch:
+  push:
+    # branch default repo saat ini + 'main' untuk jaga-jaga bila kelak di-rename
+    branches: [claude/indo-stock-screener-98kizz, main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: screening-malam
+  cancel-in-progress: false
+
+jobs:
+  screening:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependensi
+        run: pip install -r requirements.txt
+
+      - name: Ambil data & simpan tabel lengkap
+        run: python screener.py --output hasil/semua.csv
+
+      - name: Screening swing (oversold, masih uptrend)
+        run: >
+          python screener.py --dari-csv hasil/semua.csv
+          --max-rsi 35 --di-atas-ma200
+          --output hasil/swing.csv
+
+      - name: Screening value (PER <= 15, PBV <= 2, ROE >= 15%)
+        run: >
+          python screener.py --dari-csv hasil/semua.csv
+          --max-per 15 --max-pbv 2 --min-roe 15
+          --output hasil/value.csv
+
+      - name: Catat waktu pembaruan
+        run: |
+          printf '{"diperbarui": "%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > hasil/meta.json
+
+      - name: Commit hasil
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add hasil/
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan data, tidak ada yang di-commit."
+          else
+            git commit -m "Hasil screening $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
+            git pull --rebase origin "$GITHUB_REF_NAME"
+            git push
+          fi
+
+      - name: Susun situs dashboard
+        run: |
+          mkdir -p _site
+          cp dashboard/index.html _site/
+          cp -r hasil _site/
+
+      - name: Aktifkan & konfigurasi GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy ke GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
