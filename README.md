@@ -79,14 +79,29 @@ Setiap malam workflow:
    - `hasil/swing.csv` — oversold tapi masih uptrend (RSI ≤ 35, harga di atas MA200).
    - `hasil/value.csv` — value stock (PER ≤ 15, PBV ≤ 2, ROE ≥ 15%).
 3. Meng-commit hasilnya ke repo, jadi tiap pagi tinggal buka ketiga file di folder `hasil/`. Riwayat screening malam-malam sebelumnya tersimpan otomatis di git history.
+4. Men-deploy **dashboard web** ke GitHub Pages (lihat di bawah).
 
 **Mengubah kriteria:** edit langkah-langkah screening di file workflow — argumennya sama persis dengan CLI `screener.py`. Mau menambah profil screening ketiga? Duplikat saja salah satu langkah `--dari-csv` dengan filter dan nama output berbeda.
 
 **Menjalankan manual:** buka tab **Actions → Screening Malam → Run workflow** di GitHub.
 
+### Dashboard Web
+
+Hasil screening bisa dilihat lewat dashboard di:
+
+**<https://2013tib-droid.github.io/Screening-Saham/>**
+
+Fitur dashboard:
+
+- Tiga tab: **Swing**, **Value**, dan **Semua** (tabel lengkap 45 saham), plus ringkasan jumlah saham yang lolos tiap filter.
+- Klik judul kolom untuk mengurutkan (misalnya urutkan per RSI atau dividen), kotak pencarian untuk mencari ticker/nama.
+- Nyaman dibuka di HP, mendukung mode gelap, dan menampilkan waktu pembaruan terakhir (WIB).
+
+Dashboard di-deploy otomatis di akhir setiap run workflow — sumbernya file statis [`dashboard/index.html`](dashboard/index.html), datanya dibaca langsung dari folder `hasil/`. GitHub Pages diaktifkan otomatis pada run pertama; kalau gagal di langkah "Aktifkan & konfigurasi GitHub Pages", aktifkan manual sekali lewat **Settings → Pages → Source: GitHub Actions**, lalu jalankan ulang workflow-nya.
+
 Catatan penting:
 
-- Jadwal cron hanya aktif di **branch default** repo — pastikan workflow ini sudah ter-merge ke branch utama.
+- Jadwal cron hanya aktif di **branch default** repo — pastikan workflow ini sudah ter-merge ke branch utama. Workflow juga otomatis jalan sekali setiap ada push ke branch utama, jadi begitu di-merge, hasil pertama dan dashboard langsung tersedia tanpa menunggu malam.
 - GitHub menonaktifkan cron otomatis jika repo tidak ada aktivitas selama 60 hari; karena workflow ini meng-commit hasil tiap malam, repo tetap "aktif" dengan sendirinya.
 - Yahoo Finance sesekali membatasi request dari server GitHub. Kalau run gagal, coba **Run workflow** ulang, atau jalankan screening di komputer sendiri.
 
