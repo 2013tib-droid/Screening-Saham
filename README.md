@@ -38,6 +38,9 @@ python screener.py --min-dividen 5 --min-mcap 50
 # Teknikal: oversold (RSI ≤ 35) tapi masih uptrend jangka panjang
 python screener.py --max-rsi 35 --di-atas-ma200
 
+# Swing + konfirmasi volume: oversold, uptrend, dan volume mulai masuk
+python screener.py --max-rsi 35 --di-atas-ma200 --min-volspike 1.5 --min-nilai 10
+
 # Pakai daftar ticker sendiri
 python screener.py --tickers tickers/lq45.txt
 
@@ -59,6 +62,8 @@ Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
 | `--min-roe N` | Return on Equity minimal (%) |
 | `--min-dividen N` | Dividend yield minimal (%) |
 | `--min-mcap N` | Market cap minimal (triliun Rp) |
+| `--min-nilai N` | Nilai transaksi rata-rata 20 hari minimal (miliar Rp) — filter likuiditas |
+| `--min-volspike N` | Volume terakhir minimal N× rata-rata 20 hari (mis. 1.5 = ada lonjakan minat) |
 | `--max-rsi N` / `--min-rsi N` | Batas RSI-14 (≤30 oversold, ≥70 overbought) |
 | `--di-atas-ma50` / `--di-atas-ma200` | Harga di atas moving average 50/200 hari |
 | `--urut KOLOM` | Urutkan hasil (default: PER) |
@@ -76,7 +81,7 @@ Setiap malam workflow:
 
 1. Mengambil data seluruh LQ45 dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter).
 2. Memfilter ulang dari CSV itu (tanpa fetch ulang, pakai `--dari-csv`) menjadi dua daftar siap pakai:
-   - `hasil/swing.csv` — oversold tapi masih uptrend (RSI ≤ 35, harga di atas MA200).
+   - `hasil/swing.csv` — oversold tapi masih uptrend, **dengan konfirmasi volume** (RSI ≤ 35, harga di atas MA200, volume terakhir ≥ 1,5× rata-rata 20 hari, nilai transaksi ≥ 10 miliar Rp). Sinyal ini lebih jarang muncul tapi lebih tajam — wajar kalau ada malam di mana tidak ada yang lolos.
    - `hasil/value.csv` — value stock (PER ≤ 15, PBV ≤ 2, ROE ≥ 15%).
 3. Meng-commit hasilnya ke repo, jadi tiap pagi tinggal buka ketiga file di folder `hasil/`. Riwayat screening malam-malam sebelumnya tersimpan otomatis di git history.
 4. Men-deploy **dashboard web** ke GitHub Pages (lihat di bawah).

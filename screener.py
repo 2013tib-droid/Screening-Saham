@@ -21,7 +21,8 @@ import pandas as pd
 
 KOLOM = [
     "Ticker", "Nama", "Harga", "PER", "PBV", "ROE%", "Dividen%",
-    "MarketCap(T)", "RSI14", "MA50", "MA200",
+    "MarketCap(T)", "Vol20(jt)", "Nilai(M)", "VolSpike",
+    "RSI14", "MA50", "MA200",
 ]
 
 
@@ -66,11 +67,18 @@ def ambil_data(tickers: list[str]) -> pd.DataFrame:
             info = saham.info or {}
             hist = saham.history(period="1y")
             close = hist["Close"] if not hist.empty else pd.Series(dtype=float)
+            vol = hist["Volume"] if not hist.empty else pd.Series(dtype=float)
 
             harga = info.get("currentPrice") or (
                 round(close.iloc[-1]) if len(close) else None)
             roe = info.get("returnOnEquity")
             mcap = info.get("marketCap")
+            vol20 = vol.tail(20).mean() if len(vol) >= 20 else None
+            if vol20 is None or pd.isna(vol20) or vol20 <= 0:
+                vol20 = None
+            nilai20 = (close * vol).tail(20).mean() if vol20 else None
+            if nilai20 is not None and pd.isna(nilai20):
+                nilai20 = None
             baris_data.append({
                 "Ticker": tkr.removesuffix(".JK"),
                 "Nama": (info.get("shortName") or "")[:28],
@@ -80,6 +88,9 @@ def ambil_data(tickers: list[str]) -> pd.DataFrame:
                 "ROE%": round(roe * 100, 1) if roe is not None else None,
                 "Dividen%": normalisasi_persen(info.get("dividendYield")),
                 "MarketCap(T)": round(mcap / 1e12, 1) if mcap else None,
+                "Vol20(jt)": round(vol20 / 1e6, 2) if vol20 else None,
+                "Nilai(M)": round(nilai20 / 1e9, 1) if nilai20 else None,
+                "VolSpike": round(vol.iloc[-1] / vol20, 2) if vol20 else None,
                 "RSI14": hitung_rsi(close),
                 "MA50": round(close.tail(50).mean()) if len(close) >= 50 else None,
                 "MA200": round(close.tail(200).mean()) if len(close) >= 200 else None,
@@ -104,6 +115,10 @@ def terapkan_filter(df: pd.DataFrame, args) -> pd.DataFrame:
         saring(df["Dividen%"] >= args.min_dividen)
     if args.min_mcap is not None:
         saring(df["MarketCap(T)"] >= args.min_mcap)
+    if args.min_nilai is not None:
+        saring(df["Nilai(M)"] >= args.min_nilai)
+    if args.min_volspike is not None:
+        saring(df["VolSpike"] >= args.min_volspike)
     if args.max_rsi is not None:
         saring(df["RSI14"] <= args.max_rsi)
     if args.min_rsi is not None:
@@ -138,7 +153,11 @@ def main():
     f.add_argument("--min-roe", type=float, help="ROE minimal dalam persen")
     f.add_argument("--min-dividen", type=float, help="dividend yield minimal dalam persen")
     f.add_argument("--min-mcap", type=float, help="market cap minimal dalam triliun Rp")
-    t = p.add_argument_group("filter teknikal")
+    t = p.add_argument_group("filter teknikal & volume")
+    t.add_argument("--min-nilai", type=float,
+                   help="nilai transaksi rata-rata 20 hari minimal (miliar Rp)")
+    t.add_argument("--min-volspike", type=float,
+                   help="volume terakhir minimal N kali rata-rata 20 hari (mis. 1.5)")
     t.add_argument("--max-rsi", type=float, help="RSI-14 maksimal (mis. 30 = oversold)")
     t.add_argument("--min-rsi", type=float, help="RSI-14 minimal")
     t.add_argument("--di-atas-ma50", action="store_true", help="harga di atas MA50")
