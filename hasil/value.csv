@@ -1,9 +1,9 @@
 Ticker,Nama,Harga,PER,PBV,ROE%,Dividen%,MarketCap(T),RSI14,MA50,MA200
-TOWR,Sarana Menara Nusantara Tbk.,410.0,5.9,0.88,16.0,3.36,23.9,65.7,385,487
-BMRI,Bank Mandiri (Persero) Tbk,4480.0,7.1,1.37,21.0,10.65,418.1,65.0,4136,4282
-BBRI,Bank Rakyat Indonesia (Perse,2970.0,7.6,1.32,18.1,14.07,447.2,57.4,2932,3299
-CPIN,Charoen Pokphand Indonesia T,3120.0,7.7,1.39,19.5,5.77,51.2,42.9,3513,4096
-ANTM,Aneka Tambang (Persero) Tbk.,3070.0,8.7,1.9,24.7,6.84,73.8,60.0,2872,3204
-MAPI,Mitra Adiperkasa Tbk,1520.0,10.6,1.72,17.5,66.0,25.2,54.3,1490,1289
-ISAT,Indosat Tbk,1900.0,10.8,1.62,15.0,5.84,61.3,53.0,1956,2003
-BRIS,Bank Syariah Indonesia (Pers,1910.0,11.2,1.74,16.2,1.72,88.1,61.4,1804,2151
+TOWR,Sarana Menara Nusantara Tbk.,408.0,5.9,0.88,16.0,3.36,23.8,64.4,384,486
+BMRI,Bank Mandiri (Persero) Tbk,4450.0,7.1,1.36,21.0,10.65,415.3,63.3,4139,4285
+CPIN,Charoen Pokphand Indonesia T,3110.0,7.6,1.39,19.5,5.77,51.0,42.4,3494,4087
+BBRI,Bank Rakyat Indonesia (Perse,3020.0,7.8,1.34,18.1,14.07,454.7,60.1,2926,3295
+ANTM,ANTAM (Persero) Tbk.,3000.0,8.5,1.86,24.7,6.84,72.1,55.7,2860,3203
+MAPI,Mitra Adiperkasa Tbk,1505.0,10.5,1.71,17.5,66.0,25.0,50.7,1494,1291
+ISAT,Indosat Tbk,1910.0,10.8,1.63,15.0,5.84,61.6,53.9,1953,2003
+BRIS,Bank Syariah Indonesia (Pers,1865.0,10.9,1.69,16.2,1.72,86.0,57.0,1802,2148
