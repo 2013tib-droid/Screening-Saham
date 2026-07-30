@@ -97,7 +97,7 @@
     border-radius: 10px;
     background: var(--surface-raised);
   }
-  table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: .88rem; }
+  table { border-collapse: collapse; width: 100%; min-width: 960px; font-size: .88rem; }
   thead th {
     position: sticky; top: 0;
     background: var(--surface-raised);
@@ -159,7 +159,7 @@
   </header>
 
   <div class="tiles" id="tiles" hidden>
-    <div class="tile"><div class="label">Lolos filter swing</div><div class="value" id="t-swing">–</div><div class="sub">RSI ≤ 35, di atas MA200</div></div>
+    <div class="tile"><div class="label">Lolos filter swing</div><div class="value" id="t-swing">–</div><div class="sub">RSI ≤ 35, di atas MA200, vol spike ≥ 1,5×</div></div>
     <div class="tile"><div class="label">Lolos filter value</div><div class="value" id="t-value">–</div><div class="sub">PER ≤ 15, PBV ≤ 2, ROE ≥ 15%</div></div>
     <div class="tile"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">konstituen LQ45</div></div>
   </div>
@@ -183,6 +183,9 @@
       <dt>ROE%</dt><dd>Return on Equity — efisiensi perusahaan menghasilkan laba.</dd>
       <dt>Dividen%</dt><dd>Dividend yield setahun terakhir.</dd>
       <dt>MCap (T)</dt><dd>Kapitalisasi pasar dalam triliun rupiah.</dd>
+      <dt>Vol20 (jt)</dt><dd>Volume rata-rata 20 hari, dalam juta lembar.</dd>
+      <dt>Nilai (M)</dt><dd>Nilai transaksi rata-rata 20 hari, dalam miliar rupiah — ukuran likuiditas.</dd>
+      <dt>VolSpike</dt><dd>Volume terakhir dibanding rata-rata 20 hari — ≥ 1,5× berarti ada lonjakan minat (ditandai "spike").</dd>
       <dt>RSI14</dt><dd>Relative Strength Index 14 hari — ≤ 30 oversold, ≥ 70 overbought.</dd>
       <dt>MA50 / MA200</dt><dd>Rata-rata harga 50 / 200 hari terakhir.</dd>
     </dl>
@@ -206,6 +209,9 @@ const KOLOM = [
   { k: "ROE%",         label: "ROE%",      angka: true, desimal: 1 },
   { k: "Dividen%",     label: "Dividen%",  angka: true, desimal: 2 },
   { k: "MarketCap(T)", label: "MCap (T)",  angka: true, desimal: 1 },
+  { k: "Vol20(jt)",    label: "Vol20 (jt)", angka: true, desimal: 1 },
+  { k: "Nilai(M)",     label: "Nilai (M)", angka: true, desimal: 1 },
+  { k: "VolSpike",     label: "VolSpike",  angka: true, desimal: 2 },
   { k: "RSI14",        label: "RSI14",     angka: true, desimal: 1 },
   { k: "MA50",         label: "MA50",      angka: true },
   { k: "MA200",        label: "MA200",     angka: true },
@@ -308,11 +314,15 @@ function render() {
     let chip = "";
     if (r.RSI14 !== null && r.RSI14 <= 30) chip = '<span class="chip oversold">oversold</span>';
     else if (r.RSI14 !== null && r.RSI14 >= 70) chip = '<span class="chip">overbought</span>';
+    const chipVol = (r.VolSpike !== null && r.VolSpike !== undefined && r.VolSpike >= 1.5)
+      ? '<span class="chip oversold">spike</span>' : "";
     return "<tr>" + KOLOM.map(k => {
       if (k.k === "Ticker") return `<td class="ticker">${r.Ticker}</td>`;
       if (k.k === "Nama") return `<td><span class="nama">${r.Nama || "–"}</span></td>`;
       const isi = angka(r[k.k], k.desimal || 0);
-      return "<td>" + isi + (k.k === "RSI14" ? chip : "") + "</td>";
+      if (k.k === "RSI14") return "<td>" + isi + chip + "</td>";
+      if (k.k === "VolSpike") return "<td>" + isi + chipVol + "</td>";
+      return "<td>" + isi + "</td>";
     }).join("") + "</tr>";
   }).join("");
   wadah.innerHTML = `<table><thead><tr>${th}</tr></thead><tbody>${td}</tbody></table>`;

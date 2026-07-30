@@ -40,10 +40,10 @@ jobs:
       - name: Ambil data & simpan tabel lengkap
         run: python screener.py --output hasil/semua.csv
 
-      - name: Screening swing (oversold, masih uptrend)
+      - name: Screening swing (oversold, uptrend, volume masuk)
         run: >
           python screener.py --dari-csv hasil/semua.csv
-          --max-rsi 35 --di-atas-ma200
+          --max-rsi 35 --di-atas-ma200 --min-volspike 1.5 --min-nilai 10
           --output hasil/swing.csv
 
       - name: Screening value (PER <= 15, PBV <= 2, ROE >= 15%)
