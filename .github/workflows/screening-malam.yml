@@ -40,16 +40,19 @@ jobs:
       - name: Ambil data & simpan tabel lengkap
         run: python screener.py --output hasil/semua.csv
 
-      - name: Screening swing (oversold, uptrend, volume masuk)
+      # Ambang "medium risk": RSI 50 (koreksi sehat, bukan cuma oversold ekstrem).
+      - name: Screening swing (pullback, uptrend, volume masuk)
         run: >
           python screener.py --dari-csv hasil/semua.csv
-          --max-rsi 35 --di-atas-ma200 --min-volspike 1.5 --min-nilai 10
+          --max-rsi 50 --di-atas-ma200 --min-volspike 1.5 --min-nilai 10
           --output hasil/swing.csv
 
-      - name: Screening value (PER <= 15, PBV <= 2, ROE >= 15%)
+      # Ambang "medium risk": PBV 3,5 supaya blue chip berkualitas yang selalu
+      # dihargai premium (BBCA, SIDO) tidak otomatis tersaring keluar.
+      - name: Screening value (PER <= 15, PBV <= 3.5, ROE >= 15%)
         run: >
           python screener.py --dari-csv hasil/semua.csv
-          --max-per 15 --max-pbv 2 --min-roe 15
+          --max-per 15 --max-pbv 3.5 --min-roe 15
           --output hasil/value.csv
 
       - name: Catat waktu pembaruan
