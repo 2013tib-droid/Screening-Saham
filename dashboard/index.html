@@ -78,6 +78,14 @@
     color: #fff;
     font-weight: 600;
   }
+  #grup {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    font-size: .9rem;
+  }
   #cari {
     flex: 1;
     min-width: 160px;
@@ -97,7 +105,7 @@
     border-radius: 10px;
     background: var(--surface-raised);
   }
-  table { border-collapse: collapse; width: 100%; min-width: 960px; font-size: .88rem; }
+  table { border-collapse: collapse; width: 100%; min-width: 1060px; font-size: .88rem; }
   thead th {
     position: sticky; top: 0;
     background: var(--surface-raised);
@@ -110,7 +118,7 @@
     cursor: pointer;
     user-select: none;
   }
-  thead th:first-child, thead th:nth-child(2) { text-align: left; }
+  thead th:first-child, thead th:nth-child(2), thead th:nth-child(3) { text-align: left; }
   thead th:hover { color: var(--accent); }
   thead th .arah { font-size: .7rem; color: var(--accent); }
   tbody td {
@@ -120,7 +128,7 @@
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
-  tbody td:first-child, tbody td:nth-child(2) { text-align: left; }
+  tbody td:first-child, tbody td:nth-child(2), tbody td:nth-child(3) { text-align: left; }
   tbody tr:last-child td { border-bottom: none; }
   tbody tr:hover td { background: var(--row-hover); }
   td.ticker { font-weight: 650; }
@@ -161,7 +169,7 @@
   <div class="tiles" id="tiles" hidden>
     <div class="tile"><div class="label">Lolos filter swing</div><div class="value" id="t-swing">–</div><div class="sub">RSI ≤ 50, di atas MA200, vol spike ≥ 1,5×</div></div>
     <div class="tile"><div class="label">Lolos filter value</div><div class="value" id="t-value">–</div><div class="sub">PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%</div></div>
-    <div class="tile"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">konstituen LQ45</div></div>
+    <div class="tile"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">LQ45 + grup Prajogo, Bakrie, Salim, Hapsoro</div></div>
   </div>
 
   <div class="controls">
@@ -170,6 +178,9 @@
       <button data-tab="value">Value</button>
       <button data-tab="semua">Semua</button>
     </div>
+    <select id="grup" aria-label="Saring berdasarkan grup">
+      <option value="">Semua grup</option>
+    </select>
     <input id="cari" type="search" placeholder="Cari ticker / nama …" autocomplete="off">
   </div>
 
@@ -178,6 +189,8 @@
   <details>
     <summary>Arti kolom &amp; cara pakai</summary>
     <dl>
+      <dt>Grup</dt><dd>Daftar asal saham: LQ45 atau grup konglomerasi (Prajogo/Barito, Bakrie,
+      Salim, Hapsoro). Satu saham bisa masuk dua daftar, mis. "LQ45/Salim".</dd>
       <dt>PER</dt><dd>Price-to-Earnings Ratio — makin kecil makin murah relatif terhadap laba.</dd>
       <dt>PBV</dt><dd>Price-to-Book Value — harga dibanding nilai buku.</dd>
       <dt>ROE%</dt><dd>Return on Equity — efisiensi perusahaan menghasilkan laba.</dd>
@@ -203,6 +216,7 @@
 const KOLOM = [
   { k: "Ticker",       label: "Ticker" },
   { k: "Nama",         label: "Nama" },
+  { k: "Grup",         label: "Grup" },
   { k: "Harga",        label: "Harga",     angka: true },
   { k: "PER",          label: "PER",       angka: true, desimal: 1 },
   { k: "PBV",          label: "PBV",       angka: true, desimal: 2 },
@@ -262,15 +276,18 @@ function parseCSV(teks) {
 const state = {
   tab: "swing",
   cari: "",
+  grup: "",
   data: { swing: null, value: null, semua: null },
   urut: { kolom: null, naik: true },
   gagal: false,
 };
 
 function barisTerlihat() {
-  const rows = state.data[state.tab] || [];
+  let hasil = state.data[state.tab] || [];
+  if (state.grup) hasil = hasil.filter(r =>
+    String(r.Grup || "").split("/").includes(state.grup));
   const q = state.cari.trim().toUpperCase();
-  let hasil = !q ? rows.slice() : rows.filter(r =>
+  hasil = !q ? hasil.slice() : hasil.filter(r =>
     String(r.Ticker || "").toUpperCase().includes(q) ||
     String(r.Nama || "").toUpperCase().includes(q));
   const { kolom, naik } = state.urut;
@@ -300,8 +317,8 @@ function render() {
   }
   const rows = barisTerlihat();
   if (!rows.length) {
-    wadah.innerHTML = '<div class="kosong">' + (state.cari
-      ? "Tidak ada yang cocok dengan pencarian."
+    wadah.innerHTML = '<div class="kosong">' + (state.cari || state.grup
+      ? "Tidak ada yang cocok dengan pencarian / filter grup."
       : "Tidak ada saham yang lolos filter ini malam ini.") + "</div>";
     return;
   }
@@ -319,6 +336,7 @@ function render() {
     return "<tr>" + KOLOM.map(k => {
       if (k.k === "Ticker") return `<td class="ticker">${r.Ticker}</td>`;
       if (k.k === "Nama") return `<td><span class="nama">${r.Nama || "–"}</span></td>`;
+      if (k.k === "Grup") return `<td><span class="nama">${r.Grup || "–"}</span></td>`;
       const isi = angka(r[k.k], k.desimal || 0);
       if (k.k === "RSI14") return "<td>" + isi + chip + "</td>";
       if (k.k === "VolSpike") return "<td>" + isi + chipVol + "</td>";
@@ -347,6 +365,26 @@ document.getElementById("cari").addEventListener("input", e => {
   render();
 });
 
+document.getElementById("grup").addEventListener("change", e => {
+  state.grup = e.target.value;
+  render();
+});
+
+// Isi dropdown grup dari kolom Grup pada tabel "semua" (satu saham bisa
+// tercatat di beberapa grup, mis. "LQ45/Salim").
+function isiPilihanGrup() {
+  const set = new Set();
+  (state.data.semua || []).forEach(r =>
+    String(r.Grup || "").split("/").filter(Boolean).forEach(g => set.add(g)));
+  const sel = document.getElementById("grup");
+  [...set].sort().forEach(g => {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = g;
+    sel.appendChild(opt);
+  });
+  sel.hidden = set.size < 2;
+}
+
 async function muat() {
   const t = Date.now();
   try {
@@ -360,6 +398,7 @@ async function muat() {
     state.data.swing = parseCSV(swing);
     state.data.value = parseCSV(value);
 
+    isiPilihanGrup();
     document.getElementById("t-swing").textContent = state.data.swing.length;
     document.getElementById("t-value").textContent = state.data.value.length;
     document.getElementById("t-semua").textContent = state.data.semua.length;

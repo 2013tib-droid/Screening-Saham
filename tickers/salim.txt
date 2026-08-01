@@ -1,0 +1,13 @@
+# grup: Salim
+# Saham grup Salim (keluarga Anthoni Salim).
+INDF   # Indofood Sukses Makmur — induk konsumer
+ICBP   # Indofood CBP Sukses Makmur
+SIMP   # Salim Ivomas Pratama — CPO
+LSIP   # PP London Sumatra Indonesia — perkebunan
+IMAS   # Indomobil Sukses Internasional — otomotif
+IMJS   # Indomobil Multi Jasa — pembiayaan otomotif
+DNET   # Indoritel Makmur Internasional — holding ritel
+MCAS   # M Cash Integrasi — distribusi digital
+# PANI & CBDK: Agung Sedayu (Aguan) bersama Salim sebagai mitra
+PANI   # Pantai Indah Kapuk Dua — properti PIK
+CBDK   # Bangun Kosambi Sukses — properti PIK

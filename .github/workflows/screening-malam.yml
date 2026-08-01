@@ -37,6 +37,8 @@ jobs:
       - name: Install dependensi
         run: pip install -r requirements.txt
 
+      # Tanpa --tickers, screener memakai DAFTAR_DEFAULT: LQ45 + grup Prajogo,
+      # Bakrie, Salim, dan Hapsoro (lihat folder tickers/).
       - name: Ambil data & simpan tabel lengkap
         run: python screener.py --output hasil/semua.csv
 

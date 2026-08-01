@@ -1,0 +1,13 @@
+# grup: Bakrie
+# Saham grup Bakrie (Bakrie & Brothers dan afiliasinya).
+# Catatan: sebagian emiten grup ini berkapitalisasi kecil, likuiditasnya tipis,
+# dan ada yang masuk papan pemantauan khusus — pakai filter --min-nilai untuk
+# menyaring yang benar-benar bisa ditransaksikan.
+BNBR   # Bakrie & Brothers — induk grup
+BUMI   # Bumi Resources — batu bara
+BRMS   # Bumi Resources Minerals — emas & mineral
+ENRG   # Energi Mega Persada — minyak & gas
+ELTY   # Bakrieland Development — properti
+DEWA   # Darma Henwa — kontraktor tambang
+VKTR   # VKTR Teknologi Mobilitas — kendaraan listrik
+UNSP   # Bakrie Sumatera Plantations — perkebunan

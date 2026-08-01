@@ -5,9 +5,11 @@ Data diambil lewat library `yfinance` — gratis, tanpa API key. Ticker Bursa
 Efek Indonesia memakai suffix `.JK` (contoh: BBCA.JK, TLKM.JK).
 
 Contoh pemakaian:
-    python screener.py                              # screening LQ45, tanpa filter
+    python screener.py                              # screening semua daftar, tanpa filter
     python screener.py --max-per 15 --max-pbv 2 --min-roe 15
     python screener.py --tickers tickers/lq45.txt --min-dividen 3 --di-atas-ma200
+    python screener.py --tickers tickers/bakrie.txt tickers/salim.txt
+    python screener.py --dari-csv hasil/semua.csv --grup Prajogo
     python screener.py --demo --max-per 15          # mode offline dengan data contoh
 
 Hasil ditampilkan sebagai tabel dan disimpan ke hasil_screening.csv.
@@ -20,22 +22,54 @@ from pathlib import Path
 import pandas as pd
 
 KOLOM = [
-    "Ticker", "Nama", "Harga", "PER", "PBV", "ROE%", "Dividen%",
+    "Ticker", "Nama", "Grup", "Harga", "PER", "PBV", "ROE%", "Dividen%",
     "MarketCap(T)", "Vol20(jt)", "Nilai(M)", "VolSpike",
     "RSI14", "MA50", "MA200",
 ]
 
+# Daftar default: LQ45 plus saham grup konglomerasi besar di luar LQ45.
+DAFTAR_DEFAULT = [
+    "tickers/lq45.txt",
+    "tickers/prajogo.txt",
+    "tickers/bakrie.txt",
+    "tickers/salim.txt",
+    "tickers/hapsoro.txt",
+]
 
-def baca_daftar_ticker(path: str) -> list[str]:
-    tickers = []
-    for baris in Path(path).read_text().splitlines():
-        baris = baris.strip().upper()
-        if not baris or baris.startswith("#"):
-            continue
-        if not baris.endswith(".JK"):
-            baris += ".JK"
-        tickers.append(baris)
-    return tickers
+
+def baca_daftar_ticker(paths: list[str]) -> tuple[list[str], dict[str, str]]:
+    """Baca satu atau lebih file daftar ticker.
+
+    Mengembalikan daftar ticker unik (urutan file dipertahankan) dan peta
+    ticker -> label grup. Satu saham bisa masuk beberapa daftar (mis. INDF ada
+    di LQ45 dan di grup Salim); labelnya digabung jadi "LQ45/Salim".
+
+    Format file: satu ticker per baris, komentar diawali '#'. Komentar boleh
+    ditulis di belakang ticker. Baris '# grup: Nama' di mana pun dalam file
+    menentukan label grup; bila tidak ada, dipakai nama file tanpa ekstensi.
+    """
+    tickers: list[str] = []
+    grup: dict[str, str] = {}
+    for path in paths:
+        isi = Path(path).read_text().splitlines()
+        label = Path(path).stem.upper()
+        for baris in isi:
+            if baris.strip().lower().startswith("# grup:"):
+                label = baris.split(":", 1)[1].strip()
+                break
+        for baris in isi:
+            baris = baris.split("#", 1)[0].strip().upper()
+            if not baris:
+                continue
+            if not baris.endswith(".JK"):
+                baris += ".JK"
+            polos = baris.removesuffix(".JK")
+            if baris not in tickers:
+                tickers.append(baris)
+                grup[polos] = label
+            elif label not in grup[polos].split("/"):
+                grup[polos] += "/" + label
+    return tickers, grup
 
 
 def hitung_rsi(close: pd.Series, periode: int = 14) -> float | None:
@@ -56,7 +90,7 @@ def normalisasi_persen(nilai) -> float | None:
     return round(nilai * 100, 2) if nilai <= 1 else round(nilai, 2)
 
 
-def ambil_data(tickers: list[str]) -> pd.DataFrame:
+def ambil_data(tickers: list[str], grup: dict[str, str] | None = None) -> pd.DataFrame:
     import yfinance as yf
 
     baris_data = []
@@ -82,6 +116,7 @@ def ambil_data(tickers: list[str]) -> pd.DataFrame:
             baris_data.append({
                 "Ticker": tkr.removesuffix(".JK"),
                 "Nama": (info.get("shortName") or "")[:28],
+                "Grup": (grup or {}).get(tkr.removesuffix(".JK"), ""),
                 "Harga": harga,
                 "PER": round(info["trailingPE"], 1) if info.get("trailingPE") else None,
                 "PBV": round(info["priceToBook"], 2) if info.get("priceToBook") else None,
@@ -105,6 +140,10 @@ def terapkan_filter(df: pd.DataFrame, args) -> pd.DataFrame:
         nonlocal df
         df = df[kondisi.fillna(False)]
 
+    if args.grup:
+        pilihan = [g.lower() for g in args.grup]
+        saring(df["Grup"].fillna("").str.lower().apply(
+            lambda s: any(g in s.split("/") for g in pilihan)))
     if args.max_per is not None:
         saring((df["PER"] > 0) & (df["PER"] <= args.max_per))
     if args.max_pbv is not None:
@@ -134,8 +173,9 @@ def main():
     p = argparse.ArgumentParser(
         description="Screener saham IDX dengan data gratis Yahoo Finance.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    p.add_argument("--tickers", default="tickers/lq45.txt",
-                   help="file daftar ticker, satu per baris")
+    p.add_argument("--tickers", nargs="+", default=DAFTAR_DEFAULT,
+                   metavar="FILE",
+                   help="satu atau lebih file daftar ticker, satu ticker per baris")
     p.add_argument("--demo", action="store_true",
                    help="pakai data contoh offline (data/sample_data.csv), tanpa internet")
     p.add_argument("--dari-csv", metavar="FILE",
@@ -147,6 +187,9 @@ def main():
                    # nama kolom (ROE%, Dividen%) harus di-escape jadi '%%'
                    help="kolom pengurutan hasil, salah satu dari: "
                         + ", ".join(KOLOM[2:]).replace("%", "%%"))
+    p.add_argument("--grup", nargs="+", metavar="NAMA",
+                   help="hanya tampilkan saham dari grup tertentu "
+                        "(mis. --grup Salim Bakrie); cocokkan dengan kolom Grup")
     f = p.add_argument_group("filter fundamental")
     f.add_argument("--max-per", type=float, help="PER maksimal (dan harus > 0)")
     f.add_argument("--max-pbv", type=float, help="PBV maksimal (dan harus > 0)")
@@ -174,13 +217,19 @@ def main():
               file=sys.stderr)
         df = pd.read_csv(args.dari_csv)
     else:
-        tickers = baca_daftar_ticker(args.tickers)
+        tickers, grup = baca_daftar_ticker(args.tickers)
         print(f"Mengambil data {len(tickers)} saham dari Yahoo Finance ...",
               file=sys.stderr)
-        df = ambil_data(tickers)
+        df = ambil_data(tickers, grup)
 
     if df.empty:
         sys.exit("Tidak ada data yang berhasil diambil.")
+
+    # CSV lama (dan data contoh) belum punya kolom Grup — tambahkan agar
+    # filter dan urutan kolom tetap konsisten.
+    if "Grup" not in df.columns:
+        df["Grup"] = ""
+    df = df.reindex(columns=[k for k in KOLOM if k in df.columns])
 
     hasil = terapkan_filter(df, args)
     if args.urut in hasil.columns:
