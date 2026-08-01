@@ -22,10 +22,72 @@ from pathlib import Path
 import pandas as pd
 
 KOLOM = [
-    "Ticker", "Nama", "Grup", "Harga", "PER", "PBV", "ROE%", "Dividen%",
+    "Ticker", "Nama", "Grup", "Status", "Harga", "PER", "PBV", "ROE%", "Dividen%",
     "MarketCap(T)", "Vol20(jt)", "Nilai(M)", "VolSpike",
     "RSI14", "MA50", "MA200",
 ]
+
+# Status = ringkasan mekanis posisi harga terhadap trennya. Murni aturan
+# teknikal dari kolom yang sudah ada (harga, MA50, MA200, RSI, volume,
+# likuiditas) — bukan rekomendasi, dan tidak tahu apa pun soal berita,
+# laporan keuangan, atau aliran dana bandar.
+STATUS = {
+    "BUY": "uptrend, momentum sehat, volume masuk",
+    "BOW": "uptrend jangka panjang tapi sedang koreksi — buy on weakness",
+    "HOLD": "sudah naik tinggi/overbought — tahan, jangan kejar",
+    "WSE": "sinyal campur — wait & see",
+    "JUAL": "downtrend, harga di bawah MA50 dan MA200",
+    "TIPIS": "likuiditas terlalu tipis untuk ditransaksikan",
+    "-": "data tidak lengkap",
+}
+
+# Nilai transaksi harian minimal (miliar Rp) agar sebuah saham dianggap
+# layak ditransaksikan. Di bawah ini, sinyal teknikal apa pun tidak berguna
+# karena order sendiri sudah cukup untuk menggerakkan harga.
+AMBANG_LIKUID = 1.0
+
+
+def hitung_status(r) -> str:
+    """Terjemahkan kondisi teknikal satu saham jadi satu label status.
+
+    Aturan diurut dari yang paling menentukan; label pertama yang cocok
+    dipakai. Sengaja konservatif: kalau sinyalnya tidak jelas, jawabannya
+    WSE, bukan BUY.
+    """
+    def ada(*nama):
+        return all(r.get(n) is not None and pd.notna(r.get(n)) for n in nama)
+
+    if not ada("Harga", "MA50", "MA200", "RSI14"):
+        return "-"
+
+    harga, ma50, ma200, rsi = r["Harga"], r["MA50"], r["MA200"], r["RSI14"]
+    nilai = r.get("Nilai(M)")
+    spike = r.get("VolSpike")
+
+    # Likuiditas didahulukan: sinyal bagus di saham yang tidak bisa dijual
+    # bukan sinyal bagus.
+    if ada("Nilai(M)") and nilai < AMBANG_LIKUID:
+        return "TIPIS"
+
+    di_atas_ma200 = harga > ma200
+    di_atas_ma50 = harga > ma50
+
+    if not di_atas_ma200 and not di_atas_ma50:
+        # Downtrend penuh. RSI rendah di sini bukan diskon, tapi pisau jatuh —
+        # tunggu harga balik ke atas MA50 dulu.
+        return "WSE" if rsi <= 30 else "JUAL"
+
+    if di_atas_ma200:
+        if rsi >= 70:
+            return "HOLD"
+        if not di_atas_ma50 or rsi <= 50:
+            return "BOW"
+        if ada("VolSpike") and spike >= 1.2:
+            return "BUY"
+        return "HOLD"
+
+    # Di atas MA50 tapi masih di bawah MA200: awal pemulihan, belum konfirmasi.
+    return "WSE"
 
 # Daftar default: LQ45 plus saham grup konglomerasi besar di luar LQ45.
 DAFTAR_DEFAULT = [
@@ -144,6 +206,9 @@ def terapkan_filter(df: pd.DataFrame, args) -> pd.DataFrame:
         pilihan = [g.lower() for g in args.grup]
         saring(df["Grup"].fillna("").str.lower().apply(
             lambda s: any(g in s.split("/") for g in pilihan)))
+    if args.status:
+        pilihan = [s.upper() for s in args.status]
+        saring(df["Status"].fillna("").str.upper().isin(pilihan))
     if args.max_per is not None:
         saring((df["PER"] > 0) & (df["PER"] <= args.max_per))
     if args.max_pbv is not None:
@@ -190,6 +255,9 @@ def main():
     p.add_argument("--grup", nargs="+", metavar="NAMA",
                    help="hanya tampilkan saham dari grup tertentu "
                         "(mis. --grup Salim Bakrie); cocokkan dengan kolom Grup")
+    p.add_argument("--status", nargs="+", metavar="STATUS",
+                   help="hanya tampilkan saham dengan status tertentu, salah satu dari: "
+                        + ", ".join(STATUS))
     f = p.add_argument_group("filter fundamental")
     f.add_argument("--max-per", type=float, help="PER maksimal (dan harus > 0)")
     f.add_argument("--max-pbv", type=float, help="PBV maksimal (dan harus > 0)")
@@ -229,6 +297,9 @@ def main():
     # filter dan urutan kolom tetap konsisten.
     if "Grup" not in df.columns:
         df["Grup"] = ""
+    # Status selalu dihitung ulang, bukan dibaca dari CSV: aturannya bisa
+    # berubah, dan hasilnya harus selalu cocok dengan kolom-kolom di sebelahnya.
+    df["Status"] = df.apply(hitung_status, axis=1)
     df = df.reindex(columns=[k for k in KOLOM if k in df.columns])
 
     hasil = terapkan_filter(df, args)

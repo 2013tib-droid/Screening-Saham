@@ -71,8 +71,29 @@ Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
 | `--max-rsi N` / `--min-rsi N` | Batas RSI-14 (≤30 oversold, ≥70 overbought) |
 | `--di-atas-ma50` / `--di-atas-ma200` | Harga di atas moving average 50/200 hari |
 | `--grup NAMA…` | Hanya saham dari grup tertentu (mis. `--grup Salim Bakrie`) |
+| `--status STATUS…` | Hanya saham dengan status tertentu (mis. `--status BUY BOW`) |
 | `--urut KOLOM` | Urutkan hasil (default: PER) |
 | `--dari-csv FILE` | Baca data dari CSV hasil sebelumnya, tanpa fetch ulang |
+
+## Kolom Status
+
+Tiap saham dapat satu label ringkas yang merangkum posisi harganya terhadap tren:
+
+| Status | Arti | Aturannya |
+|---|---|---|
+| **BUY** | Tren naik, momentum sehat, volume masuk | Harga > MA50 dan > MA200, RSI 50–70, VolSpike ≥ 1,2 |
+| **BOW** | *Buy on weakness* — uptrend jangka panjang tapi sedang koreksi | Harga > MA200, tapi harga < MA50 **atau** RSI ≤ 50 |
+| **HOLD** | Sudah naik tinggi atau volume sepi — tahan, jangan kejar | Harga > MA200 dan RSI ≥ 70, atau tanpa konfirmasi volume |
+| **WSE** | *Wait & see* — sinyal campur | Harga > MA50 tapi masih < MA200; atau downtrend dengan RSI ≤ 30 |
+| **JUAL** | Tren turun, belum ada tanda pembalikan | Harga < MA50 **dan** < MA200, RSI > 30 |
+| **TIPIS** | Likuiditas tidak memadai | Nilai transaksi < 1 miliar Rp/hari (dicek lebih dulu dari semua aturan lain) |
+| **-** | Data tidak lengkap | Harga/MA50/MA200/RSI ada yang kosong |
+
+Aturannya diperiksa berurutan, label pertama yang cocok dipakai, dan sengaja dibuat konservatif: kalau sinyalnya tidak jelas jawabannya WSE, bukan BUY. Status selalu dihitung ulang tiap run (tidak dibaca dari CSV lama), jadi kalau aturannya diubah, seluruh tabel ikut menyesuaikan.
+
+⚠️ **Status ini bukan rekomendasi beli/jual.** Ini murni aturan mekanis dari empat angka teknikal — tidak tahu apa pun soal berita emiten, laporan keuangan, rencana korporasi, atau aliran dana bandar. Saham berstatus JUAL bisa saja justru sedang di titik balik, dan yang BUY bisa langsung turun besoknya. Pakai sebagai penyaring awal, bukan sebagai keputusan.
+
+Batas likuiditas `AMBANG_LIKUID` dan seluruh ambang lain ada di bagian atas `screener.py` — silakan disesuaikan dengan gaya trading Anda.
 
 ## Daftar Ticker
 
@@ -123,6 +144,7 @@ Fitur dashboard:
 
 - Tiga tab: **Swing**, **Value**, dan **Semua** (tabel lengkap seluruh saham yang dipantau), plus ringkasan jumlah saham yang lolos tiap filter.
 - Kolom **Grup** dan dropdown **filter grup** — bisa lihat khusus saham grup Prajogo, Bakrie, Salim, Hapsoro, atau LQ45 saja.
+- Kolom **Status** berwarna (BUY / BOW / HOLD / WSE / JUAL / TIPIS) plus dropdown filter status; klik judul kolomnya untuk mengurutkan dari paling positif ke paling negatif.
 - Klik judul kolom untuk mengurutkan (misalnya urutkan per RSI atau dividen), kotak pencarian untuk mencari ticker/nama.
 - Nyaman dibuka di HP, mendukung mode gelap, dan menampilkan waktu pembaruan terakhir (WIB).
 
