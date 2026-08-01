@@ -1,0 +1,7 @@
+# grup: Hapsoro
+# Saham terafiliasi Happy Hapsoro (lewat PT Basis Utama Prima dan afiliasinya).
+# Daftar ini paling kecil dan paling sering berubah — cek ulang kepemilikan
+# terakhir di keterbukaan informasi IDX sebelum dipakai untuk keputusan beli.
+RAJA   # Rukun Raharja — energi & gas
+RATU   # Raharja Energi Cepu — hulu migas (anak usaha RAJA)
+BUVA   # Bukit Uluwatu Villa — perhotelan

@@ -1,0 +1,10 @@
+# grup: Prajogo
+# Saham grup Barito / Prajogo Pangestu.
+# Sumber: struktur kepemilikan publik per 2025-2026. Silakan sunting bila
+# ada perubahan kepemilikan — baris diawali '#' diabaikan.
+BRPT   # Barito Pacific — induk grup
+TPIA   # Chandra Asri Pacific — petrokimia
+BREN   # Barito Renewables Energy — panas bumi
+CUAN   # Petrindo Jaya Kreasi — batu bara
+PTRO   # Petrosea — jasa pertambangan (di bawah CUAN)
+CDIA   # Chandra Daya Investasi — infrastruktur (spin-off TPIA)

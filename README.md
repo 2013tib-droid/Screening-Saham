@@ -26,7 +26,7 @@ pip install -r requirements.txt
 ## Cara Pakai
 
 ```bash
-# Screening seluruh LQ45 tanpa filter (lihat semua datanya)
+# Screening seluruh daftar default tanpa filter (LQ45 + grup konglomerasi)
 python screener.py
 
 # Value stock (medium risk): PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%
@@ -41,8 +41,12 @@ python screener.py --max-rsi 50 --di-atas-ma200
 # Swing + konfirmasi volume: koreksi, uptrend, dan volume mulai masuk
 python screener.py --max-rsi 50 --di-atas-ma200 --min-volspike 1.5 --min-nilai 10
 
-# Pakai daftar ticker sendiri
+# Pakai satu daftar saja, atau gabungan beberapa daftar
 python screener.py --tickers tickers/lq45.txt
+python screener.py --tickers tickers/bakrie.txt tickers/salim.txt
+
+# Hanya saham grup tertentu (cocokkan kolom Grup)
+python screener.py --grup Prajogo Hapsoro
 
 # Filter ulang dari CSV hasil sebelumnya, tanpa fetch ulang dari internet
 python screener.py --dari-csv hasil_screening.csv --min-dividen 5
@@ -66,12 +70,29 @@ Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
 | `--min-volspike N` | Volume terakhir minimal N× rata-rata 20 hari (mis. 1.5 = ada lonjakan minat) |
 | `--max-rsi N` / `--min-rsi N` | Batas RSI-14 (≤30 oversold, ≥70 overbought) |
 | `--di-atas-ma50` / `--di-atas-ma200` | Harga di atas moving average 50/200 hari |
+| `--grup NAMA…` | Hanya saham dari grup tertentu (mis. `--grup Salim Bakrie`) |
 | `--urut KOLOM` | Urutkan hasil (default: PER) |
 | `--dari-csv FILE` | Baca data dari CSV hasil sebelumnya, tanpa fetch ulang |
 
 ## Daftar Ticker
 
-`tickers/lq45.txt` berisi konstituen LQ45. Buat file sendiri (satu ticker per baris, suffix `.JK` opsional) dan arahkan dengan `--tickers`.
+Screening tidak terbatas LQ45. Secara default `screener.py` membaca **semua** file di bawah ini sekaligus:
+
+| File | Grup | Isi |
+|---|---|---|
+| `tickers/lq45.txt` | `LQ45` | Konstituen indeks LQ45 |
+| `tickers/prajogo.txt` | `Prajogo` | Grup Barito / Prajogo Pangestu — BRPT, TPIA, BREN, CUAN, PTRO, CDIA |
+| `tickers/bakrie.txt` | `Bakrie` | Grup Bakrie — BNBR, BUMI, BRMS, ENRG, ELTY, DEWA, VKTR, UNSP |
+| `tickers/salim.txt` | `Salim` | Grup Salim — INDF, ICBP, SIMP, LSIP, IMAS, IMJS, DNET, MCAS, plus PANI & CBDK (Agung Sedayu–Salim) |
+| `tickers/hapsoro.txt` | `Hapsoro` | Terafiliasi Happy Hapsoro — RAJA, RATU, BUVA |
+
+Duplikat antar-daftar otomatis digabung: saham yang ada di dua daftar hanya diambil datanya sekali dan kolom `Grup`-nya ditulis gabungan, misal INDF → `LQ45/Salim`.
+
+**Format file:** satu ticker per baris, suffix `.JK` opsional, komentar diawali `#` (boleh di belakang ticker). Baris `# grup: Nama` menentukan label grup; kalau tidak ada, dipakai nama file.
+
+**Bikin daftar sendiri:** buat file baru di `tickers/`, lalu jalankan `python screener.py --tickers tickers/punyaku.txt`. Untuk memasukkannya ke run otomatis tiap malam, tambahkan path-nya ke `DAFTAR_DEFAULT` di `screener.py`.
+
+⚠️ Daftar grup konglomerasi disusun dari struktur kepemilikan publik dan **bisa berubah** kalau ada akuisisi/divestasi — cek ulang di keterbukaan informasi IDX sebelum dipakai untuk keputusan beli. Emiten di luar LQ45 juga banyak yang likuiditasnya tipis; pakai `--min-nilai` untuk menyaring yang benar-benar bisa ditransaksikan.
 
 ## Otomasi Screening Malam (GitHub Actions)
 
@@ -79,7 +100,7 @@ Workflow [`.github/workflows/screening-malam.yml`](.github/workflows/screening-m
 
 Setiap malam workflow:
 
-1. Mengambil data seluruh LQ45 dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter).
+1. Mengambil data seluruh daftar default (LQ45 + grup Prajogo, Bakrie, Salim, Hapsoro) dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter).
 2. Memfilter ulang dari CSV itu (tanpa fetch ulang, pakai `--dari-csv`) menjadi dua daftar siap pakai:
    - `hasil/swing.csv` — sedang koreksi tapi masih uptrend, **dengan konfirmasi volume** (RSI ≤ 50, harga di atas MA200, volume terakhir ≥ 1,5× rata-rata 20 hari, nilai transaksi ≥ 10 miliar Rp). Sinyal ini lebih jarang muncul tapi lebih tajam — wajar kalau ada malam di mana tidak ada yang lolos.
    - `hasil/value.csv` — value stock profil **medium risk** (PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%). PBV dipatok 3,5 (bukan 2) supaya blue chip berkualitas yang memang selalu dihargai premium — BBCA, SIDO — tidak otomatis tersaring keluar.
@@ -98,7 +119,8 @@ Hasil screening bisa dilihat lewat dashboard di:
 
 Fitur dashboard:
 
-- Tiga tab: **Swing**, **Value**, dan **Semua** (tabel lengkap 45 saham), plus ringkasan jumlah saham yang lolos tiap filter.
+- Tiga tab: **Swing**, **Value**, dan **Semua** (tabel lengkap seluruh saham yang dipantau), plus ringkasan jumlah saham yang lolos tiap filter.
+- Kolom **Grup** dan dropdown **filter grup** — bisa lihat khusus saham grup Prajogo, Bakrie, Salim, Hapsoro, atau LQ45 saja.
 - Klik judul kolom untuk mengurutkan (misalnya urutkan per RSI atau dividen), kotak pencarian untuk mencari ticker/nama.
 - Nyaman dibuka di HP, mendukung mode gelap, dan menampilkan waktu pembaruan terakhir (WIB).
 
