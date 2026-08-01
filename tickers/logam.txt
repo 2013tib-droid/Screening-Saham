@@ -1,0 +1,7 @@
+# grup: Logam
+# Emiten logam & turunannya yang TIDAK masuk LQ45 maupun daftar grup
+# konglomerasi, jadi sebelumnya tidak pernah ikut ter-screening sama sekali.
+# Logam yang sudah ada di LQ45 (ANTM, INCO, MDKA, MBMA, AMMN) tidak perlu
+# ditulis ulang di sini — duplikat antar-daftar digabung otomatis.
+HRTA   # Hartadinata Abadi — produsen & peritel perhiasan emas
+TINS   # Timah — BUMN timah, anggota grup MIND ID

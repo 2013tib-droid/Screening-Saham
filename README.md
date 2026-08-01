@@ -106,6 +106,7 @@ Screening tidak terbatas LQ45. Secara default `screener.py` membaca **semua** fi
 | `tickers/bakrie.txt` | `Bakrie` | Grup Bakrie — BNBR, BUMI, BRMS, ENRG, ELTY, DEWA, VKTR, UNSP |
 | `tickers/salim.txt` | `Salim` | Grup Salim — INDF, ICBP, SIMP, LSIP, IMAS, IMJS, DNET, MCAS, plus PANI & CBDK (Agung Sedayu–Salim) |
 | `tickers/hapsoro.txt` | `Hapsoro` | Terafiliasi Happy Hapsoro — RAJA, RATU, BUVA |
+| `tickers/logam.txt` | `Logam` | Logam di luar LQ45 — HRTA (emas), TINS (timah) |
 
 Duplikat antar-daftar otomatis digabung: saham yang ada di dua daftar hanya diambil datanya sekali dan kolom `Grup`-nya ditulis gabungan, misal INDF → `LQ45/Salim`.
 

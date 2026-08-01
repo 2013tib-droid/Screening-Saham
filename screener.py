@@ -96,6 +96,7 @@ DAFTAR_DEFAULT = [
     "tickers/bakrie.txt",
     "tickers/salim.txt",
     "tickers/hapsoro.txt",
+    "tickers/logam.txt",
 ]
 
 
