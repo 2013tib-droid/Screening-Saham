@@ -18,6 +18,10 @@
     --accent-soft: #e8f0fb;
     --chip-bg: #efeeea;
     --row-hover: #f4f3f0;
+    --pos-bg: #e0f2e6; --pos-fg: #14663a;
+    --neg-bg: #fbe7e5; --neg-fg: #a3261d;
+    --warn-bg: #fbeed6; --warn-fg: #7a5200;
+    --info-bg: #e8f0fb; --info-fg: #1c5fae;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -32,6 +36,10 @@
       --accent-soft: #1e3350;
       --chip-bg: #32312f;
       --row-hover: #2a2a28;
+      --pos-bg: #17361f; --pos-fg: #74d18e;
+      --neg-bg: #3b1e1b; --neg-fg: #f19b93;
+      --warn-bg: #372d15; --warn-fg: #e3bd6b;
+      --info-bg: #1e3350; --info-fg: #83b3f2;
     }
   }
   * { box-sizing: border-box; }
@@ -78,7 +86,7 @@
     color: #fff;
     font-weight: 600;
   }
-  #grup {
+  #grup, #status {
     padding: 7px 10px;
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -105,7 +113,7 @@
     border-radius: 10px;
     background: var(--surface-raised);
   }
-  table { border-collapse: collapse; width: 100%; min-width: 1060px; font-size: .88rem; }
+  table { border-collapse: collapse; width: 100%; min-width: 1160px; font-size: .88rem; }
   thead th {
     position: sticky; top: 0;
     background: var(--surface-raised);
@@ -118,7 +126,7 @@
     cursor: pointer;
     user-select: none;
   }
-  thead th:first-child, thead th:nth-child(2), thead th:nth-child(3) { text-align: left; }
+  thead th:first-child, thead th:nth-child(-n+4) { text-align: left; }
   thead th:hover { color: var(--accent); }
   thead th .arah { font-size: .7rem; color: var(--accent); }
   tbody td {
@@ -128,7 +136,7 @@
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
-  tbody td:first-child, tbody td:nth-child(2), tbody td:nth-child(3) { text-align: left; }
+  tbody td:first-child, tbody td:nth-child(-n+4) { text-align: left; }
   tbody tr:last-child td { border-bottom: none; }
   tbody tr:hover td { background: var(--row-hover); }
   td.ticker { font-weight: 650; }
@@ -144,6 +152,23 @@
     color: var(--text-secondary);
   }
   .chip.oversold { background: var(--accent-soft); color: var(--accent); }
+
+  .status {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 6px;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    background: var(--chip-bg);
+    color: var(--text-secondary);
+  }
+  .status.s-buy   { background: var(--pos-bg);  color: var(--pos-fg); }
+  .status.s-bow   { background: var(--info-bg); color: var(--info-fg); }
+  .status.s-hold  { background: var(--chip-bg); color: var(--text-secondary); }
+  .status.s-wse   { background: var(--warn-bg); color: var(--warn-fg); }
+  .status.s-jual  { background: var(--neg-bg);  color: var(--neg-fg); }
+  .status.s-tipis { background: var(--chip-bg); color: var(--text-muted); }
   .kosong, .gagal {
     padding: 28px 16px;
     text-align: center;
@@ -181,6 +206,9 @@
     <select id="grup" aria-label="Saring berdasarkan grup">
       <option value="">Semua grup</option>
     </select>
+    <select id="status" aria-label="Saring berdasarkan status">
+      <option value="">Semua status</option>
+    </select>
     <input id="cari" type="search" placeholder="Cari ticker / nama …" autocomplete="off">
   </div>
 
@@ -191,6 +219,18 @@
     <dl>
       <dt>Grup</dt><dd>Daftar asal saham: LQ45 atau grup konglomerasi (Prajogo/Barito, Bakrie,
       Salim, Hapsoro). Satu saham bisa masuk dua daftar, mis. "LQ45/Salim".</dd>
+      <dt>Status</dt><dd>Ringkasan mekanis posisi harga terhadap trennya — <strong>bukan rekomendasi</strong>.
+      Dihitung otomatis dari MA50, MA200, RSI, volume, dan likuiditas; tidak tahu apa pun soal
+      berita, laporan keuangan, atau aliran dana bandar.
+        <ul style="margin:6px 0 0; padding-left:18px">
+          <li><span class="status s-buy">BUY</span> harga di atas MA50 &amp; MA200, RSI 50–70, volume naik ≥ 1,2× — tren naik dengan momentum sehat.</li>
+          <li><span class="status s-bow">BOW</span> masih di atas MA200 tapi sedang koreksi (di bawah MA50 atau RSI ≤ 50) — <em>buy on weakness</em>.</li>
+          <li><span class="status s-hold">HOLD</span> tren naik tapi RSI ≥ 70 atau volume sepi — tahan, jangan kejar di harga tinggi.</li>
+          <li><span class="status s-wse">WSE</span> sinyal campur, mis. sudah di atas MA50 tapi masih di bawah MA200 — <em>wait &amp; see</em>.</li>
+          <li><span class="status s-jual">JUAL</span> harga di bawah MA50 dan MA200 — tren turun, belum ada tanda pembalikan.</li>
+          <li><span class="status s-tipis">TIPIS</span> nilai transaksi &lt; 1 miliar/hari — sinyal teknikal tidak berlaku, susah masuk-keluar.</li>
+        </ul>
+      </dd>
       <dt>PER</dt><dd>Price-to-Earnings Ratio — makin kecil makin murah relatif terhadap laba.</dd>
       <dt>PBV</dt><dd>Price-to-Book Value — harga dibanding nilai buku.</dd>
       <dt>ROE%</dt><dd>Return on Equity — efisiensi perusahaan menghasilkan laba.</dd>
@@ -217,6 +257,7 @@ const KOLOM = [
   { k: "Ticker",       label: "Ticker" },
   { k: "Nama",         label: "Nama" },
   { k: "Grup",         label: "Grup" },
+  { k: "Status",       label: "Status" },
   { k: "Harga",        label: "Harga",     angka: true },
   { k: "PER",          label: "PER",       angka: true, desimal: 1 },
   { k: "PBV",          label: "PBV",       angka: true, desimal: 2 },
@@ -277,6 +318,7 @@ const state = {
   tab: "swing",
   cari: "",
   grup: "",
+  status: "",
   data: { swing: null, value: null, semua: null },
   urut: { kolom: null, naik: true },
   gagal: false,
@@ -286,6 +328,7 @@ function barisTerlihat() {
   let hasil = state.data[state.tab] || [];
   if (state.grup) hasil = hasil.filter(r =>
     String(r.Grup || "").split("/").includes(state.grup));
+  if (state.status) hasil = hasil.filter(r => r.Status === state.status);
   const q = state.cari.trim().toUpperCase();
   hasil = !q ? hasil.slice() : hasil.filter(r =>
     String(r.Ticker || "").toUpperCase().includes(q) ||
@@ -297,7 +340,10 @@ function barisTerlihat() {
       const va = a[kolom], vb = b[kolom];
       if (va === null || va === undefined || va === "") return 1;   // kosong selalu di bawah
       if (vb === null || vb === undefined || vb === "") return -1;
-      const cmp = numerik ? va - vb : String(va).localeCompare(String(vb));
+      // Status diurut menurut skala BUY→TIPIS, bukan alfabetis.
+      const cmp = kolom === "Status"
+        ? URUT_STATUS.indexOf(va) - URUT_STATUS.indexOf(vb)
+        : numerik ? va - vb : String(va).localeCompare(String(vb));
       return naik ? cmp : -cmp;
     });
   }
@@ -317,8 +363,8 @@ function render() {
   }
   const rows = barisTerlihat();
   if (!rows.length) {
-    wadah.innerHTML = '<div class="kosong">' + (state.cari || state.grup
-      ? "Tidak ada yang cocok dengan pencarian / filter grup."
+    wadah.innerHTML = '<div class="kosong">' + (state.cari || state.grup || state.status
+      ? "Tidak ada yang cocok dengan pencarian / filter."
       : "Tidak ada saham yang lolos filter ini malam ini.") + "</div>";
     return;
   }
@@ -337,6 +383,10 @@ function render() {
       if (k.k === "Ticker") return `<td class="ticker">${r.Ticker}</td>`;
       if (k.k === "Nama") return `<td><span class="nama">${r.Nama || "–"}</span></td>`;
       if (k.k === "Grup") return `<td><span class="nama">${r.Grup || "–"}</span></td>`;
+      if (k.k === "Status") {
+        const s = r.Status || "-";
+        return `<td><span class="status s-${s.toLowerCase()}">${s}</span></td>`;
+      }
       const isi = angka(r[k.k], k.desimal || 0);
       if (k.k === "RSI14") return "<td>" + isi + chip + "</td>";
       if (k.k === "VolSpike") return "<td>" + isi + chipVol + "</td>";
@@ -370,6 +420,26 @@ document.getElementById("grup").addEventListener("change", e => {
   render();
 });
 
+document.getElementById("status").addEventListener("change", e => {
+  state.status = e.target.value;
+  render();
+});
+
+// Urutan status dari paling positif ke paling negatif, bukan alfabetis —
+// dropdown-nya jadi terbaca sebagai skala.
+const URUT_STATUS = ["BUY", "BOW", "HOLD", "WSE", "JUAL", "TIPIS", "-"];
+
+function isiPilihanStatus() {
+  const ada = new Set((state.data.semua || []).map(r => r.Status).filter(Boolean));
+  const sel = document.getElementById("status");
+  URUT_STATUS.filter(s => ada.has(s)).forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = s;
+    sel.appendChild(opt);
+  });
+  sel.hidden = ada.size < 2;
+}
+
 // Isi dropdown grup dari kolom Grup pada tabel "semua" (satu saham bisa
 // tercatat di beberapa grup, mis. "LQ45/Salim").
 function isiPilihanGrup() {
@@ -399,6 +469,7 @@ async function muat() {
     state.data.value = parseCSV(value);
 
     isiPilihanGrup();
+    isiPilihanStatus();
     document.getElementById("t-swing").textContent = state.data.swing.length;
     document.getElementById("t-value").textContent = state.data.value.length;
     document.getElementById("t-semua").textContent = state.data.semua.length;
