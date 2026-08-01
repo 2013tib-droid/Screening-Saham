@@ -21,11 +21,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Job screening sengaja TIDAK memakai `environment: github-pages`. Environment
+  # itu dibatasi ke branch default, dan aturannya diperiksa sebelum job jalan —
+  # jadi kalau digabung, run dari branch fitur langsung gagal dalam 2 detik
+  # tanpa log. Deploy Pages dipisah ke job `deploy` di bawah.
   screening:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -89,6 +90,17 @@ jobs:
         with:
           path: _site
 
+  # Deploy hanya dari branch default: environment github-pages menolak branch
+  # lain. Run dari branch fitur tetap menghasilkan CSV di folder hasil/ —
+  # hanya langkah publikasi dashboard yang dilewati.
+  deploy:
+    needs: screening
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - name: Deploy ke GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v4

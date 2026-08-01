@@ -109,7 +109,9 @@ Setiap malam workflow:
 
 **Mengubah kriteria:** edit langkah-langkah screening di file workflow — argumennya sama persis dengan CLI `screener.py`. Mau menambah profil screening ketiga? Duplikat saja salah satu langkah `--dari-csv` dengan filter dan nama output berbeda.
 
-**Menjalankan manual:** buka tab **Actions → Screening Malam → Run workflow** di GitHub.
+**Menjalankan manual:** buka tab **Actions → Screening Malam → Run workflow** di GitHub, lalu pilih branch-nya.
+
+**Menjalankan dari branch selain branch default:** bisa — screening jalan dan CSV-nya di-commit ke branch itu. Yang dilewati hanya langkah deploy dashboard, karena environment `github-pages` memang dibatasi ke branch default. Job `deploy` di workflow dipisah dari job `screening` justru supaya batasan itu tidak menggagalkan seluruh run (kalau digabung, run dari branch fitur gagal dalam hitungan detik tanpa log sama sekali).
 
 ### Dashboard Web
 
