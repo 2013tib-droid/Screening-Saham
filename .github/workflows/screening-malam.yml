@@ -63,14 +63,31 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add hasil/
-          if git diff --cached --quiet; then
-            echo "Tidak ada perubahan data, tidak ada yang di-commit."
-          else
+          # Isi hasil/ adalah keluaran generate, bukan tulisan tangan. Kalau ada
+          # run lain yang push duluan (mis. re-run bertabrakan dengan jadwal),
+          # 'git pull --rebase' PASTI bentrok: dua run menulis ulang baris yang
+          # sama di CSV yang sama. Dan tidak ada yang perlu digabung — hasil
+          # paling baru yang menang.
+          #
+          # Jadi jangan me-rebase isinya. Pindahkan saja dasar commit ke ujung
+          # remote terbaru (working tree tetap berisi hasil run ini), lalu
+          # tulis ulang hasil di atasnya. Diulang kalau keburu didahului lagi.
+          for percobaan in 1 2 3; do
+            git fetch origin "$GITHUB_REF_NAME"
+            git reset --mixed FETCH_HEAD          # HEAD ikut remote, hasil/ tetap punya run ini
+            git add hasil/
+            if git diff --cached --quiet; then
+              echo "Tidak ada perubahan data, tidak ada yang di-commit."
+              exit 0
+            fi
             git commit -m "Hasil screening $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
-            git pull --rebase origin "$GITHUB_REF_NAME"
-            git push
-          fi
+            if git push origin HEAD:"$GITHUB_REF_NAME"; then
+              exit 0
+            fi
+            echo "Push ditolak — ada run lain yang mendahului. Ulangi ($percobaan/3)."
+          done
+          echo "Gagal push hasil setelah 3 percobaan." >&2
+          exit 1
 
       - name: Susun situs dashboard
         run: |
