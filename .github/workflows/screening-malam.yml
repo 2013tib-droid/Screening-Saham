@@ -38,8 +38,16 @@ jobs:
       - name: Install dependensi
         run: pip install -r requirements.txt
 
-      # Tanpa --tickers, screener memakai DAFTAR_DEFAULT: LQ45 + grup Prajogo,
-      # Bakrie, Salim, dan Hapsoro (lihat folder tickers/).
+      # Universe pasar disusun ulang tiap run supaya emiten yang naik kelas
+      # (atau baru IPO) ikut ter-screening tanpa harus ditambahkan manual.
+      # continue-on-error: kalau screener Yahoo sedang rewel, tickers/idx.txt
+      # versi commit terakhir tetap dipakai — screening jalan terus.
+      - name: Perbarui universe IDX
+        continue-on-error: true
+        run: python scripts/perbarui_universe.py --min-mcap 1 --maks 400
+
+      # Tanpa --tickers, screener memakai DAFTAR_DEFAULT: daftar kurasi (LQ45,
+      # Prajogo, Bakrie, Salim, Hapsoro, Logam) + universe tickers/idx.txt.
       - name: Ambil data & simpan tabel lengkap
         run: python screener.py --output hasil/semua.csv
 
@@ -58,6 +66,15 @@ jobs:
           --max-per 15 --max-pbv 3.5 --min-roe 15
           --output hasil/value.csv
 
+      # "Lapkeu bagus": laba kuartal terakhir tumbuh YoY, ROE layak, valuasi
+      # belum kelewat mahal, dan masih bisa ditransaksikan. Sengaja tanpa
+      # syarat teknikal — ini saringan fundamental, bukan timing.
+      - name: Screening tumbuh (laba naik YoY, valuasi wajar)
+        run: >
+          python screener.py --dari-csv hasil/semua.csv
+          --min-laba-yoy 20 --min-roe 10 --max-per 25 --min-nilai 1
+          --output hasil/tumbuh.csv
+
       - name: Catat waktu pembaruan
         run: |
           printf '{"diperbarui": "%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > hasil/meta.json
@@ -66,7 +83,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add hasil/
+          # tickers/idx.txt ikut di-commit: universe yang dipakai run malam ini
+          # harus ikut tercatat, dan jadi cadangan bila pembaruan berikutnya gagal.
+          git add hasil/ tickers/idx.txt
           if git diff --cached --quiet; then
             echo "Tidak ada perubahan data, tidak ada yang di-commit."
           else

@@ -22,7 +22,8 @@ from pathlib import Path
 import pandas as pd
 
 KOLOM = [
-    "Ticker", "Nama", "Grup", "Status", "Harga", "PER", "PBV", "ROE%", "Dividen%",
+    "Ticker", "Nama", "Grup", "Status", "Harga", "PER", "PBV", "ROE%",
+    "LabaYoY%", "OmzetYoY%", "Dividen%",
     "MarketCap(T)", "Vol20(jt)", "Nilai(M)", "VolSpike",
     "RSI14", "MA50", "MA200",
 ]
@@ -89,7 +90,12 @@ def hitung_status(r) -> str:
     # Di atas MA50 tapi masih di bawah MA200: awal pemulihan, belum konfirmasi.
     return "WSE"
 
-# Daftar default: LQ45 plus saham grup konglomerasi besar di luar LQ45.
+# Daftar default. Daftar kurasi (LQ45, grup konglomerasi, tema) ditaruh lebih
+# dulu supaya label Grup-nya yang dipakai; tickers/idx.txt di urutan terakhir
+# adalah universe pasar — dihasilkan otomatis oleh
+# scripts/perbarui_universe.py dan berisi seluruh emiten IDX di atas ambang
+# kapitalisasi, supaya saham berfundamental bagus tetap ikut ter-screening
+# walau tidak pernah dimasukkan ke daftar mana pun secara manual.
 DAFTAR_DEFAULT = [
     "tickers/lq45.txt",
     "tickers/prajogo.txt",
@@ -97,6 +103,7 @@ DAFTAR_DEFAULT = [
     "tickers/salim.txt",
     "tickers/hapsoro.txt",
     "tickers/logam.txt",
+    "tickers/idx.txt",
 ]
 
 
@@ -110,10 +117,19 @@ def baca_daftar_ticker(paths: list[str]) -> tuple[list[str], dict[str, str]]:
     Format file: satu ticker per baris, komentar diawali '#'. Komentar boleh
     ditulis di belakang ticker. Baris '# grup: Nama' di mana pun dalam file
     menentukan label grup; bila tidak ada, dipakai nama file tanpa ekstensi.
+    Baris '# grup:' tanpa nama berarti file itu sengaja tidak berlabel (dipakai
+    oleh daftar universe pasar) — sahamnya hanya berlabel bila muncul juga di
+    daftar kurasi.
+
+    File yang tidak ada dilewati dengan peringatan, bukan error: universe
+    otomatis (tickers/idx.txt) belum tentu sudah pernah dibuat.
     """
     tickers: list[str] = []
     grup: dict[str, str] = {}
     for path in paths:
+        if not Path(path).exists():
+            print(f"Daftar {path} tidak ditemukan, dilewati.", file=sys.stderr)
+            continue
         isi = Path(path).read_text().splitlines()
         label = Path(path).stem.upper()
         for baris in isi:
@@ -130,8 +146,8 @@ def baca_daftar_ticker(paths: list[str]) -> tuple[list[str], dict[str, str]]:
             if baris not in tickers:
                 tickers.append(baris)
                 grup[polos] = label
-            elif label not in grup[polos].split("/"):
-                grup[polos] += "/" + label
+            elif label and label not in grup[polos].split("/"):
+                grup[polos] = f"{grup[polos]}/{label}" if grup[polos] else label
     return tickers, grup
 
 
@@ -151,6 +167,18 @@ def normalisasi_persen(nilai) -> float | None:
     if nilai is None:
         return None
     return round(nilai * 100, 2) if nilai <= 1 else round(nilai, 2)
+
+
+def persen_pertumbuhan(nilai) -> float | None:
+    """Ubah pertumbuhan dari fraksi ke persen.
+
+    Beda dari normalisasi_persen(): pertumbuhan selalu dikirim yfinance
+    sebagai fraksi dan boleh negatif atau lebih besar dari 1 (laba naik 3x =
+    2.0), jadi tebakan "kalau <= 1 berarti fraksi" tidak berlaku di sini.
+    """
+    if nilai is None or pd.isna(nilai):
+        return None
+    return round(nilai * 100, 1)
 
 
 def ambil_data(tickers: list[str], grup: dict[str, str] | None = None) -> pd.DataFrame:
@@ -184,6 +212,12 @@ def ambil_data(tickers: list[str], grup: dict[str, str] | None = None) -> pd.Dat
                 "PER": round(info["trailingPE"], 1) if info.get("trailingPE") else None,
                 "PBV": round(info["priceToBook"], 2) if info.get("priceToBook") else None,
                 "ROE%": round(roe * 100, 1) if roe is not None else None,
+                # Pertumbuhan kuartal terakhir dibanding kuartal yang sama
+                # setahun lalu (YoY) — ini yang paling dekat dengan "lapkeu
+                # terakhir bagus atau tidak". Ikut dari .info yang sudah
+                # diambil, jadi tidak menambah request.
+                "LabaYoY%": persen_pertumbuhan(info.get("earningsQuarterlyGrowth")),
+                "OmzetYoY%": persen_pertumbuhan(info.get("revenueGrowth")),
                 "Dividen%": normalisasi_persen(info.get("dividendYield")),
                 "MarketCap(T)": round(mcap / 1e12, 1) if mcap else None,
                 "Vol20(jt)": round(vol20 / 1e6, 2) if vol20 else None,
@@ -216,6 +250,10 @@ def terapkan_filter(df: pd.DataFrame, args) -> pd.DataFrame:
         saring((df["PBV"] > 0) & (df["PBV"] <= args.max_pbv))
     if args.min_roe is not None:
         saring(df["ROE%"] >= args.min_roe)
+    if args.min_laba_yoy is not None:
+        saring(df["LabaYoY%"] >= args.min_laba_yoy)
+    if args.min_omzet_yoy is not None:
+        saring(df["OmzetYoY%"] >= args.min_omzet_yoy)
     if args.min_dividen is not None:
         saring(df["Dividen%"] >= args.min_dividen)
     if args.min_mcap is not None:
@@ -263,6 +301,10 @@ def main():
     f.add_argument("--max-per", type=float, help="PER maksimal (dan harus > 0)")
     f.add_argument("--max-pbv", type=float, help="PBV maksimal (dan harus > 0)")
     f.add_argument("--min-roe", type=float, help="ROE minimal dalam persen")
+    f.add_argument("--min-laba-yoy", type=float,
+                   help="pertumbuhan laba kuartal terakhir (YoY) minimal, dalam persen")
+    f.add_argument("--min-omzet-yoy", type=float,
+                   help="pertumbuhan pendapatan kuartal terakhir (YoY) minimal, dalam persen")
     f.add_argument("--min-dividen", type=float, help="dividend yield minimal dalam persen")
     f.add_argument("--min-mcap", type=float, help="market cap minimal dalam triliun Rp")
     t = p.add_argument_group("filter teknikal & volume")
@@ -294,10 +336,15 @@ def main():
     if df.empty:
         sys.exit("Tidak ada data yang berhasil diambil.")
 
-    # CSV lama (dan data contoh) belum punya kolom Grup — tambahkan agar
-    # filter dan urutan kolom tetap konsisten.
+    # CSV lama (dan data contoh) belum tentu punya semua kolom — tambahkan
+    # yang hilang agar filter dan urutan kolom tetap konsisten. Kolom yang
+    # dibuat di sini isinya kosong, jadi filter atasnya tidak akan meloloskan
+    # apa pun; itu memang perilaku yang benar untuk data yang tidak diketahui.
     if "Grup" not in df.columns:
         df["Grup"] = ""
+    for kolom in KOLOM:
+        if kolom not in df.columns:
+            df[kolom] = None
     # Status selalu dihitung ulang, bukan dibaca dari CSV: aturannya bisa
     # berubah, dan hasilnya harus selalu cocok dengan kolom-kolom di sebelahnya.
     df["Status"] = df.apply(hitung_status, axis=1)

@@ -35,6 +35,9 @@ python screener.py --max-per 15 --max-pbv 3.5 --min-roe 15
 # Saham dividen: yield ≥ 5%, market cap ≥ 50 triliun
 python screener.py --min-dividen 5 --min-mcap 50
 
+# Lapkeu terakhir bagus: laba kuartal naik ≥ 20% YoY, ROE ≥ 10%, valuasi belum mahal
+python screener.py --min-laba-yoy 20 --min-roe 10 --max-per 25 --min-nilai 1
+
 # Teknikal (medium risk): sedang koreksi (RSI ≤ 50) tapi masih uptrend jangka panjang
 python screener.py --max-rsi 50 --di-atas-ma200
 
@@ -64,6 +67,8 @@ Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
 | `--max-per N` | Price-to-Earnings Ratio maksimal (PER negatif otomatis gugur) |
 | `--max-pbv N` | Price-to-Book Value maksimal |
 | `--min-roe N` | Return on Equity minimal (%) |
+| `--min-laba-yoy N` | Pertumbuhan laba kuartal terakhir (YoY) minimal (%) — saringan "lapkeu terakhir bagus" |
+| `--min-omzet-yoy N` | Pertumbuhan pendapatan kuartal terakhir (YoY) minimal (%) |
 | `--min-dividen N` | Dividend yield minimal (%) |
 | `--min-mcap N` | Market cap minimal (triliun Rp) |
 | `--min-nilai N` | Nilai transaksi rata-rata 20 hari minimal (miliar Rp) — filter likuiditas |
@@ -107,6 +112,20 @@ Screening tidak terbatas LQ45. Secara default `screener.py` membaca **semua** fi
 | `tickers/salim.txt` | `Salim` | Grup Salim — INDF, ICBP, SIMP, LSIP, IMAS, IMJS, DNET, MCAS, plus PANI & CBDK (Agung Sedayu–Salim) |
 | `tickers/hapsoro.txt` | `Hapsoro` | Terafiliasi Happy Hapsoro — RAJA, RATU, BUVA |
 | `tickers/logam.txt` | `Logam` | Logam di luar LQ45 — HRTA (emas), TINS (timah) |
+| `tickers/idx.txt` | *(kosong)* | **Universe pasar** — seluruh emiten IDX dengan kapitalisasi di atas 1 triliun (maks. 400 nama terbesar), dihasilkan otomatis oleh `scripts/perbarui_universe.py`. Jangan disunting tangan. |
+
+### Universe otomatis
+
+Daftar kurasi di atas ada supaya kolom `Grup` bermakna, **bukan** untuk membatasi screening. Pembatas sebenarnya adalah `tickers/idx.txt`: daftar itu disusun ulang tiap run malam langsung dari screener Yahoo Finance (`region=id`, urut kapitalisasi terbesar), jadi emiten yang fundamentalnya bagus tetap ikut tersaring walau tidak pernah dimasukkan ke daftar mana pun secara manual — termasuk emiten yang baru IPO atau baru naik kelas.
+
+```bash
+python scripts/perbarui_universe.py                    # default: mcap > 1 T, maks 400 nama
+python scripts/perbarui_universe.py --min-mcap 0.5 --maks 600   # jaring lebih lebar
+```
+
+Ambangnya ada demi runtime: tiap ticker berarti beberapa request ke Yahoo, dan emiten paling kecil praktis tidak bisa ditransaksikan (screener menandainya `TIPIS`). Turunkan `--min-mcap` kalau memang mau menjaring lebih dalam. Kalau pembaruan universe gagal (Yahoo rewel), `tickers/idx.txt` versi commit terakhir tetap dipakai dan screening jalan terus.
+
+Saham dari universe yang tidak ada di daftar kurasi mana pun berlabel `Grup` kosong — itu normal, bukan data hilang.
 
 Duplikat antar-daftar otomatis digabung: saham yang ada di dua daftar hanya diambil datanya sekali dan kolom `Grup`-nya ditulis gabungan, misal INDF → `LQ45/Salim`.
 
@@ -122,12 +141,14 @@ Workflow [`.github/workflows/screening-malam.yml`](.github/workflows/screening-m
 
 Setiap malam workflow:
 
-1. Mengambil data seluruh daftar default (LQ45 + grup Prajogo, Bakrie, Salim, Hapsoro) dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter).
-2. Memfilter ulang dari CSV itu (tanpa fetch ulang, pakai `--dari-csv`) menjadi dua daftar siap pakai:
+1. Menyusun ulang universe pasar (`tickers/idx.txt`) lewat `scripts/perbarui_universe.py`, supaya emiten baru atau yang naik kelas ikut ter-screening tanpa disebut manual. Kalau langkah ini gagal, universe versi commit terakhir dipakai dan run tetap lanjut.
+2. Mengambil data seluruh daftar default (universe IDX + daftar kurasi) dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter).
+3. Memfilter ulang dari CSV itu (tanpa fetch ulang, pakai `--dari-csv`) menjadi tiga daftar siap pakai:
    - `hasil/swing.csv` — sedang koreksi tapi masih uptrend, **dengan konfirmasi volume** (RSI ≤ 50, harga di atas MA200, volume terakhir ≥ 1,5× rata-rata 20 hari, nilai transaksi ≥ 10 miliar Rp). Sinyal ini lebih jarang muncul tapi lebih tajam — wajar kalau ada malam di mana tidak ada yang lolos.
    - `hasil/value.csv` — value stock profil **medium risk** (PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%). PBV dipatok 3,5 (bukan 2) supaya blue chip berkualitas yang memang selalu dihargai premium — BBCA, SIDO — tidak otomatis tersaring keluar.
-3. Meng-commit hasilnya ke repo, jadi tiap pagi tinggal buka ketiga file di folder `hasil/`. Riwayat screening malam-malam sebelumnya tersimpan otomatis di git history.
-4. Men-deploy **dashboard web** ke GitHub Pages (lihat di bawah).
+   - `hasil/tumbuh.csv` — **lapkeu terakhir bagus**: laba kuartalan naik ≥ 20% YoY, ROE ≥ 10%, PER ≤ 25, dan nilai transaksi ≥ 1 miliar Rp. Murni saringan fundamental, tanpa syarat teknikal.
+4. Meng-commit hasilnya ke repo (termasuk `tickers/idx.txt` yang dipakai malam itu), jadi tiap pagi tinggal buka file-file di folder `hasil/`. Riwayat screening malam-malam sebelumnya tersimpan otomatis di git history.
+5. Men-deploy **dashboard web** ke GitHub Pages (lihat di bawah).
 
 **Mengubah kriteria:** edit langkah-langkah screening di file workflow — argumennya sama persis dengan CLI `screener.py`. Mau menambah profil screening ketiga? Duplikat saja salah satu langkah `--dari-csv` dengan filter dan nama output berbeda.
 

@@ -194,13 +194,15 @@
   <div class="tiles" id="tiles" hidden>
     <div class="tile"><div class="label">Lolos filter swing</div><div class="value" id="t-swing">–</div><div class="sub">RSI ≤ 50, di atas MA200, vol spike ≥ 1,5×</div></div>
     <div class="tile"><div class="label">Lolos filter value</div><div class="value" id="t-value">–</div><div class="sub">PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%</div></div>
-    <div class="tile"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">LQ45 + grup Prajogo, Bakrie, Salim, Hapsoro</div></div>
+    <div class="tile"><div class="label">Lolos filter tumbuh</div><div class="value" id="t-tumbuh">–</div><div class="sub">Laba YoY ≥ 20%, ROE ≥ 10%, PER ≤ 25</div></div>
+    <div class="tile"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">Seluruh emiten IDX di atas 1 T, plus daftar kurasi</div></div>
   </div>
 
   <div class="controls">
     <div class="tabs" role="tablist">
       <button data-tab="swing" class="active">Swing</button>
       <button data-tab="value">Value</button>
+      <button data-tab="tumbuh">Tumbuh</button>
       <button data-tab="semua">Semua</button>
     </div>
     <select id="grup" aria-label="Saring berdasarkan grup">
@@ -217,8 +219,10 @@
   <details>
     <summary>Arti kolom &amp; cara pakai</summary>
     <dl>
-      <dt>Grup</dt><dd>Daftar asal saham: LQ45 atau grup konglomerasi (Prajogo/Barito, Bakrie,
-      Salim, Hapsoro). Satu saham bisa masuk dua daftar, mis. "LQ45/Salim".</dd>
+      <dt>Grup</dt><dd>Daftar asal saham: LQ45, grup konglomerasi (Prajogo/Barito, Bakrie,
+      Salim, Hapsoro), atau tema (Logam). Satu saham bisa masuk dua daftar, mis. "LQ45/Salim".
+      <strong>Kosong</strong> berarti saham itu masuk dari universe pasar — seluruh emiten IDX
+      berkapitalisasi di atas 1 triliun ikut di-screening, bukan cuma daftar kurasi.</dd>
       <dt>Status</dt><dd>Ringkasan mekanis posisi harga terhadap trennya — <strong>bukan rekomendasi</strong>.
       Dihitung otomatis dari MA50, MA200, RSI, volume, dan likuiditas; tidak tahu apa pun soal
       berita, laporan keuangan, atau aliran dana bandar.
@@ -234,6 +238,11 @@
       <dt>PER</dt><dd>Price-to-Earnings Ratio — makin kecil makin murah relatif terhadap laba.</dd>
       <dt>PBV</dt><dd>Price-to-Book Value — harga dibanding nilai buku.</dd>
       <dt>ROE%</dt><dd>Return on Equity — efisiensi perusahaan menghasilkan laba.</dd>
+      <dt>Laba YoY%</dt><dd>Pertumbuhan laba kuartal terakhir dibanding kuartal yang sama setahun
+      lalu — angka inilah yang paling dekat dengan "laporan keuangan terakhir bagus atau tidak".
+      Ikut ritme rilis lapkeu (triwulanan), jadi bisa tertinggal beberapa minggu dari berita.</dd>
+      <dt>Omzet YoY%</dt><dd>Pertumbuhan pendapatan kuartal terakhir (YoY). Laba naik tanpa omzet
+      naik biasanya berasal dari efisiensi atau pos sekali jalan, bukan pertumbuhan bisnis.</dd>
       <dt>Dividen%</dt><dd>Dividend yield setahun terakhir.</dd>
       <dt>MCap (T)</dt><dd>Kapitalisasi pasar dalam triliun rupiah.</dd>
       <dt>Vol20 (jt)</dt><dd>Volume rata-rata 20 hari, dalam juta lembar.</dd>
@@ -262,6 +271,8 @@ const KOLOM = [
   { k: "PER",          label: "PER",       angka: true, desimal: 1 },
   { k: "PBV",          label: "PBV",       angka: true, desimal: 2 },
   { k: "ROE%",         label: "ROE%",      angka: true, desimal: 1 },
+  { k: "LabaYoY%",     label: "Laba YoY%", angka: true, desimal: 1 },
+  { k: "OmzetYoY%",    label: "Omzet YoY%", angka: true, desimal: 1 },
   { k: "Dividen%",     label: "Dividen%",  angka: true, desimal: 2 },
   { k: "MarketCap(T)", label: "MCap (T)",  angka: true, desimal: 1 },
   { k: "Vol20(jt)",    label: "Vol20 (jt)", angka: true, desimal: 1 },
@@ -319,7 +330,7 @@ const state = {
   cari: "",
   grup: "",
   status: "",
-  data: { swing: null, value: null, semua: null },
+  data: { swing: null, value: null, tumbuh: null, semua: null },
   urut: { kolom: null, naik: true },
   gagal: false,
 };
@@ -458,20 +469,25 @@ function isiPilihanGrup() {
 async function muat() {
   const t = Date.now();
   try {
-    const [semua, swing, value, meta] = await Promise.all([
+    const [semua, swing, value, tumbuh, meta] = await Promise.all([
       fetch(`hasil/semua.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       fetch(`hasil/swing.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       fetch(`hasil/value.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
+      // Tab terbaru: sengaja tidak membuat seluruh dashboard gagal kalau
+      // filenya belum ada (run malam pertama setelah fitur ini ditambahkan).
+      fetch(`hasil/tumbuh.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
       fetch(`hasil/meta.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
     state.data.semua = parseCSV(semua);
     state.data.swing = parseCSV(swing);
     state.data.value = parseCSV(value);
+    state.data.tumbuh = tumbuh ? parseCSV(tumbuh) : [];
 
     isiPilihanGrup();
     isiPilihanStatus();
     document.getElementById("t-swing").textContent = state.data.swing.length;
     document.getElementById("t-value").textContent = state.data.value.length;
+    document.getElementById("t-tumbuh").textContent = state.data.tumbuh.length;
     document.getElementById("t-semua").textContent = state.data.semua.length;
     document.getElementById("tiles").hidden = false;
 
