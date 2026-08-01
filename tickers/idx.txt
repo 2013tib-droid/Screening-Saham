@@ -1,0 +1,412 @@
+# grup:
+# ^ sengaja kosong: file ini adalah universe pasar, bukan tema atau grup
+#   konglomerasi. Saham yang juga ada di daftar kurasi (LQ45, Salim, dst.)
+#   tetap memakai label dari daftar itu; sisanya berlabel kosong.
+#
+# DIHASILKAN OTOMATIS oleh scripts/perbarui_universe.py — jangan disunting
+# tangan, isinya akan ditimpa pada pembaruan berikutnya.
+# Kriteria: emiten Indonesia (Yahoo region=id) dengan kapitalisasi pasar
+#   di atas 1 triliun rupiah, diurut dari yang terbesar,
+#   maksimal 400 nama.
+# Diperbarui: 2026-08-01 — 400 emiten.
+
+BBCA  # Bank Central Asia Tbk — 777.2 T
+BBRI  # Bank Rakyat Indonesia (Persero) — 457.7 T
+DCII  # DCI Indonesia Tbk. — 456.1 T
+BREN  # Barito Renewables Energy Tbk. — 448.2 T
+BYAN  # Bayan Resources Tbk — 400.8 T
+BMRI  # Bank Mandiri (Persero) Tbk — 391.1 T
+MORA  # Ekamas Mora Republik Tbk. — 298.6 T
+AMMN  # Amman Mineral Internasional Tbk — 296.9 T
+TLKM  # Telkom Indonesia (Persero) Tbk. — 259.6 T
+ASII  # Astra International Tbk — 204.3 T
+TPIA  # Chandra Asri Pacific Tbk. — 186.8 T
+BRPT  # Barito Pacific Tbk. — 172.9 T
+SRAJ  # Sejahteraraya Anugrahjaya Tbk. — 147.5 T
+DNET  # Indoritel Makmur Internasional — 139.0 T
+DSSA  # Dian Swastatika Sentosa Tbk — 131.5 T
+BBNI  # Bank Negara Indonesia  (Persero — 131.5 T
+SMMA  # Sinarmas Multiartha Tbk. — 128.5 T
+PANI  # Pantai Indah Kapuk Dua Tbk. — 113.7 T
+MPRO  # Maha Properti Indonesia Tbk. — 109.4 T
+CASA  # Capital Financial Indonesia Tbk — 99.7 T
+EMAS  # Merdeka Gold Resources Tbk. — 97.2 T
+MLPT  # Multipolar Technology Tbk. — 90.2 T
+HMSP  # H.M. Sampoerna Tbk. — 85.5 T
+IMPC  # Impack Pratama Industri Tbk. — 84.6 T
+BRIS  # Bank Syariah Indonesia (Persero — 84.0 T
+UNTR  # United Tractors Tbk — 83.7 T
+CDIA  # Chandra Daya Investasi Tbk. — 81.7 T
+ICBP  # Indofood CBP Sukses Makmur Tbk. — 81.3 T
+BRMS  # Bumi Resources Minerals Tbk. — 79.4 T
+BNLI  # Bank Permata Tbk — 78.5 T
+CUAN  # Petrindo Jaya Kreasi Tbk. — 74.7 T
+AADI  # Adaro Andalan Indonesia Tbk. — 71.8 T
+ADRO  # Alamtri Resources Indonesia Tbk — 70.8 T
+ANTM  # ANTAM (Persero) Tbk. — 69.2 T
+UNVR  # Unilever Indonesia Tbk — 66.7 T
+MDKA  # Merdeka Copper Gold Tbk. — 66.4 T
+ADMR  # Alamtri Minerals Indonesia Tbk. — 61.9 T
+ISAT  # Indosat Tbk — 61.3 T
+BUMI  # Bumi Resources Tbk — 61.3 T
+INDF  # Indofood Sukses Makmur Tbk — 61.2 T
+NCKL  # Trimegah Bangun Persada Tbk. — 56.4 T
+INCO  # Vale Indonesia Tbk. — 55.6 T
+MBMA  # Merdeka Battery Materials Tbk. — 54.5 T
+AMRT  # Sumber Alfaria Trijaya Tbk — 54.4 T
+CPIN  # Charoen Pokphand Indonesia Tbk — 53.9 T
+GOTO  # GoTo Gojek Tokopedia Tbk. — 53.3 T
+PTRO  # Petrosea Tbk — 47.5 T
+INKP  # Indah Kiat Pulp & Paper Tbk. — 46.0 T
+MEGA  # Bank Mega Tbk — 45.8 T
+EXCL  # XLSMART Telecom Sejahtera Tbk. — 44.4 T
+PGUN  # Pradiksi Gunatama Tbk. — 43.2 T
+PGEO  # Pertamina Geothermal Energy Tbk — 42.3 T
+BNBR  # Bakrie & Brothers Tbk — 42.1 T
+BNGA  # Bank CIMB Niaga Tbk. — 41.7 T
+BDMN  # Bank Danamon Indonesia Tbk. — 41.0 T
+GEMS  # Golden Energy Mines Tbk. — 38.1 T
+MTEL  # Dayamitra Telekomunikasi Tbk. — 37.4 T
+MYOR  # Mayora Indah Tbk — 37.1 T
+GGRM  # Gudang Garam Tbk — 36.6 T
+CMRY  # Cisarua Mountain Dairy Tbk. — 36.5 T
+PGAS  # Perusahaan Gas Negara (Persero) — 36.4 T
+BELI  # Global Digital Niaga Tbk. — 34.8 T
+TAPG  # Triputra Agro Persada Tbk. — 34.7 T
+ENRG  # Energi Mega Persada Tbk — 34.3 T
+KLBF  # Kalbe Farma Tbk — 32.8 T
+TBIG  # Tower Bersama Infrastructure Tb — 32.6 T
+EMTK  # Elang Mahkota Teknologi Tbk — 32.4 T
+VKTR  # VKTR Teknologi Mobilitas Tbk. — 31.9 T
+MEDC  # Medco Energi Internasional Tbk. — 31.7 T
+NISP  # Bank OCBC NISP Tbk — 29.6 T
+AKRA  # AKR Corporindo Tbk — 29.0 T
+SILO  # Siloam International Hospitals — 28.6 T
+TINS  # TIMAH (Persero) Tbk. — 28.3 T
+ITMG  # Indo Tambangraya Megah Tbk — 27.4 T
+ARCI  # Archi Indonesia Tbk. — 27.1 T
+BINA  # Bank Ina Perdana Tbk. — 27.0 T
+PTBA  # Bukit Asam (Persero) Tbk. — 26.7 T
+NSSS  # Nusantara Sawit Sejahtera Tbk. — 26.3 T
+MAPI  # Mitra Adiperkasa Tbk — 25.8 T
+FAPA  # FAP Agri Tbk. — 25.6 T
+TCPI  # Transcoal Pacific Tbk. — 25.2 T
+JPFA  # Japfa Comfeed Indonesia Tbk. — 25.0 T
+MIKA  # Mitra Keluarga Karyasehat Tbk. — 24.5 T
+MSIN  # MNC Digital Entertainment Tbk. — 24.3 T
+SRTG  # Saratoga Investama Sedaya Tbk. — 24.2 T
+TOWR  # Sarana Menara Nusantara Tbk. — 23.5 T
+BTPN  # Bank SMBC Indonesia Tbk. — 23.3 T
+MDIY  # Daya Intiguna Yasa Tbk. — 23.0 T
+GIAA  # Garuda Indonesia (Persero) Tbk. — 22.0 T
+BUVA  # Bukit Uluwatu Villa Tbk. — 21.7 T
+PNBN  # Bank Pan Indonesia Tbk — 21.5 T
+CBDK  # Bangun Kosambi Sukses Tbk. — 21.4 T
+MKPI  # Metropolitan Kentjana Tbk — 20.6 T
+SUPA  # Super Bank Indonesia Tbk. — 20.5 T
+BBHI  # Allo Bank Indonesia Tbk. — 20.4 T
+TKIM  # Pabrik Kertas Tjiwi Kimia Tbk — 20.2 T
+ADES  # Akasha Wira International Tbk. — 20.1 T
+JSMR  # Jasa Marga (Persero) Tbk — 19.9 T
+AVIA  # Avia Avian Tbk. — 19.2 T
+RAJA  # Rukun Raharja Tbk — 18.8 T
+DEWA  # Darma Henwa Tbk — 18.7 T
+MAPA  # Map Aktif Adiperkasa Tbk. — 18.5 T
+JARR  # Jhonlin Agro Raya Tbk. — 17.8 T
+BBSI  # Krom Bank Indonesia Tbk. — 17.2 T
+BBTN  # Bank Tabungan Negara (Persero) — 17.1 T
+ARTO  # Bank Jago Tbk. — 16.9 T
+SMAR  # Sinar Mas Agro Resources and Te — 16.9 T
+RLCO  # Abadi Lestari Indonesia Tbk. — 16.4 T
+RISE  # Jaya Sukses Makmur Sentosa Tbk. — 16.1 T
+INTP  # Indocement Tunggal Prakarsa Tbk — 16.0 T
+MGLV  # NexAI Digital Infrastruktur Tbk — 15.9 T
+ULTJ  # Ultrajaya Milk Industry & Tradi — 15.3 T
+SOHO  # Soho Global Health Tbk. — 15.2 T
+BNII  # Bank Maybank Indonesia Tbk. — 14.6 T
+ARKO  # Arkora Hydro Tbk. — 14.3 T
+MLBI  # Multi Bintang Indonesia Tbk — 14.3 T
+DSNG  # Dharma Satya Nusantara Tbk. — 14.2 T
+CARE  # Metro Healthcare Indonesia Tbk. — 14.0 T
+BSIM  # Bank Sinarmas Tbk. — 14.0 T
+RATU  # Raharja Energi Cepu Tbk. — 13.9 T
+JRPT  # Jaya Real Property Tbk — 13.9 T
+CMNT  # Cemindo Gemilang Tbk. — 13.7 T
+INDY  # Indika Energy Tbk — 13.7 T
+MCOL  # Prima Andalan Mandiri Tbk. — 13.5 T
+BFIN  # BFI Finance  Indonesia Tbk — 13.5 T
+AUTO  # Astra Otoparts Tbk — 13.3 T
+AALI  # Astra Agro Lestari Tbk. — 13.2 T
+SCMA  # Surya Citra Media Tbk — 13.2 T
+TSPC  # Tempo Scan Pacific Tbk — 13.0 T
+CITA  # Cita Mineral Investindo Tbk — 12.9 T
+PWON  # Pakuwon Jati Tbk. — 12.8 T
+STTP  # Siantar Top Tbk. — 12.8 T
+HEAL  # Medikaloka Hermina Tbk. — 12.2 T
+LIFE  # MSIG Life Insurance Indonesia T — 12.2 T
+BSDE  # Bumi Serpong Damai Tbk — 11.9 T
+STAA  # Sumber Tani Agung Resources Tbk — 11.8 T
+ALII  # Ancara Logistics Indonesia Tbk. — 11.7 T
+FILM  # MD Entertainment Tbk. — 11.5 T
+POWR  # Cikarang Listrindo Tbk. — 11.5 T
+PSAB  # J Resources Asia Pasifik Tbk. — 11.5 T
+BKSL  # Sentul City Tbk. — 11.4 T
+BSSR  # Baramulti Suksessarana Tbk. — 11.3 T
+YUPI  # Yupi Indo Jelly Gum Tbk. — 11.2 T
+ESSA  # ESSA Industries Indonesia Tbk. — 11.0 T
+HRUM  # Harum Energy Tbk. — 11.0 T
+GOOD  # Garudafood Putra Putri Jaya Tbk — 10.8 T
+BUKA  # Bukalapak.com Tbk. — 10.8 T
+CTRA  # Ciputra Development Tbk — 10.7 T
+SIDO  # Industri Jamu dan Farmasi Sido — 10.7 T
+ADMF  # Adira Dinamika Multi Finance Tb — 10.6 T
+WIFI  # Solusi Sinergi Digital Tbk. — 10.6 T
+SMSM  # Selamat Sempurna Tbk — 10.3 T
+SMGR  # Semen Indonesia (Persero) Tbk. — 9.8 T
+PRAY  # Famon Awal Bros Sedaya Tbk. — 9.8 T
+BBKP  # Bank KB Indonesia Tbk. — 9.8 T
+LSIP  # PP London Sumatra Indonesia Tbk — 9.8 T
+COIN  # Indokripto Koin Semesta Tbk. — 9.6 T
+AGII  # Samator Indo Gas Tbk. — 9.6 T
+SIMP  # Salim Ivomas Pratama Tbk. — 9.5 T
+SSMS  # Sawit Sumbermas Sarana Tbk. — 9.5 T
+MIDI  # Midi Utama Indonesia Tbk. — 9.5 T
+CLEO  # Sariguna Primatirta Tbk. — 9.3 T
+POLU  # Golden Flower Tbk. — 9.2 T
+RMKE  # RMK Energy Tbk. — 9.1 T
+BIPI  # Astrindo Nusantara Infrastruktu — 9.0 T
+CMNP  # Citra Marga Nusaphala Persada T — 9.0 T
+SINI  # Singaraja Putra Tbk. — 9.0 T
+KPIG  # MNC Tourism Indonesia Tbk. — 8.9 T
+BMAS  # Bank Kasikorn Indonesia Tbk. — 8.8 T
+HRTA  # Hartadinata Abadi Tbk. — 8.5 T
+BJBR  # Bank Pembangunan Daerah Jawa Ba — 8.3 T
+PACK  # Abadi Nusantara Hijau Investama — 8.0 T
+DUTI  # Duta Pertiwi Tbk — 7.9 T
+BBMD  # Bank Mestika Dharma Tbk. — 7.9 T
+INPP  # Indonesian Paradise Property Tb — 7.8 T
+BJTM  # Bank Pembangunan Daerah Jawa Ti — 7.8 T
+APIC  # Pacific Strategic Financial Tbk — 7.8 T
+SSIA  # Surya Semesta Internusa Tbk — 7.8 T
+BTPS  # Bank BTPN Syariah Tbk. — 7.6 T
+SGER  # Sumber Global Energy Tbk. — 7.6 T
+CNMA  # Nusantara Sejahtera Raya Tbk. — 7.6 T
+MDIA  # Intermedia Capital Tbk. — 7.5 T
+SGRO  # Prime Agri Resources Tbk. — 7.4 T
+CYBR  # ITSEC Asia Tbk. — 7.3 T
+PNLF  # Panin Financial Tbk — 7.3 T
+DMAS  # Puradelta Lestari Tbk. — 7.1 T
+BULL  # Buana Lintas Lautan Tbk. — 7.0 T
+ABMM  # ABM Investama Tbk. — 6.9 T
+TMAS  # Temas Tbk. — 6.9 T
+ELPI  # Pelayaran Nasional Ekalya Purna — 6.9 T
+GMFI  # Garuda Maintenance Facility Aer — 6.7 T
+TLDN  # Teladan Prima Agro Tbk. — 6.7 T
+CLAY  # Citra Putra Realty Tbk. — 6.7 T
+ERAA  # Erajaya Swasembada Tbk. — 6.6 T
+EPMT  # Enseval Putera Megatrading Tbk — 6.4 T
+BOGA  # Apollo Global Interactive Tbk. — 6.4 T
+SMMT  # Golden Eagle Energy Tbk. — 6.3 T
+MTDL  # Metrodata Electronics Tbk — 6.2 T
+ACES  # Aspirasi Hidup Indonesia Tbk. — 6.2 T
+FORE  # Fore Kopi Indonesia Tbk. — 6.2 T
+DMND  # Diamond Food Indonesia Tbk. — 5.9 T
+OMED  # Jayamas Medica Industri Tbk. — 5.9 T
+UNIC  # Unggul Indah Cahaya Tbk — 5.9 T
+SHIP  # Sillo Maritime Perdana Tbk. — 5.5 T
+WBSA  # BSA Logistics Indonesia Tbk. — 5.5 T
+SMRA  # Summarecon Agung Tbk — 5.4 T
+YULE  # Yulie Sekuritas Indonesia Tbk. — 5.4 T
+NATO  # Olympus Strategic Indonesia Tbk — 5.4 T
+INET  # Sinergi Inti Andalan Prima Tbk. — 5.2 T
+MAYA  # Bank Mayapada Internasional Tbk — 5.1 T
+SAME  # Sarana Meditama Metropolitan Tb — 5.1 T
+ELSA  # Elnusa Tbk — 5.1 T
+NICL  # PAM Mineral Tbk. — 5.1 T
+MBSS  # Mitrabahtera Segara Sejati Tbk. — 5.0 T
+ANJT  # Austindo Nusantara Jaya Tbk. — 5.0 T
+EURO  # Estee Gold Feet Tbk. — 4.9 T
+SMDR  # Samudera Indonesia  Tbk — 4.9 T
+BALI  # Bali Towerindo Sentra Tbk. — 4.9 T
+MASB  # Bank Multiarta Sentosa Tbk. — 4.8 T
+PKPK  # Paragon Karya Perkasa Tbk. — 4.7 T
+HATM  # Habco Trans Maritima Tbk. — 4.6 T
+PALM  # Provident Investasi Bersama Tbk — 4.6 T
+DRMA  # Dharma Polimetal Tbk. — 4.5 T
+TGKA  # Tigaraksa Satria Tbk — 4.5 T
+MPMX  # Mitra Pinasthika Mustika Tbk. — 4.4 T
+MTLA  # Metropolitan Land Tbk. — 4.4 T
+TUGU  # Asuransi Tugu Pratama Indonesia — 4.3 T
+KRAS  # Krakatau Steel (Persero) Tbk. — 4.3 T
+JECX  # Nitrasanata Dharma Tbk. — 4.3 T
+BPII  # Batavia Prosperindo Internasion — 4.3 T
+GJTL  # Gajah Tunggal Tbk — 4.3 T
+LPKR  # Lippo Karawaci Tbk — 4.3 T
+MSTI  # Mastersystem Infotama Tbk. — 4.2 T
+BSWD  # Bank Of India Indonesia Tbk. — 4.1 T
+SURE  # Super Energy Tbk. — 4.1 T
+JTPE  # Jasuindo Tiga Perkasa Tbk — 4.1 T
+MARK  # Mark Dynamics Indonesia Tbk. — 4.1 T
+BIRD  # Blue Bird Tbk. — 4.0 T
+TRIM  # Trimegah Sekuritas Indonesia Tb — 4.0 T
+PBID  # Panca Budi Idaman Tbk. — 4.0 T
+CASS  # Cahaya Aero Services Tbk. — 4.0 T
+AMAR  # Bank Amar Indonesia Tbk. — 4.0 T
+BANK  # Bank Aladin Syariah Tbk. — 3.9 T
+TOTL  # Total Bangun Persada Tbk — 3.9 T
+LINK  # Link Net Tbk. — 3.9 T
+TOBA  # TBS Energi Utama Tbk. — 3.8 T
+VICI  # Victoria Care Indonesia Tbk. — 3.8 T
+MKAP  # Multikarya Asia Pasifik Raya Tb — 3.8 T
+HEXA  # Hexindo Adiperkasa Tbk — 3.8 T
+TBLA  # Tunas Baru Lampung Tbk — 3.7 T
+ARGO  # Argo Pantes Tbk — 3.7 T
+PSGO  # Palma Serasih Tbk. — 3.7 T
+RDTX  # Roda Vivatex Tbk — 3.7 T
+DKFT  # Central Omega Resources Tbk. — 3.6 T
+AGRO  # Bank Raya Indonesia Tbk. — 3.6 T
+GGRP  # Gunung Raja Paksi Tbk. — 3.6 T
+BACH  # Bach Multi Global Tbk. — 3.6 T
+WIIM  # Wismilak Inti Makmur Tbk. — 3.6 T
+NOBU  # Bank Nationalnobu Tbk. — 3.5 T
+MMIX  # Multi Medika Internasional Tbk. — 3.5 T
+BBYB  # Bank Neo Commerce Tbk. — 3.5 T
+SMIL  # Sarana Mitra Luas Tbk. — 3.5 T
+TFCO  # Tifico Fiber Indonesia Tbk. — 3.5 T
+ARNA  # Arwana Citramulia Tbk — 3.4 T
+DWGL  # Dwi Guna Laksana Tbk. — 3.4 T
+IMAS  # Indomobil Sukses Internasional — 3.4 T
+JSPT  # Jakarta Setiabudi Internasional — 3.4 T
+SDRA  # Bank Woori Saudara Indonesia 19 — 3.4 T
+CTBN  # Citra Tubindo Tbk — 3.4 T
+ROTI  # Nippon Indosari Corpindo Tbk. — 3.4 T
+NIRO  # City Retail Developments Tbk. — 3.3 T
+OMRE  # Indonesia Prima Property Tbk — 3.2 T
+KEEN  # Kencana Energi Lestari Tbk. — 3.2 T
+BEEF  # Estika Tata Tiara Tbk. — 3.2 T
+GOLF  # Intra Golflink Resorts Tbk. — 3.1 T
+ISSP  # Steel Pipe Industry of Indonesi — 3.1 T
+BESS  # Batulicin Nusantara Maritim Tbk — 3.1 T
+KEJU  # Mulia Boga Raya Tbk. — 3.1 T
+CBRE  # Cakra Buana Resources Energi Tb — 3.1 T
+SOCI  # Soechi Lines Tbk. — 3.1 T
+IRSX  # Folago Global Nusantara Tbk. — 3.1 T
+CPRO  # Central Proteina Prima Tbk. — 3.0 T
+DAAZ  # Daaz Bara Lestari Tbk. — 3.0 T
+MDLA  # Medela Potentia Tbk. — 3.0 T
+FISH  # FKS Multi Agro Tbk — 3.0 T
+PNIN  # Paninvest Tbk — 2.9 T
+AGRS  # Bank IBK Indonesia Tbk. — 2.9 T
+SKRN  # Superkrane Mitra Utama Tbk. — 2.9 T
+UANG  # Pakuan Tbk. — 2.9 T
+SAMF  # Saraswanti Anugerah Makmur Tbk. — 2.9 T
+NEST  # Esta Indonesia Tbk. — 2.8 T
+DATA  # Remala Abadi Tbk. — 2.8 T
+INPC  # Bank Artha Graha Internasional — 2.8 T
+APLN  # Agung Podomoro Land Tbk. — 2.8 T
+MAPB  # MAP Boga Adiperkasa Tbk. — 2.8 T
+PNGO  # AEP Pinago Plantations Tbk. — 2.8 T
+MNCN  # Media Nusantara Citra Tbk — 2.8 T
+LPCK  # Lippo Cikarang Tbk — 2.8 T
+BWPT  # Eagle High Plantations Tbk. — 2.8 T
+BUKK  # Bukaka Teknik Utama Tbk. — 2.7 T
+BGTG  # Bank Ganesha Tbk. — 2.7 T
+KIJA  # Kawasan Industri Jababeka Tbk — 2.7 T
+SFAN  # Surya Fajar Capital Tbk. — 2.7 T
+MINA  # Sanurhasta Mitra Tbk. — 2.7 T
+SMDM  # Suryamas Dutamakmur Tbk — 2.6 T
+VISI  # Satu Visi Putra Tbk. — 2.6 T
+RANS  # Rans Entertainmen Indonesia Tbk — 2.6 T
+MCOR  # Bank China Construction Bank In — 2.6 T
+CBUT  # Citra Borneo Utama Tbk. — 2.6 T
+ROCK  # Rockfields Properti Indonesia T — 2.6 T
+CENT  # Centratama Telekomunikasi Indon — 2.5 T
+KAEF  # Kimia Farma Tbk. — 2.5 T
+BNBA  # Bank Bumi Arta Tbk — 2.5 T
+TOTO  # Surya Toto Indonesia Tbk — 2.5 T
+MGRO  # Mahkota Group Tbk. — 2.5 T
+HUMI  # Humpuss Maritim Internasional T — 2.5 T
+PORT  # Nusantara Pelabuhan Handal Tbk. — 2.4 T
+GTSI  # GTS Internasional Tbk. — 2.4 T
+ASGR  # Astra Graphia Tbk — 2.4 T
+DAYA  # Duta Intidaya Tbk. — 2.4 T
+MAHA  # Mandiri Herindo Adiperkasa Tbk. — 2.4 T
+IATA  # Karya Pacific Energy Tbk. — 2.4 T
+PYFA  # Pyridam Farma Tbk — 2.4 T
+RALS  # Ramayana Lestari Sentosa Tbk — 2.3 T
+PSKT  # Red Planet Indonesia Tbk. — 2.3 T
+MYOH  # Samindo Resources Tbk. — 2.3 T
+ASRI  # Alam Sutera Realty Tbk. — 2.3 T
+PBSA  # Paramita Bangun Sarana Tbk. — 2.3 T
+BACA  # Bank Capital Indonesia Tbk. — 2.3 T
+BCIC  # Bank JTrust Indonesia Tbk. — 2.3 T
+WINS  # Wintermar Offshore Marine Tbk. — 2.3 T
+FPNI  # Lotte Chemical Titan Tbk. — 2.3 T
+ASSA  # Adi Sarana Armada Tbk. — 2.3 T
+MSJA  # Multi Spunindo Jaya Tbk. — 2.2 T
+BABP  # Bank MNC Internasional Tbk. — 2.2 T
+IFSH  # Ifishdeco Tbk. — 2.2 T
+ALDO  # Alkindo Naratama Tbk. — 2.2 T
+ABDA  # Asuransi Bina Dana Arta Tbk. — 2.2 T
+BHIT  # MNC Asia Holding Tbk. — 2.2 T
+VICO  # Victoria Investama Tbk. — 2.1 T
+PRDA  # Prodia Widyahusada Tbk. — 2.1 T
+BCAP  # MNC Kapital Indonesia Tbk. — 2.1 T
+JAWA  # Jaya Agra Wattie Tbk. — 2.1 T
+NETV  # MDTV Media Technologies Tbk. — 2.1 T
+DNAR  # Bank Oke Indonesia Tbk. — 2.1 T
+IPCC  # Indonesia Kendaraan Terminal Tb — 2.1 T
+OASA  # Maharaksa Biru Energi Tbk. — 2.1 T
+MMLP  # Mega Manunggal Property Tbk. — 2.1 T
+BRAM  # Indo Kordsa Tbk — 2.0 T
+BISI  # BISI International Tbk — 2.0 T
+PNBS  # Bank Panin Dubai Syariah Tbk. — 1.9 T
+IFII  # Indonesia Fibreboard Industry T — 1.9 T
+BMTR  # Global Mediacom Tbk — 1.9 T
+AMAG  # Asuransi Multi Artha Guna Tbk — 1.9 T
+KMTR  # Kirana Megatara Tbk. — 1.9 T
+DOOH  # Era Media Sejahtera Tbk. — 1.9 T
+SCCO  # Supreme Cable Manufacturing & C — 1.9 T
+BOLT  # Garuda Metalindo Tbk. — 1.9 T
+MTMH  # Murni Sadar Tbk. — 1.9 T
+UDNG  # Agro Bahari Nusantara Tbk. — 1.9 T
+BKSW  # Bank QNB Indonesia Tbk. — 1.9 T
+FUTR  # Futura Energi Global Tbk. — 1.9 T
+LPGI  # Lippo General Insurance Tbk — 1.8 T
+INDS  # Indospring Tbk — 1.8 T
+LPPF  # MDS Retailing Tbk. — 1.8 T
+DVLA  # Darya-Varia Laboratoria Tbk — 1.8 T
+BLES  # Superior Prima Sukses Tbk. — 1.8 T
+SUNI  # Sunindo Pratama Tbk. — 1.8 T
+MBAP  # Mitrabara Adiperdana Tbk. — 1.7 T
+UCID  # Uni-Charm Indonesia Tbk. — 1.7 T
+IMJS  # Indomobil Multi Jasa Tbk. — 1.7 T
+BVIC  # Bank Victoria International Tbk — 1.7 T
+MERK  # Merck Tbk — 1.7 T
+KINO  # Kino Indonesia Tbk. — 1.7 T
+AYAM  # Janu Putra Sejahtera Tbk. — 1.7 T
+DGWG  # Delta Giri Wacana Tbk. — 1.7 T
+RONY  # Aracord Nusantara Group Tbk. — 1.7 T
+CSAP  # Catur Sentosa Adiprana Tbk. — 1.6 T
+DEPO  # Caturkarda Depo Bangunan Tbk. — 1.6 T
+BMHS  # Bundamedik Tbk. — 1.6 T
+SPTO  # Surya Pertiwi Tbk. — 1.6 T
+TPMA  # Trans Power Marine Tbk. — 1.6 T
+PSSI  # IMC Pelita Logistik Tbk. — 1.6 T
+IPCM  # Jasa Armada Indonesia Tbk. — 1.6 T
+SMBR  # Semen Baturaja (Persero) Tbk. — 1.6 T
+FMII  # Fortune Mate Indonesia Tbk — 1.6 T
+DOID  # BUMA Internasional Grup Tbk. — 1.6 T
+PMJS  # Putra Mandiri Jembar Tbk. — 1.6 T
+FAST  # Fast Food Indonesia Tbk — 1.6 T
+MPPA  # Matahari Putra Prima Tbk — 1.6 T
+ERAL  # Sinar Eka Selaras Tbk. — 1.6 T
+COCO  # Wahana Interfood Nusantara Tbk. — 1.6 T
+KETR  # Ketrosden Triasmitra Tbk. — 1.6 T
+KOTA  # DMS Propertindo Tbk. — 1.6 T
+SONA  # Sona Topas Tourism Industry Tbk — 1.6 T
+MLIA  # Mulia Industrindo Tbk — 1.5 T
+NICE  # Adhi Kartiko Pratama Tbk. — 1.5 T
+CSRA  # Cisadane Sawit Raya Tbk. — 1.5 T
+MLPL  # Multipolar Tbk — 1.5 T
+MKTR  # Menthobi Karyatama Raya Tbk. — 1.5 T
