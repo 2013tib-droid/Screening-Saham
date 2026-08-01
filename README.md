@@ -29,17 +29,17 @@ pip install -r requirements.txt
 # Screening seluruh LQ45 tanpa filter (lihat semua datanya)
 python screener.py
 
-# Value stock: PER ≤ 15, PBV ≤ 2, ROE ≥ 15%
-python screener.py --max-per 15 --max-pbv 2 --min-roe 15
+# Value stock (medium risk): PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%
+python screener.py --max-per 15 --max-pbv 3.5 --min-roe 15
 
 # Saham dividen: yield ≥ 5%, market cap ≥ 50 triliun
 python screener.py --min-dividen 5 --min-mcap 50
 
-# Teknikal: oversold (RSI ≤ 35) tapi masih uptrend jangka panjang
-python screener.py --max-rsi 35 --di-atas-ma200
+# Teknikal (medium risk): sedang koreksi (RSI ≤ 50) tapi masih uptrend jangka panjang
+python screener.py --max-rsi 50 --di-atas-ma200
 
-# Swing + konfirmasi volume: oversold, uptrend, dan volume mulai masuk
-python screener.py --max-rsi 35 --di-atas-ma200 --min-volspike 1.5 --min-nilai 10
+# Swing + konfirmasi volume: koreksi, uptrend, dan volume mulai masuk
+python screener.py --max-rsi 50 --di-atas-ma200 --min-volspike 1.5 --min-nilai 10
 
 # Pakai daftar ticker sendiri
 python screener.py --tickers tickers/lq45.txt
@@ -81,8 +81,8 @@ Setiap malam workflow:
 
 1. Mengambil data seluruh LQ45 dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter).
 2. Memfilter ulang dari CSV itu (tanpa fetch ulang, pakai `--dari-csv`) menjadi dua daftar siap pakai:
-   - `hasil/swing.csv` — oversold tapi masih uptrend, **dengan konfirmasi volume** (RSI ≤ 35, harga di atas MA200, volume terakhir ≥ 1,5× rata-rata 20 hari, nilai transaksi ≥ 10 miliar Rp). Sinyal ini lebih jarang muncul tapi lebih tajam — wajar kalau ada malam di mana tidak ada yang lolos.
-   - `hasil/value.csv` — value stock (PER ≤ 15, PBV ≤ 2, ROE ≥ 15%).
+   - `hasil/swing.csv` — sedang koreksi tapi masih uptrend, **dengan konfirmasi volume** (RSI ≤ 50, harga di atas MA200, volume terakhir ≥ 1,5× rata-rata 20 hari, nilai transaksi ≥ 10 miliar Rp). Sinyal ini lebih jarang muncul tapi lebih tajam — wajar kalau ada malam di mana tidak ada yang lolos.
+   - `hasil/value.csv` — value stock profil **medium risk** (PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%). PBV dipatok 3,5 (bukan 2) supaya blue chip berkualitas yang memang selalu dihargai premium — BBCA, SIDO — tidak otomatis tersaring keluar.
 3. Meng-commit hasilnya ke repo, jadi tiap pagi tinggal buka ketiga file di folder `hasil/`. Riwayat screening malam-malam sebelumnya tersimpan otomatis di git history.
 4. Men-deploy **dashboard web** ke GitHub Pages (lihat di bawah).
 
@@ -109,6 +109,18 @@ Catatan penting:
 - Jadwal cron hanya aktif di **branch default** repo — pastikan workflow ini sudah ter-merge ke branch utama. Workflow juga otomatis jalan sekali setiap ada push ke branch utama, jadi begitu di-merge, hasil pertama dan dashboard langsung tersedia tanpa menunggu malam.
 - GitHub menonaktifkan cron otomatis jika repo tidak ada aktivitas selama 60 hari; karena workflow ini meng-commit hasil tiap malam, repo tetap "aktif" dengan sendirinya.
 - Yahoo Finance sesekali membatasi request dari server GitHub. Kalau run gagal, coba **Run workflow** ulang, atau jalankan screening di komputer sendiri.
+
+## Uji Akses IDX (net buy asing)
+
+Yahoo Finance **tidak** menyediakan data net buy asing, padahal itu salah satu sinyal yang sering dipakai. Sumber gratisnya ada di IDX ([Ringkasan Saham](https://www.idx.co.id/id/data-pasar/ringkasan-perdagangan/ringkasan-saham), berisi Foreign Buy/Sell per emiten per hari), tapi idx.co.id memakai Cloudflare yang rutin memblokir request non-browser — jadi kelayakannya harus diuji dulu di tempat workflow benar-benar jalan.
+
+Workflow **Uji Akses IDX** (`.github/workflows/uji-idx.yml`) melakukan itu: tab **Actions → Uji Akses IDX → Run workflow**. Dia hanya menembak beberapa endpoint IDX lalu melapor — tidak menyentuh data screening dan tidak commit apa pun. Hasilnya muncul di ringkasan job sebagai salah satu dari tiga kesimpulan:
+
+- **BISA** — endpoint tembus dan kolom asing ketemu; lanjut ke integrasi.
+- **SEBAGIAN** — IDX tembus tapi kolom asing tidak ada di endpoint itu; perlu cari berkas lain.
+- **DIBLOKIR** — Cloudflare menolak; integrasi langsung tidak layak, perlu sumber alternatif.
+
+Skripnya (`scripts/uji_idx.py`) hanya memakai stdlib, jadi bisa dijalankan lokal juga: `python scripts/uji_idx.py`.
 
 ## Disclaimer
 
