@@ -1,0 +1,26 @@
+name: Uji Akses IDX
+
+# Uji coba SEKALI JALAN untuk menjawab: apakah runner GitHub Actions bisa
+# menembus idx.co.id, dan apakah data net buy asing per saham tersedia di sana?
+# Tidak menyentuh hasil screening, tidak commit apa pun — cuma melapor.
+#
+# Cara menjalankan: tab Actions -> "Uji Akses IDX" -> Run workflow.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  uji:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Tanpa 'pip install': skrip sengaja hanya memakai stdlib.
+      - name: Tembak endpoint IDX
+        run: python scripts/uji_idx.py

@@ -110,6 +110,18 @@ Catatan penting:
 - GitHub menonaktifkan cron otomatis jika repo tidak ada aktivitas selama 60 hari; karena workflow ini meng-commit hasil tiap malam, repo tetap "aktif" dengan sendirinya.
 - Yahoo Finance sesekali membatasi request dari server GitHub. Kalau run gagal, coba **Run workflow** ulang, atau jalankan screening di komputer sendiri.
 
+## Uji Akses IDX (net buy asing)
+
+Yahoo Finance **tidak** menyediakan data net buy asing, padahal itu salah satu sinyal yang sering dipakai. Sumber gratisnya ada di IDX ([Ringkasan Saham](https://www.idx.co.id/id/data-pasar/ringkasan-perdagangan/ringkasan-saham), berisi Foreign Buy/Sell per emiten per hari), tapi idx.co.id memakai Cloudflare yang rutin memblokir request non-browser — jadi kelayakannya harus diuji dulu di tempat workflow benar-benar jalan.
+
+Workflow **Uji Akses IDX** (`.github/workflows/uji-idx.yml`) melakukan itu: tab **Actions → Uji Akses IDX → Run workflow**. Dia hanya menembak beberapa endpoint IDX lalu melapor — tidak menyentuh data screening dan tidak commit apa pun. Hasilnya muncul di ringkasan job sebagai salah satu dari tiga kesimpulan:
+
+- **BISA** — endpoint tembus dan kolom asing ketemu; lanjut ke integrasi.
+- **SEBAGIAN** — IDX tembus tapi kolom asing tidak ada di endpoint itu; perlu cari berkas lain.
+- **DIBLOKIR** — Cloudflare menolak; integrasi langsung tidak layak, perlu sumber alternatif.
+
+Skripnya (`scripts/uji_idx.py`) hanya memakai stdlib, jadi bisa dijalankan lokal juga: `python scripts/uji_idx.py`.
+
 ## Disclaimer
 
 Bukan rekomendasi investasi. Data Yahoo Finance bisa tertunda ±15 menit dan sesekali tidak lengkap untuk emiten kecil. File `data/sample_data.csv` berisi **angka contoh buatan** untuk demo offline, bukan data pasar sungguhan. Selalu verifikasi sebelum mengambil keputusan investasi.
