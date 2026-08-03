@@ -51,11 +51,23 @@ jobs:
       - name: Ambil data & simpan tabel lengkap
         run: python screener.py --output hasil/semua.csv
 
-      # Ambang "medium risk": RSI 50 (koreksi sehat, bukan cuma oversold ekstrem).
-      - name: Screening swing (pullback, uptrend, volume masuk)
+      # RSI dibatasi 65, bukan 50. Alasannya: --max-rsi dan --min-volspike
+      # saling menggerus. Volume yang masuk hari ini justru yang mengangkat
+      # RSI, jadi menuntut "harga lagi lemah" (RSI <= 50) sekaligus "volume
+      # lagi ramai" (spike >= 1.5) menyisakan irisan yang hampir selalu kosong
+      # — bukan cuma saat pasar tertentu. Di data 2 Agu 2026 kombinasi lama
+      # meloloskan 0 dari 396 saham.
+      #
+      # RSI 65 tetap menyaring yang sudah overbought (>= 70 dianggap HOLD oleh
+      # hitung_status), tapi membaca "belum kemahalan" alih-alih "harus lagi
+      # terkoreksi". Likuiditas diturunkan 10 -> 5 miliar/hari: masih cukup
+      # untuk ditransaksikan, tapi tidak membuang mid cap yang layak dilihat.
+      # Hasilnya daftar berisi ~5-10 nama untuk dianalisa ulang manual,
+      # bukan tabel kosong.
+      - name: Screening swing (uptrend, belum overbought, volume masuk)
         run: >
           python screener.py --dari-csv hasil/semua.csv
-          --max-rsi 50 --di-atas-ma200 --min-volspike 1.5 --min-nilai 10
+          --max-rsi 65 --di-atas-ma200 --min-volspike 1.2 --min-nilai 5
           --output hasil/swing.csv
 
       # Ambang "medium risk": PBV 3,5 supaya blue chip berkualitas yang selalu

@@ -41,8 +41,8 @@ python screener.py --min-laba-yoy 20 --min-roe 10 --max-per 25 --min-nilai 1
 # Teknikal (medium risk): sedang koreksi (RSI ≤ 50) tapi masih uptrend jangka panjang
 python screener.py --max-rsi 50 --di-atas-ma200
 
-# Swing + konfirmasi volume: koreksi, uptrend, dan volume mulai masuk
-python screener.py --max-rsi 50 --di-atas-ma200 --min-volspike 1.5 --min-nilai 10
+# Swing + konfirmasi volume: uptrend, belum overbought, dan volume mulai masuk
+python screener.py --max-rsi 65 --di-atas-ma200 --min-volspike 1.2 --min-nilai 5
 
 # Pakai satu daftar saja, atau gabungan beberapa daftar
 python screener.py --tickers tickers/lq45.txt
@@ -144,7 +144,7 @@ Setiap malam workflow:
 1. Menyusun ulang universe pasar (`tickers/idx.txt`) lewat `scripts/perbarui_universe.py`, supaya emiten baru atau yang naik kelas ikut ter-screening tanpa disebut manual. Kalau langkah ini gagal, universe versi commit terakhir dipakai dan run tetap lanjut.
 2. Mengambil data seluruh daftar default (universe IDX + daftar kurasi) dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter).
 3. Memfilter ulang dari CSV itu (tanpa fetch ulang, pakai `--dari-csv`) menjadi tiga daftar siap pakai:
-   - `hasil/swing.csv` — sedang koreksi tapi masih uptrend, **dengan konfirmasi volume** (RSI ≤ 50, harga di atas MA200, volume terakhir ≥ 1,5× rata-rata 20 hari, nilai transaksi ≥ 10 miliar Rp). Sinyal ini lebih jarang muncul tapi lebih tajam — wajar kalau ada malam di mana tidak ada yang lolos.
+   - `hasil/swing.csv` — masih uptrend dan belum overbought, **dengan konfirmasi volume** (RSI ≤ 65, harga di atas MA200, volume terakhir ≥ 1,2× rata-rata 20 hari, nilai transaksi ≥ 5 miliar Rp). Ambang RSI sengaja tidak dipatok 50: `--max-rsi` dan `--min-volspike` saling menggerus, karena volume yang masuk hari ini justru yang mengangkat RSI. Menuntut "harga lagi lemah" sekaligus "volume lagi ramai" menghasilkan tabel kosong hampir tiap malam — bukan sinyal yang lebih tajam, cuma daftar yang tidak pernah terisi.
    - `hasil/value.csv` — value stock profil **medium risk** (PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%). PBV dipatok 3,5 (bukan 2) supaya blue chip berkualitas yang memang selalu dihargai premium — BBCA, SIDO — tidak otomatis tersaring keluar.
    - `hasil/tumbuh.csv` — **lapkeu terakhir bagus**: laba kuartalan naik ≥ 20% YoY, ROE ≥ 10%, PER ≤ 25, dan nilai transaksi ≥ 1 miliar Rp. Murni saringan fundamental, tanpa syarat teknikal.
 4. Meng-commit hasilnya ke repo (termasuk `tickers/idx.txt` yang dipakai malam itu), jadi tiap pagi tinggal buka file-file di folder `hasil/`. Riwayat screening malam-malam sebelumnya tersimpan otomatis di git history.
