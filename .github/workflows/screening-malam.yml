@@ -10,6 +10,10 @@ on:
   push:
     # branch default repo saat ini + 'main' untuk jaga-jaga bila kelak di-rename
     branches: [claude/indo-stock-screener-98kizz, main]
+    # Trigger push tidak peduli jam, jadi run bisa jatuh di tengah sesi bursa.
+    # Itu aman: screener.py membuang bar hari ini selama sesi belum tuntas
+    # (lihat bar_terakhir_belum_final) sehingga hasilnya selalu data
+    # penutupan, bukan setengah hari perdagangan.
 
 permissions:
   contents: write

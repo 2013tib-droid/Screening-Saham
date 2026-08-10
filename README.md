@@ -139,6 +139,22 @@ Beberapa hal yang perlu diketahui soal perhitungannya:
 
 ⚠️ **Skor ini juga bukan rekomendasi.** Ia cuma merangkum enam angka yang datanya ada — tidak tahu soal beban utang, kualitas manajemen, prospek industri, atau apakah laba kuartal lalu berasal dari penjualan aset. Skor tinggi dengan Status JUAL artinya perusahaannya bagus tapi harganya sedang turun tren; dua kolom itu menjawab pertanyaan yang berbeda dan sengaja tidak digabung.
 
+## Selalu Data Penutupan
+
+Kalau screener dijalankan saat bursa masih buka (IDX 09:00–15:50 WIB), **bar hari ini dibuang** dan seluruh tabel dihitung dari penutupan terakhir. Waktunya ditandai lewat baris `Sesi bursa masih berjalan …` di stderr.
+
+Ini bukan kehati-hatian berlebihan. Selama sesi berjalan Yahoo tetap mengirim bar untuk hari ini, tapi isinya baru sebagian hari — dan yang paling merusak adalah volumenya: volume satu jam pertama dibagi rata-rata 20 hari **penuh** membuat `VolSpike` seluruh pasar anjlok ke sekitar seperlima nilai wajarnya. Akibatnya semua filter berbasis volume berhenti meloloskan apa pun, padahal tabelnya tetap terlihat normal. Perbandingan nyata pada 10 Agustus 2026:
+
+| Run | Median VolSpike | Saham dengan VolSpike ≥ 1,2 |
+|---|---|---|
+| 18:57 WIB, setelah bursa tutup | 0,73 | 88 dari 402 |
+| 10:01 WIB, bursa masih buka (tanpa perbaikan) | 0,21 | 16 dari 402 |
+| 10:09 WIB, bursa masih buka (dengan perbaikan) | 0,84 | 12 dari 45 (LQ45) |
+
+Ambangnya `JAM_DATA_FINAL` = 16:15 WIB, diberi jeda 25 menit dari penutupan karena Yahoo perlu beberapa menit memperbarui bar terakhirnya. Hari libur bursa tidak perlu didaftar: tanggal dibaca dari bar-nya sendiri, jadi kalau hari ini bursa tutup, bar terakhir bertanggal kemarin dan tidak ada yang dipotong.
+
+Satu sisa ketidakkonsistenan yang disengaja: yang dipotong hanya kolom turunan histori (Harga, MA50, MA200, RSI, volume). `PER` dan `PBV` datang jadi dari Yahoo dan tetap dihitung dari harga berjalan, jadi saat sesi hidup keduanya berbeda sebesar pergerakan satu hari — umumnya di bawah 2% dan tidak menggeser Skor secara berarti.
+
 ## Daftar Ticker
 
 Screening tidak terbatas LQ45. Secara default `screener.py` membaca **semua** file di bawah ini sekaligus:

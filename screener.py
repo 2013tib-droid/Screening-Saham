@@ -18,6 +18,7 @@ Hasil ditampilkan sebagai tabel dan disimpan ke hasil_screening.csv.
 
 import argparse
 import sys
+from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -47,6 +48,38 @@ STATUS = {
 # layak ditransaksikan. Di bawah ini, sinyal teknikal apa pun tidak berguna
 # karena order sendiri sudah cukup untuk menggerakkan harga.
 AMBANG_LIKUID = 1.0
+
+# WIB tidak pernah memakai DST, jadi offset tetap +7 lebih aman daripada
+# zoneinfo("Asia/Jakarta") — di Windows zoneinfo butuh paket tzdata yang tidak
+# ada di requirements.
+WIB = timezone(timedelta(hours=7))
+
+# IDX tutup 15:50 WIB. Jam ini diberi jeda sampai 16:15 karena Yahoo perlu
+# beberapa menit memperbarui bar terakhirnya setelah penutupan; sebelum itu
+# angka hari ini masih bisa berubah.
+JAM_DATA_FINAL = time(16, 15)
+
+
+def bar_terakhir_belum_final(hist: pd.DataFrame) -> bool:
+    """True bila baris terakhir histori adalah hari ini dan sesi belum tuntas.
+
+    Selama sesi berjalan, Yahoo tetap mengirim bar untuk hari ini — tapi
+    isinya baru sebagian hari. Volumenya terutama yang menyesatkan: volume
+    satu jam pertama dibagi rata-rata 20 hari *penuh* membuat VolSpike
+    seluruh pasar anjlok ke sekitar seperlima nilai wajarnya, sehingga filter
+    berbasis volume tidak meloloskan apa pun. Perbandingan nyata pada 10 Agu
+    2026: run 18:57 WIB memberi median VolSpike 0,73 (88 saham di atas 1,2),
+    run 10:01 WIB memberi 0,21 (16 saham).
+
+    Tanggal diambil dari bar-nya sendiri, bukan dari kalender, supaya hari
+    libur bursa tidak perlu didaftar: kalau hari ini bursa tutup, bar terakhir
+    bertanggal kemarin dan fungsi ini langsung False.
+    """
+    if hist.empty:
+        return False
+    sekarang = datetime.now(WIB)
+    return (hist.index[-1].date() == sekarang.date()
+            and sekarang.time() < JAM_DATA_FINAL)
 
 
 def hitung_status(r) -> str:
@@ -271,17 +304,44 @@ def ambil_data(tickers: list[str], grup: dict[str, str] | None = None) -> pd.Dat
     import yfinance as yf
 
     baris_data = []
+    sudah_diberitahu = False
     for i, tkr in enumerate(tickers, 1):
         print(f"  [{i}/{len(tickers)}] {tkr} ...", file=sys.stderr)
         try:
             saham = yf.Ticker(tkr)
             info = saham.info or {}
             hist = saham.history(period="1y")
+
+            # Bar hari ini dibuang selama sesi masih berjalan, supaya seluruh
+            # tabel konsisten berisi angka penutupan terakhir — sesuai yang
+            # dijanjikan header dashboard. Tanpa ini, run yang kebetulan jalan
+            # di jam bursa menghasilkan tabel yang tampak wajar tapi kolom
+            # volumenya salah total.
+            #
+            # Yang dipotong hanya kolom turunan histori (Harga, MA, RSI,
+            # volume). Rasio dari .info (PER, PBV) tetap dihitung Yahoo dari
+            # harga berjalan, jadi saat sesi hidup keduanya beda selisih
+            # pergerakan satu hari — biasanya di bawah 2% dan tidak menggeser
+            # Skor secara berarti. Dibiarkan begitu karena menghitung ulang
+            # PER/PBV sendiri berarti ikut menanggung definisi EPS dan nilai
+            # buku Yahoo yang tidak selalu konsisten antar emiten.
+            belum_final = bar_terakhir_belum_final(hist)
+            if belum_final:
+                if not sudah_diberitahu:
+                    print("  Sesi bursa masih berjalan — bar hari ini dibuang, "
+                          "dipakai data penutupan terakhir.", file=sys.stderr)
+                    sudah_diberitahu = True
+                hist = hist.iloc[:-1]
+
             close = hist["Close"] if not hist.empty else pd.Series(dtype=float)
             vol = hist["Volume"] if not hist.empty else pd.Series(dtype=float)
 
-            harga = info.get("currentPrice") or (
-                round(close.iloc[-1]) if len(close) else None)
+            penutupan = round(close.iloc[-1]) if len(close) else None
+            # currentPrice adalah harga berjalan; memakainya saat sesi belum
+            # tuntas akan mencampur harga intraday dengan volume dan MA yang
+            # sudah dipotong ke kemarin.
+            harga = penutupan if belum_final else (
+                info.get("currentPrice") or penutupan)
             roe = info.get("returnOnEquity")
             mcap = info.get("marketCap")
             vol20 = vol.tail(20).mean() if len(vol) >= 20 else None
