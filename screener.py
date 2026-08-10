@@ -9,6 +9,7 @@ Contoh pemakaian:
     python screener.py --max-per 15 --max-pbv 2 --min-roe 15
     python screener.py --tickers tickers/lq45.txt --min-dividen 3 --di-atas-ma200
     python screener.py --tickers tickers/bakrie.txt tickers/salim.txt
+    python screener.py --min-skor 70 --urut Skor        # fundamental terkuat saja
     python screener.py --dari-csv hasil/semua.csv --grup Prajogo
     python screener.py --demo --max-per 15          # mode offline dengan data contoh
 
@@ -22,7 +23,7 @@ from pathlib import Path
 import pandas as pd
 
 KOLOM = [
-    "Ticker", "Nama", "Grup", "Status", "Harga", "PER", "PBV", "ROE%",
+    "Ticker", "Nama", "Grup", "Status", "Skor", "Harga", "PER", "PBV", "ROE%",
     "LabaYoY%", "OmzetYoY%", "Dividen%",
     "MarketCap(T)", "Vol20(jt)", "Nilai(M)", "VolSpike",
     "RSI14", "MA50", "MA200",
@@ -89,6 +90,91 @@ def hitung_status(r) -> str:
 
     # Di atas MA50 tapi masih di bawah MA200: awal pemulihan, belum konfirmasi.
     return "WSE"
+
+
+# Skor = kesimpulan fundamental satu saham dalam satu angka 1-100. Perusahaan
+# sehat (untung besar, tumbuh, valuasi wajar) dapat angka tinggi; yang rugi,
+# menyusut, atau kemahalan dapat angka rendah.
+#
+# Bobot tiap komponen. Profitabilitas dan pertumbuhan diberi porsi terbesar
+# karena itu yang menentukan sehat-tidaknya bisnisnya; valuasi ikut karena
+# perusahaan bagus di harga kemahalan bukan investasi bagus; dividen paling
+# kecil karena tidak membayar dividen belum tentu jelek (bisa dipakai
+# ekspansi).
+BOBOT_SKOR = {
+    "ROE%": 25,
+    "LabaYoY%": 20,
+    "PER": 20,
+    "OmzetYoY%": 15,
+    "PBV": 10,
+    "Dividen%": 10,
+}
+
+# Titik-titik konversi nilai mentah -> skor 0-100 per komponen, diurut naik.
+# Di antara dua titik dipakai interpolasi linier; di luar rentang dipakai
+# nilai ujungnya. Angkanya dipilih dari kebiasaan pasar Indonesia, mis. ROE
+# 15% dianggap layak dan PER 10 dianggap murah — bukan hasil optimasi
+# statistik, jadi jangan dibaca lebih presisi dari sebenarnya.
+TITIK_SKOR = {
+    "ROE%":      [(0, 0), (5, 25), (10, 45), (15, 65), (20, 80), (30, 95), (40, 100)],
+    "LabaYoY%":  [(-50, 0), (-20, 15), (0, 40), (20, 65), (50, 85), (100, 100)],
+    "OmzetYoY%": [(-30, 0), (-10, 20), (0, 40), (10, 60), (25, 80), (50, 100)],
+    # PER & PBV: makin kecil makin murah, jadi skornya menurun.
+    "PER":       [(5, 100), (10, 85), (15, 70), (20, 55), (25, 40), (35, 20), (50, 5)],
+    "PBV":       [(0.5, 100), (1, 90), (2, 70), (3, 55), (5, 30), (8, 10)],
+    # Yield 0 tidak dihukum berat — perusahaan tumbuh wajar menahan labanya.
+    "Dividen%":  [(0, 30), (2, 55), (4, 75), (6, 90), (8, 100)],
+}
+
+# Skor hanya dikeluarkan bila komponen yang tersedia mencakup minimal porsi
+# ini dari total bobot. Di bawah itu angkanya lebih menyesatkan daripada
+# berguna — lebih baik kosong.
+MIN_CAKUPAN_SKOR = 0.5
+
+
+def _interpolasi(nilai: float, titik: list[tuple[float, float]]) -> float:
+    """Petakan nilai ke skor lewat interpolasi linier antar titik acuan."""
+    if nilai <= titik[0][0]:
+        return titik[0][1]
+    if nilai >= titik[-1][0]:
+        return titik[-1][1]
+    for (x1, y1), (x2, y2) in zip(titik, titik[1:]):
+        if nilai <= x2:
+            return y1 + (y2 - y1) * (nilai - x1) / (x2 - x1)
+    return titik[-1][1]
+
+
+def hitung_skor(r) -> int | None:
+    """Ringkas fundamental satu saham jadi skor 1-100 (makin tinggi makin sehat).
+
+    Rata-rata tertimbang dari komponen yang datanya ada. Komponen yang kosong
+    dibuang dan bobotnya dibagi ulang ke sisanya, jadi saham yang belum bagi
+    dividen tidak otomatis kalah dari yang sudah — asal data lain lengkap.
+    Kalau yang tersedia terlalu sedikit, hasilnya None (kolom kosong).
+
+    PER atau PBV yang nol/negatif bukan data hilang melainkan kabar buruk:
+    PER negatif berarti perusahaannya rugi, PBV negatif berarti ekuitasnya
+    minus. Keduanya diberi skor 0, bukan dilewati.
+    """
+    total_bobot = 0.0
+    total_skor = 0.0
+    for kolom, bobot in BOBOT_SKOR.items():
+        nilai = r.get(kolom)
+        if nilai is None or pd.isna(nilai):
+            continue
+        nilai = float(nilai)
+        if kolom in ("PER", "PBV") and nilai <= 0:
+            skor = 0.0
+        else:
+            skor = _interpolasi(nilai, TITIK_SKOR[kolom])
+        total_skor += skor * bobot
+        total_bobot += bobot
+
+    if total_bobot < MIN_CAKUPAN_SKOR * sum(BOBOT_SKOR.values()):
+        return None
+    # Dibatasi minimal 1: skor 0 mudah tertukar dengan "tidak ada data".
+    return max(1, min(100, round(total_skor / total_bobot)))
+
 
 # Daftar default. Daftar kurasi (LQ45, grup konglomerasi, tema) ditaruh lebih
 # dulu supaya label Grup-nya yang dipakai; tickers/idx.txt di urutan terakhir
@@ -244,6 +330,8 @@ def terapkan_filter(df: pd.DataFrame, args) -> pd.DataFrame:
     if args.status:
         pilihan = [s.upper() for s in args.status]
         saring(df["Status"].fillna("").str.upper().isin(pilihan))
+    if args.min_skor is not None:
+        saring(df["Skor"] >= args.min_skor)
     if args.max_per is not None:
         saring((df["PER"] > 0) & (df["PER"] <= args.max_per))
     if args.max_pbv is not None:
@@ -298,6 +386,8 @@ def main():
                    help="hanya tampilkan saham dengan status tertentu, salah satu dari: "
                         + ", ".join(STATUS))
     f = p.add_argument_group("filter fundamental")
+    f.add_argument("--min-skor", type=float, metavar="1-100",
+                   help="skor fundamental minimal (mis. 70 = fundamental kuat)")
     f.add_argument("--max-per", type=float, help="PER maksimal (dan harus > 0)")
     f.add_argument("--max-pbv", type=float, help="PBV maksimal (dan harus > 0)")
     f.add_argument("--min-roe", type=float, help="ROE minimal dalam persen")
@@ -348,6 +438,11 @@ def main():
     # Status selalu dihitung ulang, bukan dibaca dari CSV: aturannya bisa
     # berubah, dan hasilnya harus selalu cocok dengan kolom-kolom di sebelahnya.
     df["Status"] = df.apply(hitung_status, axis=1)
+    # Skor juga selalu dihitung ulang dari kolom fundamental, dengan alasan
+    # yang sama seperti Status: bobotnya bisa berubah sewaktu-waktu.
+    # Int64 (nullable), bukan int biasa: skor boleh kosong, dan tanpa ini
+    # pandas menaikkannya ke float sehingga CSV-nya berisi "72.0".
+    df["Skor"] = df.apply(hitung_skor, axis=1).astype("Int64")
     df = df.reindex(columns=[k for k in KOLOM if k in df.columns])
 
     hasil = terapkan_filter(df, args)

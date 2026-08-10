@@ -32,6 +32,9 @@ python screener.py
 # Value stock (medium risk): PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%
 python screener.py --max-per 15 --max-pbv 3.5 --min-roe 15
 
+# Fundamental terkuat: skor ≥ 70, diurut dari yang paling tinggi
+python screener.py --min-skor 70 --urut Skor
+
 # Saham dividen: yield ≥ 5%, market cap ≥ 50 triliun
 python screener.py --min-dividen 5 --min-mcap 50
 
@@ -64,6 +67,7 @@ Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
 
 | Opsi | Arti |
 |---|---|
+| `--min-skor N` | Skor fundamental minimal (1–100), lihat [Kolom Skor](#kolom-skor) |
 | `--max-per N` | Price-to-Earnings Ratio maksimal (PER negatif otomatis gugur) |
 | `--max-pbv N` | Price-to-Book Value maksimal |
 | `--min-roe N` | Return on Equity minimal (%) |
@@ -99,6 +103,41 @@ Aturannya diperiksa berurutan, label pertama yang cocok dipakai, dan sengaja dib
 ⚠️ **Status ini bukan rekomendasi beli/jual.** Ini murni aturan mekanis dari empat angka teknikal — tidak tahu apa pun soal berita emiten, laporan keuangan, rencana korporasi, atau aliran dana bandar. Saham berstatus JUAL bisa saja justru sedang di titik balik, dan yang BUY bisa langsung turun besoknya. Pakai sebagai penyaring awal, bukan sebagai keputusan.
 
 Batas likuiditas `AMBANG_LIKUID` dan seluruh ambang lain ada di bagian atas `screener.py` — silakan disesuaikan dengan gaya trading Anda.
+
+## Kolom Skor
+
+Kalau **Status** merangkum sisi teknikal, **Skor** merangkum sisi fundamental: satu angka **1–100** yang menjawab "perusahaan ini sehat atau tidak". Makin tinggi makin sehat — untung besar, tumbuh, dan valuasinya belum kemahalan.
+
+Skor adalah rata-rata tertimbang dari enam komponen yang sudah ada di tabel:
+
+| Komponen | Bobot | Kenapa |
+|---|---|---|
+| `ROE%` | 25% | Ukuran paling langsung seberapa efisien perusahaan menghasilkan laba dari modalnya |
+| `LabaYoY%` | 20% | Lapkeu terakhir tumbuh atau menyusut |
+| `PER` | 20% | Perusahaan bagus di harga kemahalan bukan investasi bagus |
+| `OmzetYoY%` | 15% | Laba naik tanpa omzet naik biasanya efisiensi atau pos sekali jalan |
+| `PBV` | 10% | Pembanding valuasi kedua, berguna saat laba sedang tidak normal |
+| `Dividen%` | 10% | Bobot terkecil — tidak bagi dividen belum tentu jelek (bisa dipakai ekspansi) |
+
+Tiap komponen dipetakan ke skala 0–100 lewat interpolasi linier antar titik acuan (mis. ROE 15% → 65, ROE 30% → 95; PER 10 → 85, PER 25 → 40). Titik-titiknya ada di `TITIK_SKOR` dan bobotnya di `BOBOT_SKOR` pada `screener.py`, jadi gampang disesuaikan.
+
+Cara bacanya:
+
+| Skor | Arti |
+|---|---|
+| **70–100** | Fundamental kuat |
+| **40–69** | Menengah — ada yang bagus, ada yang tidak |
+| **1–39** | Lemah — rugi, menyusut, atau harganya kemahalan |
+| *(kosong)* | Data fundamentalnya terlalu sedikit untuk disimpulkan |
+
+Beberapa hal yang perlu diketahui soal perhitungannya:
+
+- **Komponen kosong dibuang, bobotnya dibagi ulang** ke komponen yang ada. Jadi saham yang belum pernah bagi dividen tidak otomatis kalah dari yang sudah, asalkan data lainnya lengkap.
+- **Kalau data yang tersedia kurang dari separuh total bobot, skornya dikosongkan** — angka dari satu-dua komponen lebih menyesatkan daripada berguna.
+- **PER atau PBV nol/negatif dihitung 0, bukan dilewati.** PER negatif berarti perusahaannya rugi dan PBV negatif berarti ekuitasnya minus; itu kabar buruk, bukan data hilang.
+- Seperti Status, Skor **selalu dihitung ulang tiap run** dan tidak dibaca dari CSV lama, jadi mengubah bobot langsung berlaku ke seluruh tabel.
+
+⚠️ **Skor ini juga bukan rekomendasi.** Ia cuma merangkum enam angka yang datanya ada — tidak tahu soal beban utang, kualitas manajemen, prospek industri, atau apakah laba kuartal lalu berasal dari penjualan aset. Skor tinggi dengan Status JUAL artinya perusahaannya bagus tapi harganya sedang turun tren; dua kolom itu menjawab pertanyaan yang berbeda dan sengaja tidak digabung.
 
 ## Daftar Ticker
 
@@ -167,6 +206,7 @@ Fitur dashboard:
 - Tiga tab: **Swing**, **Value**, dan **Semua** (tabel lengkap seluruh saham yang dipantau), plus ringkasan jumlah saham yang lolos tiap filter.
 - Kolom **Grup** dan dropdown **filter grup** — bisa lihat khusus saham grup Prajogo, Bakrie, Salim, Hapsoro, atau LQ45 saja.
 - Kolom **Status** berwarna (BUY / BOW / HOLD / WSE / JUAL / TIPIS) plus dropdown filter status; klik judul kolomnya untuk mengurutkan dari paling positif ke paling negatif.
+- Kolom **Skor** berwarna (hijau ≥ 70, kuning 40–69, merah < 40) — kesimpulan fundamental 1–100; klik judulnya untuk mengurutkan dari fundamental terkuat.
 - Klik judul kolom untuk mengurutkan (misalnya urutkan per RSI atau dividen), kotak pencarian untuk mencari ticker/nama.
 - Nyaman dibuka di HP, mendukung mode gelap, dan menampilkan waktu pembaruan terakhir (WIB).
 

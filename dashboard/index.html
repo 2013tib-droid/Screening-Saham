@@ -113,7 +113,7 @@
     border-radius: 10px;
     background: var(--surface-raised);
   }
-  table { border-collapse: collapse; width: 100%; min-width: 1160px; font-size: .88rem; }
+  table { border-collapse: collapse; width: 100%; min-width: 1240px; font-size: .88rem; }
   thead th {
     position: sticky; top: 0;
     background: var(--surface-raised);
@@ -169,6 +169,20 @@
   .status.s-wse   { background: var(--warn-bg); color: var(--warn-fg); }
   .status.s-jual  { background: var(--neg-bg);  color: var(--neg-fg); }
   .status.s-tipis { background: var(--chip-bg); color: var(--text-muted); }
+
+  .skor {
+    display: inline-block;
+    min-width: 34px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    background: var(--chip-bg);
+    color: var(--text-secondary);
+  }
+  .skor.sk-kuat   { background: var(--pos-bg);  color: var(--pos-fg); }
+  .skor.sk-sedang { background: var(--warn-bg); color: var(--warn-fg); }
+  .skor.sk-lemah  { background: var(--neg-bg);  color: var(--neg-fg); }
   .kosong, .gagal {
     padding: 28px 16px;
     text-align: center;
@@ -235,6 +249,20 @@
           <li><span class="status s-tipis">TIPIS</span> nilai transaksi &lt; 1 miliar/hari — sinyal teknikal tidak berlaku, susah masuk-keluar.</li>
         </ul>
       </dd>
+      <dt>Skor</dt><dd>Kesimpulan fundamental dalam satu angka <strong>1–100</strong>: makin tinggi
+      makin sehat perusahaannya. Rata-rata tertimbang dari ROE (25%), pertumbuhan laba YoY (20%),
+      PER (20%), pertumbuhan omzet YoY (15%), PBV (10%), dan dividend yield (10%). Komponen yang
+      datanya kosong dibuang dan bobotnya dibagi ke sisanya; kalau data yang ada kurang dari
+      separuh bobot, kolomnya dikosongkan. PER atau PBV negatif (perusahaan rugi / ekuitas minus)
+      dihitung 0, bukan diabaikan.
+        <ul style="margin:6px 0 0; padding-left:18px">
+          <li><span class="skor sk-kuat">70+</span> fundamental kuat — untung besar, tumbuh, valuasi masih wajar.</li>
+          <li><span class="skor sk-sedang">40–69</span> menengah — ada yang bagus, ada yang tidak.</li>
+          <li><span class="skor sk-lemah">&lt;40</span> lemah — rugi, menyusut, atau harganya kemahalan.</li>
+        </ul>
+        Ini murni hitungan dari angka lapkeu di kolom-kolom sebelah kanan, <strong>bukan
+        rekomendasi</strong>: skor tidak tahu soal utang, kualitas manajemen, atau prospek industri.
+        Skor tinggi + Status JUAL berarti perusahaannya bagus tapi harganya sedang turun tren.</dd>
       <dt>PER</dt><dd>Price-to-Earnings Ratio — makin kecil makin murah relatif terhadap laba.</dd>
       <dt>PBV</dt><dd>Price-to-Book Value — harga dibanding nilai buku.</dd>
       <dt>ROE%</dt><dd>Return on Equity — efisiensi perusahaan menghasilkan laba.</dd>
@@ -267,6 +295,7 @@ const KOLOM = [
   { k: "Nama",         label: "Nama" },
   { k: "Grup",         label: "Grup" },
   { k: "Status",       label: "Status" },
+  { k: "Skor",         label: "Skor",      angka: true },
   { k: "Harga",        label: "Harga",     angka: true },
   { k: "PER",          label: "PER",       angka: true, desimal: 1 },
   { k: "PBV",          label: "PBV",       angka: true, desimal: 2 },
@@ -399,6 +428,12 @@ function render() {
         return `<td><span class="status s-${s.toLowerCase()}">${s}</span></td>`;
       }
       const isi = angka(r[k.k], k.desimal || 0);
+      if (k.k === "Skor") {
+        const s = r.Skor;
+        if (s === null || s === undefined || s === "") return "<td>–</td>";
+        const band = s >= 70 ? "kuat" : s >= 40 ? "sedang" : "lemah";
+        return `<td><span class="skor sk-${band}">${isi}</span></td>`;
+      }
       if (k.k === "RSI14") return "<td>" + isi + chip + "</td>";
       if (k.k === "VolSpike") return "<td>" + isi + chipVol + "</td>";
       return "<td>" + isi + "</td>";
