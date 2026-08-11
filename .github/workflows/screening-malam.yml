@@ -20,8 +20,11 @@ permissions:
   pages: write
   id-token: write
 
+# Satu grup dengan fundamental-kuartalan.yml: keduanya commit dan push ke repo
+# yang sama, dan run fundamental berlangsung ~20 menit sehingga tabrakan dengan
+# run malam bukan hal teoretis. Antre lebih baik daripada dua push berlomba.
 concurrency:
-  group: screening-malam
+  group: tulis-repo
   cancel-in-progress: false
 
 jobs:

@@ -54,8 +54,17 @@ python screener.py --tickers tickers/bakrie.txt tickers/salim.txt
 # Hanya saham grup tertentu (cocokkan kolom Grup)
 python screener.py --grup Prajogo Hapsoro
 
+# Fundamental kuat, tanpa satu pun red flag, dan cukup likuid
+python screener.py --min-skor 75 --tanpa-flag --min-nilai 5 --urut Skor
+
+# Murah dibanding sektornya sendiri, bukan dibanding pasar secara umum
+python screener.py --maks-per-sektor 0.7 --min-roe 12 --maks-der 1
+
 # Filter ulang dari CSV hasil sebelumnya, tanpa fetch ulang dari internet
 python screener.py --dari-csv hasil_screening.csv --min-dividen 5
+
+# Laporan fundamental lengkap satu emiten (lihat bagian Analisa Satu Emiten)
+python analisa.py BBCA
 
 # Mode demo offline (data contoh, BUKAN data pasar riil)
 python screener.py --demo --max-per 15 --min-roe 15
@@ -70,7 +79,13 @@ Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
 | `--min-skor N` | Skor fundamental minimal (1–100), lihat [Kolom Skor](#kolom-skor) |
 | `--max-per N` | Price-to-Earnings Ratio maksimal (PER negatif otomatis gugur) |
 | `--max-pbv N` | Price-to-Book Value maksimal |
+| `--maks-per-sektor N` | PER maksimal **relatif median sektornya** (0.8 = minimal 20% lebih murah dari sektornya) |
+| `--maks-pbv-sektor N` | PBV maksimal relatif median sektornya |
 | `--min-roe N` | Return on Equity minimal (%) |
+| `--maks-der N` | Debt to Equity maksimal (mis. 1.0) |
+| `--min-current-ratio N` | Current Ratio minimal (bank tidak punya kolom ini) |
+| `--min-ocf-laba N` | Rasio arus kas operasi terhadap laba bersih minimal (0.8 = labanya sebagian besar benar-benar jadi kas) |
+| `--sektor NAMA…` | Hanya sektor tertentu (mis. `--sektor Technology 'Real Estate'`) |
 | `--min-laba-yoy N` | Pertumbuhan laba kuartal terakhir (YoY) minimal (%) — saringan "lapkeu terakhir bagus" |
 | `--min-omzet-yoy N` | Pertumbuhan pendapatan kuartal terakhir (YoY) minimal (%) |
 | `--min-dividen N` | Dividend yield minimal (%) |
@@ -83,6 +98,31 @@ Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
 | `--status STATUS…` | Hanya saham dengan status tertentu (mis. `--status BUY BOW`) |
 | `--urut KOLOM` | Urutkan hasil (default: PER) |
 | `--dari-csv FILE` | Baca data dari CSV hasil sebelumnya, tanpa fetch ulang |
+
+## Analisa Satu Emiten (`analisa.py`)
+
+Screener menjawab *"dari 400 emiten, mana yang layak dilihat"*. Untuk pertanyaan berikutnya — *"emiten ini bagaimana persisnya"* — ada `analisa.py`, yang menghasilkan laporan Markdown lengkap dari data yang sudah ada, tanpa menarik apa pun dari internet:
+
+```bash
+python analisa.py BBCA                          # tampilkan di layar
+python analisa.py ANTM --output analisa/ANTM.md # simpan ke file
+```
+
+Butuh `hasil/semua.csv` (dari run screener) karena median sektor dihitung dari harga terkini.
+
+Isi laporannya: tabel skor lima kategori, rincian tiap metrik beserta bobot dan penyesuaian sektoralnya, angka pendukung dalam rupiah, kekuatan & kelemahan, red flags, status valuasi dengan nilai wajar dan margin of safety, tingkat keyakinan, dan rekomendasi Accumulate / Hold / Reduce / Avoid.
+
+**Nilai wajar** ditaksir dari dua jangkar sekaligus — median PER sektor × EPS, dan median PBV sektor × nilai buku per saham — lalu dirata-ratakan. Keduanya dipakai bersama karena masing-masing punya titik butanya: PER runtuh saat labanya sedang tidak normal, PBV runtuh saat nilai bukunya tidak mencerminkan daya hasil. Laporan menyatakan **arah bias** taksirannya alih-alih menyembunyikannya:
+
+- Kalau ROE-nya jauh di atas median sektor, jangkar PBV kemungkinan **merendahkan** nilai wajar — emiten yang menghasilkan imbal hasil di atas sektornya memang layak dihargai premium terhadap PBV median. Contoh nyata: BBCA (ROE 22,5% vs median sektor 7,8%) keluar sebagai "Overvalued 53%" kalau angkanya ditelan mentah, padahal jangkar PER-nya justru menunjuk harga wajar yang praktis sama dengan harga pasar.
+- Kalau kedua jangkar berselisih lebih dari 2×, laporan menyatakan rata-ratanya tidak berarti banyak dan menyuruh memeriksa mana yang lebih relevan.
+- Kalau margin of safety melewati ±100%, itu tanda penyebutnya nyaris nol, bukan diskon sebesar itu.
+
+**DCF sengaja tidak dihitung.** Data yang ada hanya menyediakan pertumbuhan tiga tahun ke belakang; menurunkan proyeksi sepuluh tahun ke depan darinya menghasilkan angka yang terlihat presisi tapi sepenuhnya ditentukan asumsi yang dikarang sendiri.
+
+**Yang tidak dihasilkan skrip ini:** bull/bear case, moat, katalis, dan kualitas manajemen. Semuanya menuntut penilaian atas hal yang tidak ada di laporan keuangan — rencana korporasi, posisi bersaing, rekam jejak manajemen memenuhi guidance. Bagian itu keluar sebagai tabel bukti dan pertanyaan terarah ("apakah labanya jadi kas?", "apakah manajemen mendilusi pemegang saham?") dengan angkanya sudah disiapkan, bukan sebagai kesimpulan yang dikarang.
+
+**Tingkat keyakinan** mengukur seberapa jauh angka di laporan boleh dipercaya — bukan seberapa yakin sahamnya akan naik. Turun bila basisnya laporan tahunan (−25), metrik inti kosong (−6 per metrik), pembanding sektornya kurang dari 3 emiten (−15), likuiditasnya tipis (−10), atau emitennya bank (−10, karena NIM/NPL/CAR/LDR tidak tersedia di sumber gratis ini padahal itu metrik penilai utama sebuah bank).
 
 ## Kolom Status
 
@@ -108,36 +148,104 @@ Batas likuiditas `AMBANG_LIKUID` dan seluruh ambang lain ada di bagian atas `scr
 
 Kalau **Status** merangkum sisi teknikal, **Skor** merangkum sisi fundamental: satu angka **1–100** yang menjawab "perusahaan ini sehat atau tidak". Makin tinggi makin sehat — untung besar, tumbuh, dan valuasinya belum kemahalan.
 
-Skor adalah rata-rata tertimbang dari enam komponen yang sudah ada di tabel:
+Skor disusun dari **lima kategori** berbobot tetap, masing-masing berisi beberapa komponen:
 
-| Komponen | Bobot | Kenapa |
+| Kategori | Bobot | Komponen |
 |---|---|---|
-| `ROE%` | 25% | Ukuran paling langsung seberapa efisien perusahaan menghasilkan laba dari modalnya |
-| `LabaYoY%` | 20% | Lapkeu terakhir tumbuh atau menyusut |
-| `PER` | 20% | Perusahaan bagus di harga kemahalan bukan investasi bagus |
-| `OmzetYoY%` | 15% | Laba naik tanpa omzet naik biasanya efisiensi atau pos sekali jalan |
-| `PBV` | 10% | Pembanding valuasi kedua, berguna saat laba sedang tidak normal |
-| `Dividen%` | 10% | Bobot terkecil — tidak bagi dividen belum tentu jelek (bisa dipakai ekspansi) |
+| **Valuasi** | 25 | `PERvsSektor`, `PBVvsSektor`, `PER`, `EV/EBITDA`, `Dividen%` |
+| **Profitabilitas & Kualitas Laba** | 25 | `ROE%`, `ROA%`, `MarginBersih%`, `MarginOperasi%`, `OCF/Laba` |
+| **Kesehatan Keuangan** | 20 | `DER`, `UtangBersih/EBITDA`, `InterestCoverage`, `CurrentRatio`, `QuickRatio` |
+| **Pertumbuhan** | 20 | `LabaYoY%`, `OmzetYoY%`, `LabaCAGR3%`, `OmzetCAGR3%`, `TahunLabaNaik` |
+| **Arus Kas & Alokasi Modal** | 10 | `FCFYield%`, `Payout%`, `SahamYoY%`, `Capex/OCF` |
 
-Tiap komponen dipetakan ke skala 0–100 lewat interpolasi linier antar titik acuan (mis. ROE 15% → 65, ROE 30% → 95; PER 10 → 85, PER 25 → 40). Titik-titiknya ada di `TITIK_SKOR` dan bobotnya di `BOBOT_SKOR` pada `screener.py`, jadi gampang disesuaikan.
+Perbandingan terhadap **median sektor** diberi porsi terbesar di kategori valuasi, karena angka absolut tidak bisa membedakan PBV 2,5 di bank dari PBV 2,5 di emiten batubara.
+
+Tiap komponen dipetakan ke skala 0–100 lewat interpolasi linier antar titik acuan (mis. ROE 15% → 65, ROE 30% → 95; DER 0,6 → 78, DER 2,5 → 22). Sebagian komponen sengaja **berpuncak di tengah**, bukan makin tinggi makin baik: `Payout%` 30–50% dinilai terbaik karena 0% berarti tidak berbagi hasil sementara di atas 100% berarti dividennya melebihi laba; `Capex/OCF` begitu juga, karena capex sangat rendah bisa berarti bisnis ringan modal tapi bisa juga berarti perusahaannya berhenti berinvestasi.
+
+Bobot dan titik acuannya ada di `BOBOT_KATEGORI` dan `KOMPONEN_SKOR` pada `screener.py`. Skor tiap kategori ikut tersimpan di CSV (`SkorValuasi`, `SkorProfitabilitas`, …) supaya angka totalnya bisa dibongkar — dua emiten berskor 70 bisa sampai ke sana lewat jalan yang sangat berbeda.
 
 Cara bacanya:
 
 | Skor | Arti |
 |---|---|
-| **70–100** | Fundamental kuat |
-| **40–69** | Menengah — ada yang bagus, ada yang tidak |
-| **1–39** | Lemah — rugi, menyusut, atau harganya kemahalan |
+| **90–100** | Exceptional |
+| **80–89** | Excellent |
+| **65–79** | Good |
+| **50–64** | Average / Fair |
+| **35–49** | Weak |
+| **< 35** | Poor / hindari |
 | *(kosong)* | Data fundamentalnya terlalu sedikit untuk disimpulkan |
 
-Beberapa hal yang perlu diketahui soal perhitungannya:
+### Penyesuaian sektoral
 
-- **Komponen kosong dibuang, bobotnya dibagi ulang** ke komponen yang ada. Jadi saham yang belum pernah bagi dividen tidak otomatis kalah dari yang sudah, asalkan data lainnya lengkap.
-- **Kalau data yang tersedia kurang dari separuh total bobot, skornya dikosongkan** — angka dari satu-dua komponen lebih menyesatkan daripada berguna.
-- **PER atau PBV nol/negatif dihitung 0, bukan dilewati.** PER negatif berarti perusahaannya rugi dan PBV negatif berarti ekuitasnya minus; itu kabar buruk, bukan data hilang.
+Satu set bobot tidak berlaku untuk semua industri, jadi `PENYESUAIAN_SEKTOR` mengalikan bobot komponen tertentu per sektor (faktor 0 = komponennya tidak dipakai sama sekali, porsinya dibagi ulang):
+
+| Sektor | Penyesuaian | Alasan |
+|---|---|---|
+| **Perbankan & Jasa Keuangan** | DER, Net Debt/EBITDA, Current/Quick Ratio, Interest Coverage, EV/EBITDA dimatikan; `PBVvsSektor` ×1,6 dan `ROE%` ×1,4 | Neraca bank tidak mengenal aset lancar, dan utangnya adalah dana pihak ketiga — itu bisnisnya, bukan bebannya. P/B dan ROE memang metrik utama untuk menilai bank |
+| **Energi & Komoditas** | `UtangBersih/EBITDA` ×1,6, `FCFYield%` ×1,3; `PER` ×0,6, `LabaYoY%` ×0,7 | Yang menentukan bertahan-tidaknya melewati siklus adalah utang bersih terhadap kas yang dihasilkan, bukan laba satu tahun yang kebetulan sedang di puncak harga komoditas |
+| **Properti & Konstruksi** | `DER` ×1,5, `CurrentRatio` ×1,3, `OCF/Laba` ×1,3 | Gearing dan kemampuan mendanai proyek yang menentukan; laba akuntansinya sering mendahului kasnya |
+| **Consumer & Retail** | `MarginBersih%` ×1,4, `MarginOperasi%` ×1,3, `OCF/Laba` ×1,3 | Yang membedakan pemenang adalah margin yang bertahan dan kas yang benar-benar masuk |
+| **Teknologi** | `PER` ×0,4, `EV/EBITDA` ×0,5, `Dividen%` ×0,3; `OmzetYoY%` ×1,5, `FCFYield%` ×1,4, `SahamYoY%` ×1,5 | Toleransi valuasi lebih tinggi, tapi ditagih lebih keras soal kualitas pertumbuhan, kas yang terbakar, dan dilusi |
+
+### Kolom Flag (red flags)
+
+Kolom `Flag` menandai kondisi yang **menolak dirata-ratakan**. Skor adalah rata-rata, dan rata-rata bisa menutupi satu cacat berat dengan banyak angka bagus — emiten berekuitas negatif tetap bisa dapat skor menengah kalau valuasinya kebetulan tampak murah. Karena itu Flag dihitung terpisah dan **tidak** mengurangi Skor; keduanya menjawab pertanyaan berbeda.
+
+| Kode | Arti |
+|---|---|
+| `ekuitas-` | Ekuitas negatif — kewajiban melebihi seluruh asetnya |
+| `rugi` | Masih merugi pada periode terakhir |
+| `OCF-` / `FCF-` | Arus kas operasi / arus kas bebas negatif |
+| `kas<laba` | Kas operasi kurang dari separuh laba — kualitas laba dipertanyakan |
+| `DER>3` | Utang lebih dari tiga kali ekuitas |
+| `bunga<1.5` | Laba operasi nyaris tidak menutup beban bunga |
+| `laba-30%` | Laba turun lebih dari 30% YoY |
+| `dilusi` | Jumlah saham bertambah lebih dari 10% setahun |
+| `payout>100` | Dividen melebihi laba — belum tentu bisa dipertahankan |
+
+Flag `OCF-`, `FCF-`, `kas<laba`, dan `DER>3` **dimatikan untuk sektor perbankan** dengan alasan yang sama seperti bobotnya: arus kas operasi bank sering negatif karena penyaluran kredit menyerap kas, dan itu tanda bank sedang tumbuh. Dibiarkan menyala, flag ini akan menandai hampir seluruh sektor dan berhenti berarti.
+
+Saring dengan `--tanpa-flag` (buang yang punya flag apa pun) atau `--kecuali-flag rugi ekuitas-` (buang yang tertentu saja).
+
+Beberapa hal lain soal perhitungannya:
+
+- **Komponen kosong dibuang, bobotnya dibagi ulang** ke komponen lain dalam kategori yang sama. Jadi bank tidak dihukum karena tidak punya current ratio, dan emiten yang belum bagi dividen tidak otomatis kalah dari yang sudah.
+- **Kategori yang datanya kurang dari 40% bobotnya dibuang seluruhnya**, dan bobot kategorinya dibagi ulang ke kategori lain.
+- **Kalau kategori yang tersisa kurang dari separuh total bobot, skornya dikosongkan** — angka yang disusun dari dua-tiga komponen lebih menyesatkan daripada berguna.
+- **PER, PBV, atau EV/EBITDA nol/negatif dihitung 0, bukan dilewati.** PER negatif berarti perusahaannya rugi dan PBV negatif berarti ekuitasnya minus; kalau dilewati, emiten rugi justru diuntungkan karena komponen terburuknya menghilang.
 - Seperti Status, Skor **selalu dihitung ulang tiap run** dan tidak dibaca dari CSV lama, jadi mengubah bobot langsung berlaku ke seluruh tabel.
 
-⚠️ **Skor ini juga bukan rekomendasi.** Ia cuma merangkum enam angka yang datanya ada — tidak tahu soal beban utang, kualitas manajemen, prospek industri, atau apakah laba kuartal lalu berasal dari penjualan aset. Skor tinggi dengan Status JUAL artinya perusahaannya bagus tapi harganya sedang turun tren; dua kolom itu menjawab pertanyaan yang berbeda dan sengaja tidak digabung.
+⚠️ **Skor ini juga bukan rekomendasi.** Ia cuma merangkum enam angka — tidak tahu soal kualitas manajemen, prospek industri, atau apakah laba kuartal lalu berasal dari penjualan aset. Skor tinggi dengan Status JUAL artinya perusahaannya bagus tapi harganya sedang turun tren; dua kolom itu menjawab pertanyaan yang berbeda dan sengaja tidak digabung.
+
+Beban utang, likuiditas, margin, dan arus kas **sudah ikut terambil** dan tersimpan di CSV hasil (lihat bagian berikut), hanya belum masuk ke rumus Skor.
+
+## Cache Fundamental
+
+Laporan keuangan cuma berubah empat kali setahun, sedangkan harga berubah tiap hari. Karena itu keduanya diambil terpisah:
+
+| | Kapan | Yang diambil | Skrip |
+|---|---|---|---|
+| **Fundamental** | Per kuartal | Laba rugi, neraca, arus kas (~20 menit untuk 400 emiten) | `scripts/perbarui_fundamental.py` → `data/fundamental.csv` |
+| **Teknikal** | Tiap malam | Histori harga & volume saja | `screener.py` |
+
+```bash
+python scripts/perbarui_fundamental.py                 # seluruh universe
+python scripts/perbarui_fundamental.py --maks-umur 80  # hanya yang sudah basi
+```
+
+Sejak workflow **Fundamental Kuartalan** ada, ini berjalan otomatis di bulan-bulan setelah batas penyampaian laporan ke IDX — April (tahunan audited), Mei (kuartal I), Agustus (semester I), dan November (kuartal III), tiap tanggal 5. Jalankan manual lewat tab Actions → *Fundamental Kuartalan* → *Run workflow* bila ada emiten yang terlambat menyampaikan laporan.
+
+Workflow itu **menolak commit** kalau cache-nya tidak wajar (kurang dari 100 baris, atau kurang dari 70% punya EPS). Skrip mempertahankan baris lama saat satu emiten gagal diambil, jadi kegagalan sebagian tidak terlihat dari exit code — tanpa pemeriksaan ini, Yahoo yang sedang rusak total bisa mendorong cache kosong yang membuat seluruh kolom Skor menghilang malam itu juga.
+
+Sebelumnya `screener.py` menarik `.info` untuk 400-an emiten **tiap malam** hanya demi ROE dan dua angka pertumbuhan — angka yang sama persis selama tiga bulan. Pemisahan ini bukan cuma menghemat request; karena biayanya tidak lagi ditanggung harian, laporan keuangan penuh jadi terjangkau. Yang ikut tersimpan di CSV hasil sekarang: margin kotor/operasi/bersih, ROA, DER, Net Debt/EBITDA, current & quick ratio, interest coverage, OCF/Laba, FCF Yield, payout, CAGR 3 tahun, dan perubahan jumlah saham beredar (dilusi).
+
+Tiga hal yang perlu diketahui soal datanya:
+
+- **Kolom `Basis`** menandai cara angka labanya didapat. `TTM` = empat kuartal berurutan. `TTM-gabungan` = tahun buku terakhir + YTD tahun ini − YTD tahun lalu; ini yang paling sering dipakai, karena bar kuartal September 2025 hilang di hampir semua emiten IDX dan penjumlahan empat kuartal biasa akan menyeberangi lubang itu. `Tahunan` = terpaksa memakai laporan tahunan, jadi bisa beberapa bulan basi.
+- **Laporan berdenominasi USD dikonversi ke rupiah.** Banyak emiten batubara, energi, dan sebagian utilitas menyusun laporan keuangannya dalam dolar sementara sahamnya diperdagangkan dalam rupiah. Tanpa konversi, EPS dan harga berasal dari satuan berbeda dan PER meleset ~17.000×: ADRO terbaca 146.821 alih-alih 8,3, dan median PER sektor Energy sempat 155.093. Kolom `MataUang` mencatat mata uang laporan aslinya. Yield dividen tidak ikut dikonversi — `dividendRate` Yahoo memang sudah dalam mata uang perdagangan.
+- **Rasio yang tidak berlaku dibiarkan kosong, bukan diisi nol.** Bank tidak memisahkan aset lancar dan tidak melaporkan gross profit maupun EBITDA, jadi current ratio dan Net Debt/EBITDA-nya memang tidak ada. `Net Debt/EBITDA` juga dikosongkan saat EBITDA negatif — penyebut minus membuat utang besar terbaca sebagai rasio kecil yang menyesatkan.
+- **`PERvsSektor` dan `PBVvsSektor`** membandingkan valuasi terhadap median sektornya: 1,0 = persis median, 0,7 = 30% lebih murah, 1,4 = 40% lebih mahal. Ini yang membuat valuasi bisa dibaca lintas industri — PBV 2,5 di bank dan PBV 2,5 di emiten batubara bukan hal yang sama. Kosong bila sektornya berisi kurang dari tiga pembanding.
 
 ## Selalu Data Penutupan
 
@@ -153,7 +261,7 @@ Ini bukan kehati-hatian berlebihan. Selama sesi berjalan Yahoo tetap mengirim ba
 
 Ambangnya `JAM_DATA_FINAL` = 16:15 WIB, diberi jeda 25 menit dari penutupan karena Yahoo perlu beberapa menit memperbarui bar terakhirnya. Hari libur bursa tidak perlu didaftar: tanggal dibaca dari bar-nya sendiri, jadi kalau hari ini bursa tutup, bar terakhir bertanggal kemarin dan tidak ada yang dipotong.
 
-Satu sisa ketidakkonsistenan yang disengaja: yang dipotong hanya kolom turunan histori (Harga, MA50, MA200, RSI, volume). `PER` dan `PBV` datang jadi dari Yahoo dan tetap dihitung dari harga berjalan, jadi saat sesi hidup keduanya berbeda sebesar pergerakan satu hari — umumnya di bawah 2% dan tidak menggeser Skor secara berarti.
+Dulu ada satu sisa ketidakkonsistenan di sini: `PER` dan `PBV` datang jadi dari Yahoo yang menghitungnya dari harga berjalan, sementara semua kolom lain sudah dipotong ke penutupan. Sejak kedua rasio itu dihitung sendiri dari EPS dan nilai buku di cache fundamental (lihat [Cache Fundamental](#cache-fundamental)), satu-satunya variabel harian tinggal harga — jadi seluruh tabel kini mengacu ke titik waktu yang sama tanpa kecuali.
 
 ## Daftar Ticker
 
