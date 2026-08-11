@@ -1,2 +1,5 @@
 hasil_screening.csv
 __pycache__/
+# Folder staging untuk pratinjau dashboard secara lokal (disusun ulang oleh
+# workflow di runner). Isinya salinan dashboard/index.html + hasil/.
+_site/

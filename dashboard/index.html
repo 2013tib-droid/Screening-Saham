@@ -8,158 +8,368 @@
 <style>
   :root {
     color-scheme: light;
-    --surface: #fcfcfb;
+    --surface: #f6f6f4;
     --surface-raised: #ffffff;
+    --surface-sunken: #efeeeb;
+    --head-bg: #f8f8f6;
+    --zebra: #fafaf9;
     --border: #e4e3df;
+    --border-soft: #eceae6;
     --text-primary: #0b0b0b;
     --text-secondary: #52514e;
     --text-muted: #8a8984;
     --accent: #2a78d6;
+    --accent-strong: #1c5fae;
     --accent-soft: #e8f0fb;
     --chip-bg: #efeeea;
-    --row-hover: #f4f3f0;
+    --row-hover: #eef4fc;
     --pos-bg: #e0f2e6; --pos-fg: #14663a;
     --neg-bg: #fbe7e5; --neg-fg: #a3261d;
     --warn-bg: #fbeed6; --warn-fg: #7a5200;
     --info-bg: #e8f0fb; --info-fg: #1c5fae;
+    --shadow-sm: 0 1px 2px rgba(16,15,14,.05);
+    --shadow-md: 0 2px 4px rgba(16,15,14,.06), 0 8px 24px -12px rgba(16,15,14,.14);
+    --sticky-shadow: 10px 0 12px -10px rgba(16,15,14,.35);
   }
   @media (prefers-color-scheme: dark) {
     :root {
       color-scheme: dark;
-      --surface: #1a1a19;
-      --surface-raised: #232322;
+      --surface: #131312;
+      --surface-raised: #1e1e1d;
+      --surface-sunken: #191918;
+      --head-bg: #262625;
+      --zebra: #212120;
       --border: #3a3936;
+      --border-soft: #2e2d2b;
       --text-primary: #ffffff;
       --text-secondary: #c3c2b7;
       --text-muted: #8a8984;
       --accent: #3987e5;
+      --accent-strong: #83b3f2;
       --accent-soft: #1e3350;
       --chip-bg: #32312f;
-      --row-hover: #2a2a28;
+      --row-hover: #26313f;
       --pos-bg: #17361f; --pos-fg: #74d18e;
       --neg-bg: #3b1e1b; --neg-fg: #f19b93;
       --warn-bg: #372d15; --warn-fg: #e3bd6b;
       --info-bg: #1e3350; --info-fg: #83b3f2;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.35);
+      --shadow-md: 0 2px 4px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.7);
+      --sticky-shadow: 10px 0 12px -10px rgba(0,0,0,.75);
     }
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     margin: 0;
     background: var(--surface);
     color: var(--text-primary);
     font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 20px 16px 48px; }
-  header h1 { font-size: 1.35rem; margin: 0 0 2px; }
-  header p { margin: 0; color: var(--text-secondary); font-size: .9rem; }
+  /* Lebar dibiarkan mengikuti layar: tabelnya 24 kolom, dan di monitor lebar
+     membatasi diri ke 1080px hanya menyisakan ruang kosong di kiri-kanan
+     sementara tabelnya sendiri terpaksa menggulir. */
+  .wrap { max-width: none; margin: 0 auto; padding: 22px clamp(10px, 1.4vw, 24px) 56px; }
 
+  /* ---- Kepala halaman ---- */
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: clamp(1.3rem, 1.1rem + .7vw, 1.7rem);
+    letter-spacing: -.02em;
+    margin: 0;
+  }
+  header h1 .ikon { margin-right: 6px; }
+  header p { margin: 0; color: var(--text-secondary); font-size: .875rem; }
+  .titik {
+    display: inline-block;
+    width: 7px; height: 7px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: var(--pos-fg);
+    vertical-align: middle;
+  }
+
+  /* ---- Kartu ringkasan ---- */
   .tiles {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 10px;
-    margin: 18px 0;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
   }
   .tile {
+    position: relative;
+    display: block;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: inherit;
     background: var(--surface-raised);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-  }
-  .tile .label { font-size: .78rem; color: var(--text-secondary); }
-  .tile .value { font-size: 1.55rem; font-weight: 650; line-height: 1.2; }
-  .tile .sub { font-size: .78rem; color: var(--text-muted); }
-
-  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0; }
-  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-  .tabs button {
-    border: 1px solid var(--border);
-    background: var(--surface-raised);
-    color: var(--text-secondary);
-    border-radius: 999px;
-    padding: 6px 14px;
-    font-size: .88rem;
+    border-radius: 12px;
+    padding: 13px 16px 14px 18px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
     cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
   }
-  .tabs button.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-    font-weight: 600;
+  .tile::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--pita, var(--accent));
   }
-  #grup, #status {
-    padding: 7px 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface-raised);
-    color: var(--text-primary);
-    font-size: .9rem;
+  .tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--pita, var(--accent)); }
+  .tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tile.aktif { border-color: var(--pita, var(--accent)); background: var(--surface-raised); box-shadow: var(--shadow-md); }
+  .tile .label {
+    font-size: .72rem;
+    font-weight: 650;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
   }
-  #cari {
-    flex: 1;
-    min-width: 160px;
-    max-width: 280px;
-    padding: 7px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface-raised);
-    color: var(--text-primary);
-    font-size: .9rem;
+  .tile .value {
+    font-size: 1.9rem;
+    font-weight: 680;
+    line-height: 1.15;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
   }
-  #cari:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tile .sub { font-size: .76rem; color: var(--text-muted); line-height: 1.35; }
+  .tile[data-tab="swing"]  { --pita: #2a78d6; }
+  .tile[data-tab="value"]  { --pita: #17915a; }
+  .tile[data-tab="tumbuh"] { --pita: #c07a11; }
+  .tile[data-tab="semua"]  { --pita: #7a6ce0; }
 
-  .tablewrap {
-    overflow-x: auto;
+  /* ---- Kendali ---- */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 16px 0 12px;
+    padding: 10px 12px;
+    background: var(--surface-raised);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--surface-raised);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
   }
-  table { border-collapse: collapse; width: 100%; min-width: 1640px; font-size: .88rem; }
-  thead th {
-    position: sticky; top: 0;
+  .tabs {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    padding: 3px;
+    background: var(--surface-sunken);
+    border-radius: 10px;
+  }
+  .tabs button {
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    padding: 6px 15px;
+    font: inherit;
+    font-size: .875rem;
+    font-weight: 550;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+  }
+  .tabs button:hover { color: var(--text-primary); }
+  .tabs button.active {
     background: var(--surface-raised);
-    border-bottom: 2px solid var(--border);
-    padding: 9px 10px;
+    color: var(--accent-strong);
+    font-weight: 650;
+    box-shadow: var(--shadow-sm);
+  }
+  .pisah { width: 1px; align-self: stretch; background: var(--border); margin: 2px 2px; }
+  select, input[type="search"] {
+    padding: 7px 11px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: .875rem;
+  }
+  select:hover, input[type="search"]:hover { border-color: var(--text-muted); }
+  select:focus-visible, input[type="search"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #cari { flex: 1; min-width: 170px; max-width: 320px; }
+  .hitung { margin-left: auto; font-size: .8rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  /* ---- Panel tabel ---- */
+  .panel {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .tablewrap { overflow-x: auto; overscroll-behavior-x: contain; scroll-behavior: smooth; }
+  .tablewrap::-webkit-scrollbar { height: 10px; }
+  .tablewrap::-webkit-scrollbar-track { background: var(--surface-sunken); }
+  .tablewrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; border: 2px solid var(--surface-sunken); }
+  .tablewrap::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+  table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1680px; font-size: .875rem; }
+  table.sempit { min-width: 1040px; }
+  thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--head-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 10px;
     text-align: right;
-    font-weight: 600;
+    font-weight: 650;
+    font-size: .76rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
     color: var(--text-secondary);
     white-space: nowrap;
     cursor: pointer;
     user-select: none;
+    transition: color .1s ease, background .1s ease;
   }
-  thead th:first-child, thead th:nth-child(-n+4) { text-align: left; }
-  thead th:hover { color: var(--accent); }
-  thead th .arah { font-size: .7rem; color: var(--accent); }
+  thead th:hover { color: var(--accent); background: var(--accent-soft); }
+  thead th.terurut { color: var(--accent); }
+  thead th .arah { font-size: .7rem; }
+  tbody tr { background: var(--surface-raised); transition: background .08s ease; }
+  tbody tr:nth-child(even) { background: var(--zebra); }
+  tbody tr:hover { background: var(--row-hover); }
   tbody td {
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border-soft);
     text-align: right;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
-  tbody td:first-child, tbody td:nth-child(-n+4) { text-align: left; }
   tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: var(--row-hover); }
-  td.ticker { font-weight: 650; }
-  td .nama { color: var(--text-secondary); }
-  .chip {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 1px 7px;
-    border-radius: 999px;
-    font-size: .7rem;
-    font-weight: 600;
-    background: var(--chip-bg);
-    color: var(--text-secondary);
+  th.kiri, td.kiri { text-align: left; }
+
+  /* Kolom ticker dijadikan lengket: dengan 24 kolom, menggulir ke kanan tanpa
+     ini berarti kehilangan tahu sedang membaca baris siapa. */
+  th.lengket, td.lengket {
+    position: sticky; left: 0;
+    background: inherit;
   }
-  .chip.oversold { background: var(--accent-soft); color: var(--accent); }
+  thead th.lengket { z-index: 3; background: var(--head-bg); }
+  tbody td.lengket { z-index: 1; }
+  .tablewrap.tergulir th.lengket,
+  .tablewrap.tergulir td.lengket { box-shadow: var(--sticky-shadow); }
+
+  td.ticker { font-weight: 680; letter-spacing: .01em; }
+  td .nama { color: var(--text-secondary); }
+
+  /* ---- Pagination mendatar ---- */
+  .pager {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+    background: var(--head-bg);
+  }
+  .pager button.nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-raised);
+    color: var(--text-secondary);
+    font-size: .9rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .pager button.nav:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .pager button.nav:disabled { opacity: .35; cursor: default; }
+  .pager .dots { display: flex; gap: 5px; flex: 1; }
+  .pager .dots button {
+    flex: 1;
+    max-width: 72px;
+    height: 6px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: var(--border);
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .pager .dots button:hover { background: var(--text-muted); }
+  .pager .dots button.aktif { background: var(--accent); }
+  .pager .posisi { font-size: .78rem; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* ---- Pagination baris ---- */
+  .rowpager {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 9px 12px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-raised);
+  }
+  .rowpager .info { font-size: .8rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .halaman { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+  .halaman button {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-raised);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: .82rem;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .halaman button:hover:not(:disabled):not(.aktif) { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+  .halaman button.aktif { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 650; cursor: default; }
+  .halaman button:disabled { opacity: .35; cursor: default; }
+  .halaman .jeda { border: 0; background: none; cursor: default; color: var(--text-muted); min-width: 16px; padding: 0; }
+  .perhal { font-size: .8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+  .perhal select { padding: 4px 8px; font-size: .8rem; }
+
+  /* ---- Label ---- */
+  /* RSI dan VolSpike dulunya menempelkan label teks ("overbought", "spike") di
+     samping angkanya. Labelnya melebarkan kolom sampai dua kali lipat, dan
+     karena hanya sebagian baris punya label, angkanya jadi tidak sejajar.
+     Sekarang angkanya sendiri yang diwarnai: sinyalnya tetap terbaca sekali
+     pandang, lebar kolomnya tetap. Ambangnya sudah jelas dari angkanya
+     (RSI 70 / 30), jadi tidak ada informasi yang hilang bersama teksnya. */
+  .nilai {
+    display: inline-block;
+    min-width: 44px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    cursor: help;
+  }
+  .nilai.n-panas  { background: var(--neg-bg);    color: var(--neg-fg); }
+  .nilai.n-dingin { background: var(--info-bg);   color: var(--info-fg); }
+  .nilai.n-spike  { background: var(--accent-soft); color: var(--accent-strong); }
 
   .status {
     display: inline-block;
-    padding: 2px 9px;
+    min-width: 46px;
+    text-align: center;
+    padding: 3px 9px;
     border-radius: 6px;
-    font-size: .74rem;
+    font-size: .72rem;
     font-weight: 700;
-    letter-spacing: .02em;
+    letter-spacing: .04em;
     background: var(--chip-bg);
     color: var(--text-secondary);
   }
@@ -172,8 +382,9 @@
 
   .skor {
     display: inline-block;
-    min-width: 34px;
-    padding: 2px 8px;
+    min-width: 36px;
+    text-align: center;
+    padding: 3px 8px;
     border-radius: 6px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -193,7 +404,7 @@
     margin: 1px 3px 1px 0;
     padding: 1px 6px;
     border-radius: 4px;
-    font-size: .68rem;
+    font-size: .67rem;
     font-weight: 700;
     white-space: nowrap;
     background: var(--neg-bg);
@@ -202,35 +413,55 @@
   .flag-kosong { color: var(--text-muted); }
   /* Rasio terhadap median sektor: di bawah 1 berarti lebih murah dari
      sektornya sendiri, di atas 1 lebih mahal. */
-  .rel-murah { color: var(--pos-fg); font-weight: 600; }
+  .rel-murah { color: var(--pos-fg); font-weight: 650; }
   .rel-mahal { color: var(--neg-fg); }
   .kosong, .gagal {
-    padding: 28px 16px;
+    padding: 40px 16px;
     text-align: center;
     color: var(--text-secondary);
     font-size: .92rem;
   }
 
-  details { margin-top: 16px; font-size: .85rem; color: var(--text-secondary); }
-  details summary { cursor: pointer; color: var(--accent); }
-  details dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 8px 0 0; }
-  details dt { font-weight: 600; }
+  details {
+    margin-top: 18px;
+    font-size: .85rem;
+    color: var(--text-secondary);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+  }
+  details[open] { box-shadow: var(--shadow-sm); }
+  details summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  details dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 12px 0 0; }
+  details dt { font-weight: 650; color: var(--text-primary); }
   details dd { margin: 0; }
-  footer { margin-top: 22px; font-size: .78rem; color: var(--text-muted); }
+  footer { margin-top: 24px; font-size: .78rem; color: var(--text-muted); }
+  footer a { color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .controls { gap: 8px; padding: 9px; }
+    .pisah { display: none; }
+    #cari { max-width: none; }
+    .hitung { margin-left: 0; }
+    .tile .value { font-size: 1.6rem; }
+    details dl { grid-template-columns: 1fr; }
+    details dt { margin-top: 8px; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>📈 Screening Saham IDX</h1>
-    <p id="pembaruan">Memuat data …</p>
+    <h1><span class="ikon">📈</span>Screening Saham IDX</h1>
+    <p><span class="titik"></span><span id="pembaruan">Memuat data …</span></p>
   </header>
 
   <div class="tiles" id="tiles" hidden>
-    <div class="tile"><div class="label">Lolos filter swing</div><div class="value" id="t-swing">–</div><div class="sub">RSI ≤ 65, di atas MA200, vol spike ≥ 1,2×</div></div>
-    <div class="tile"><div class="label">Lolos filter value</div><div class="value" id="t-value">–</div><div class="sub">PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%</div></div>
-    <div class="tile"><div class="label">Lolos filter tumbuh</div><div class="value" id="t-tumbuh">–</div><div class="sub">Laba YoY ≥ 20%, ROE ≥ 10%, PER ≤ 25</div></div>
-    <div class="tile"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">Seluruh emiten IDX di atas 1 T, plus daftar kurasi</div></div>
+    <button type="button" class="tile aktif" data-tab="swing"><div class="label">Lolos filter swing</div><div class="value" id="t-swing">–</div><div class="sub">RSI ≤ 65, di atas MA200, vol spike ≥ 1,2×</div></button>
+    <button type="button" class="tile" data-tab="value"><div class="label">Lolos filter value</div><div class="value" id="t-value">–</div><div class="sub">PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%</div></button>
+    <button type="button" class="tile" data-tab="tumbuh"><div class="label">Lolos filter tumbuh</div><div class="value" id="t-tumbuh">–</div><div class="sub">Laba YoY ≥ 20%, ROE ≥ 10%, PER ≤ 25</div></button>
+    <button type="button" class="tile" data-tab="semua"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">Seluruh emiten IDX di atas 1 T, plus daftar kurasi</div></button>
   </div>
 
   <div class="controls">
@@ -240,6 +471,14 @@
       <button data-tab="tumbuh">Tumbuh</button>
       <button data-tab="semua">Semua</button>
     </div>
+    <div class="pisah"></div>
+    <select id="kelompok" aria-label="Pilih kelompok kolom">
+      <option value="">Semua kolom (24)</option>
+      <option value="ringkas">Ringkas</option>
+      <option value="valuasi">Valuasi</option>
+      <option value="fundamental">Fundamental</option>
+      <option value="teknikal">Teknikal</option>
+    </select>
     <select id="grup" aria-label="Saring berdasarkan grup">
       <option value="">Semua grup</option>
     </select>
@@ -247,9 +486,30 @@
       <option value="">Semua status</option>
     </select>
     <input id="cari" type="search" placeholder="Cari ticker / nama …" autocomplete="off">
+    <span class="hitung" id="hitung"></span>
   </div>
 
-  <div class="tablewrap" id="tabel"><div class="kosong">Memuat data …</div></div>
+  <div class="panel">
+    <div class="tablewrap" id="tabel"><div class="kosong">Memuat data …</div></div>
+    <div class="pager" id="pager" hidden>
+      <button type="button" class="nav" id="ke-kiri" aria-label="Geser kolom ke kiri">◀</button>
+      <div class="dots" id="pager-dots"></div>
+      <button type="button" class="nav" id="ke-kanan" aria-label="Geser kolom ke kanan">▶</button>
+      <span class="posisi" id="pager-posisi"></span>
+    </div>
+    <div class="rowpager" id="rowpager" hidden>
+      <span class="info" id="rp-info"></span>
+      <label class="perhal">Baris per halaman
+        <select id="perhal" aria-label="Jumlah baris per halaman">
+          <option value="10" selected>10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="0">Semua</option>
+        </select>
+      </label>
+      <div class="halaman" id="rp-halaman"></div>
+    </div>
+  </div>
 
   <details>
     <summary>Arti kolom &amp; cara pakai</summary>
@@ -270,6 +530,13 @@
           <li><span class="status s-tipis">TIPIS</span> nilai transaksi &lt; 1 miliar/hari — sinyal teknikal tidak berlaku, susah masuk-keluar.</li>
         </ul>
       </dd>
+      <dt>Kelompok kolom</dt><dd>Tabelnya 24 kolom dan tidak muat di layar mana pun sekaligus.
+      Dropdown <strong>Semua kolom / Ringkas / Valuasi / Fundamental / Teknikal</strong> memotongnya
+      jadi sekumpulan kolom yang memang dibaca bersamaan; Ticker, Nama, Status, dan Skor selalu ikut
+      supaya barisnya tetap bisa dikenali. Kalau tetap ingin melihat semuanya, tombol
+      <strong>◀ ▶</strong> di bawah tabel menggeser satu layar penuh ke kiri/kanan, dan bilah
+      ruas di antaranya melompat langsung ke bagian tabel yang dituju. Kolom Ticker menempel di
+      tepi kiri, jadi tidak akan hilang sejauh apa pun digeser.</dd>
       <dt>Skor</dt><dd>Kesimpulan fundamental dalam satu angka <strong>1–100</strong>: makin tinggi
       makin sehat perusahaannya. Disusun dari lima kategori berbobot — valuasi (25), profitabilitas
       &amp; kualitas laba (25), kesehatan keuangan (20), pertumbuhan (20), serta arus kas &amp;
@@ -328,8 +595,12 @@
       <dt>MCap (T)</dt><dd>Kapitalisasi pasar dalam triliun rupiah.</dd>
       <dt>Vol20 (jt)</dt><dd>Volume rata-rata 20 hari, dalam juta lembar.</dd>
       <dt>Nilai (M)</dt><dd>Nilai transaksi rata-rata 20 hari, dalam miliar rupiah — ukuran likuiditas.</dd>
-      <dt>VolSpike</dt><dd>Volume terakhir dibanding rata-rata 20 hari — ≥ 1,5× berarti ada lonjakan minat (ditandai "spike").</dd>
-      <dt>RSI14</dt><dd>Relative Strength Index 14 hari — ≤ 30 oversold, ≥ 70 overbought.</dd>
+      <dt>VolSpike</dt><dd>Volume terakhir dibanding rata-rata 20 hari. Mulai
+      <span class="nilai n-spike">▲ 1,50</span> ada lonjakan minat — angkanya ditandai biru.</dd>
+      <dt>RSI14</dt><dd>Relative Strength Index 14 hari. Angkanya diwarnai hanya di dua ujung:
+      <span class="nilai n-panas">70+</span> overbought (sudah jauh naik, rawan koreksi) dan
+      <span class="nilai n-dingin">≤ 30</span> oversold (sudah jauh turun). Di antara keduanya
+      dibiarkan polos — kalau setiap angka diwarnai, tidak ada satu pun yang menonjol.</dd>
       <dt>MA50 / MA200</dt><dd>Rata-rata harga 50 / 200 hari terakhir.</dd>
     </dl>
     <p>Klik judul kolom untuk mengurutkan. Data diperbarui otomatis tiap malam hari bursa
@@ -344,11 +615,11 @@
 "use strict";
 
 const KOLOM = [
-  { k: "Ticker",       label: "Ticker" },
-  { k: "Nama",         label: "Nama" },
-  { k: "Grup",         label: "Grup" },
-  { k: "Sektor",       label: "Sektor" },
-  { k: "Status",       label: "Status" },
+  { k: "Ticker",       label: "Ticker",    kiri: true },
+  { k: "Nama",         label: "Nama",      kiri: true },
+  { k: "Grup",         label: "Grup",      kiri: true },
+  { k: "Sektor",       label: "Sektor",    kiri: true },
+  { k: "Status",       label: "Status",    kiri: true },
   { k: "Skor",         label: "Skor",      angka: true },
   { k: "Flag",         label: "Red flag" },
   { k: "Harga",        label: "Harga",     angka: true },
@@ -372,6 +643,26 @@ const KOLOM = [
   { k: "MA50",         label: "MA50",      angka: true },
   { k: "MA200",        label: "MA200",     angka: true },
 ];
+
+// Kelompok kolom: 24 kolom tidak pernah muat sekaligus, jadi selain menggeser
+// mendatar, tabelnya bisa dipotong jadi sekumpulan kolom yang memang dibaca
+// bersamaan. Empat kolom jangkar selalu ikut supaya barisnya tetap dikenali.
+const JANGKAR = ["Ticker", "Nama", "Status", "Skor"];
+const KELOMPOK = {
+  ringkas:     ["Sektor", "Flag", "Harga", "PER", "PBV", "ROE%", "Dividen%", "MarketCap(T)"],
+  valuasi:     ["Sektor", "Harga", "PER", "PBV", "PERvsSektor", "PBVvsSektor",
+                "ROE%", "DER", "Dividen%", "MarketCap(T)"],
+  fundamental: ["Sektor", "Flag", "ROE%", "DER", "LabaYoY%", "OmzetYoY%",
+                "Dividen%", "MarketCap(T)"],
+  teknikal:    ["Harga", "MA50", "MA200", "RSI14", "VolSpike", "Vol20(jt)", "Nilai(M)"],
+};
+
+function kolomTampil() {
+  const daftar = KELOMPOK[state.kelompok];
+  if (!daftar) return KOLOM;
+  const pilih = new Set(JANGKAR.concat(daftar));
+  return KOLOM.filter(k => pilih.has(k.k));
+}
 
 const fmt = new Map();
 function angka(n, desimal = 0) {
@@ -420,6 +711,12 @@ const state = {
   cari: "",
   grup: "",
   status: "",
+  kelompok: "",
+  // Tab "semua" berisi 402 emiten; menuangkan semuanya sekaligus membuat
+  // halaman panjang sekali dan tidak ada yang membacanya sampai bawah.
+  // 0 berarti tanpa pagination (pilihan "Semua").
+  perHal: 10,
+  hal: 1,
   data: { swing: null, value: null, tumbuh: null, semua: null },
   urut: { kolom: null, naik: true },
   gagal: false,
@@ -453,101 +750,274 @@ function barisTerlihat() {
 
 function render() {
   const wadah = document.getElementById("tabel");
+  const info = document.getElementById("hitung");
   if (state.gagal) {
     wadah.innerHTML = '<div class="gagal">Gagal memuat data. Coba muat ulang halaman — ' +
       'kalau masih gagal, cek run terakhir di tab Actions repo.</div>';
+    info.textContent = "";
+    sembunyikanPager();
     return;
   }
   if (!state.data[state.tab]) {
     wadah.innerHTML = '<div class="kosong">Memuat data …</div>';
+    sembunyikanPager();
     return;
   }
   const rows = barisTerlihat();
+  const total = (state.data[state.tab] || []).length;
+  info.textContent = rows.length === total
+    ? `${total} emiten`
+    : `${rows.length} dari ${total} emiten`;
   if (!rows.length) {
     wadah.innerHTML = '<div class="kosong">' + (state.cari || state.grup || state.status
       ? "Tidak ada yang cocok dengan pencarian / filter."
       : "Tidak ada saham yang lolos filter ini malam ini.") + "</div>";
+    sembunyikanPager();
     return;
   }
-  const th = KOLOM.map(k => {
+  const halaman = potongHalaman(rows);
+  const kolom = kolomTampil();
+  const th = kolom.map((k, i) => {
     const aktif = state.urut.kolom === k.k;
     const arah = aktif ? '<span class="arah">' + (state.urut.naik ? " ▲" : " ▼") + "</span>" : "";
-    return `<th data-kolom="${k.k}">${k.label}${arah}</th>`;
+    const kelas = [k.kiri ? "kiri" : "", i === 0 ? "lengket" : "", aktif ? "terurut" : ""]
+      .filter(Boolean).join(" ");
+    return `<th data-kolom="${k.k}" class="${kelas}">${k.label}${arah}</th>`;
   }).join("");
-  const td = rows.map(r => {
-    let chip = "";
-    if (r.RSI14 !== null && r.RSI14 <= 30) chip = '<span class="chip oversold">oversold</span>';
-    else if (r.RSI14 !== null && r.RSI14 >= 70) chip = '<span class="chip">overbought</span>';
-    const chipVol = (r.VolSpike !== null && r.VolSpike !== undefined && r.VolSpike >= 1.5)
-      ? '<span class="chip oversold">spike</span>' : "";
-    return "<tr>" + KOLOM.map(k => {
-      if (k.k === "Ticker") return `<td class="ticker">${r.Ticker}</td>`;
-      if (k.k === "Nama") return `<td><span class="nama">${r.Nama || "–"}</span></td>`;
-      if (k.k === "Grup") return `<td><span class="nama">${r.Grup || "–"}</span></td>`;
-      if (k.k === "Sektor") return `<td><span class="nama">${r.Sektor || "–"}</span></td>`;
+  const td = halaman.map(r => {
+    return "<tr>" + kolom.map((k, i) => {
+      const kelas = [k.kiri ? "kiri" : "", i === 0 ? "lengket" : ""].filter(Boolean).join(" ");
+      if (k.k === "Ticker") return `<td class="ticker ${kelas}">${r.Ticker}</td>`;
+      if (k.k === "Nama") return `<td class="${kelas}"><span class="nama">${r.Nama || "–"}</span></td>`;
+      if (k.k === "Grup") return `<td class="${kelas}"><span class="nama">${r.Grup || "–"}</span></td>`;
+      if (k.k === "Sektor") return `<td class="${kelas}"><span class="nama">${r.Sektor || "–"}</span></td>`;
       if (k.k === "Status") {
         const s = r.Status || "-";
-        return `<td><span class="status s-${s.toLowerCase()}">${s}</span></td>`;
+        return `<td class="${kelas}"><span class="status s-${s.toLowerCase()}">${s}</span></td>`;
       }
       if (k.k === "Flag") {
         const f = String(r.Flag || "").trim();
-        if (!f) return '<td><span class="flag-kosong">–</span></td>';
-        return "<td>" + f.split(",").filter(Boolean)
+        if (!f) return `<td class="${kelas}"><span class="flag-kosong">–</span></td>`;
+        return `<td class="${kelas}">` + f.split(",").filter(Boolean)
           .map(x => `<span class="flag">${x}</span>`).join("") + "</td>";
       }
       const isi = angka(r[k.k], k.desimal || 0);
       if (k.k === "Skor") {
         const s = r.Skor;
-        if (s === null || s === undefined || s === "") return "<td>–</td>";
+        if (s === null || s === undefined || s === "") return `<td class="${kelas}">–</td>`;
         // Ambang mengikuti kategori skor 100 poin: 65 ke atas Good/Excellent,
         // 50-64 Average/Fair, di bawah 50 Weak/Poor. Sebelumnya 70/40, yang
         // sudah tidak cocok lagi sejak skornya disusun dari lima kategori.
         const band = s >= 65 ? "kuat" : s >= 50 ? "sedang" : "lemah";
-        return `<td><span class="skor sk-${band}">${isi}</span></td>`;
+        return `<td class="${kelas}"><span class="skor sk-${band}">${isi}</span></td>`;
       }
       // Warnai rasio relatif-sektor: di bawah 1 lebih murah dari sektornya,
       // di atas 1 lebih mahal. Netral di sekitar 1 supaya tidak setiap angka
       // tampak sebagai sinyal.
       if (k.relatif) {
         const v = r[k.k];
-        if (v === null || v === undefined || v === "") return "<td>–</td>";
-        const kelas = v < 0.85 ? "rel-murah" : v > 1.15 ? "rel-mahal" : "";
-        return `<td class="${kelas}">${isi}</td>`;
+        if (v === null || v === undefined || v === "") return `<td class="${kelas}">–</td>`;
+        const rel = v < 0.85 ? "rel-murah" : v > 1.15 ? "rel-mahal" : "";
+        return `<td class="${kelas} ${rel}">${isi}</td>`;
       }
-      if (k.k === "RSI14") return "<td>" + isi + chip + "</td>";
-      if (k.k === "VolSpike") return "<td>" + isi + chipVol + "</td>";
-      return "<td>" + isi + "</td>";
+      // RSI: merah di 70 ke atas (overbought), biru di 30 ke bawah (oversold),
+      // polos di antaranya — supaya yang berwarna benar-benar berarti sesuatu.
+      if (k.k === "RSI14") {
+        const v = r.RSI14;
+        if (v === null || v === undefined || v === "") return `<td class="${kelas}">–</td>`;
+        const zona = v >= 70 ? "n-panas" : v <= 30 ? "n-dingin" : "";
+        if (!zona) return `<td class="${kelas}">${isi}</td>`;
+        const ket = v >= 70 ? "Overbought — RSI 70 ke atas, sudah jauh naik"
+                            : "Oversold — RSI 30 ke bawah, sudah jauh turun";
+        return `<td class="${kelas}"><span class="nilai ${zona}" title="${ket}">${isi}</span></td>`;
+      }
+      // Lonjakan volume: 1,5× rata-rata 20 hari ke atas.
+      if (k.k === "VolSpike") {
+        const v = r.VolSpike;
+        if (v === null || v === undefined || v === "") return `<td class="${kelas}">–</td>`;
+        if (v < 1.5) return `<td class="${kelas}">${isi}</td>`;
+        return `<td class="${kelas}"><span class="nilai n-spike" ` +
+               `title="Lonjakan volume — ${isi}× rata-rata 20 hari">▲ ${isi}</span></td>`;
+      }
+      return `<td class="${kelas}">` + isi + "</td>";
     }).join("") + "</tr>";
   }).join("");
-  wadah.innerHTML = `<table><thead><tr>${th}</tr></thead><tbody>${td}</tbody></table>`;
+  // Lebar minimum ikut jumlah kolom: dengan kelompok kolom yang dipersempit,
+  // memaksa 1680px hanya menciptakan gulir mendatar yang tidak perlu.
+  const kelasTabel = kolom.length <= 14 ? ' class="sempit"' : "";
+  wadah.innerHTML = `<table${kelasTabel}><thead><tr>${th}</tr></thead><tbody>${td}</tbody></table>`;
   wadah.querySelectorAll("th").forEach(el => el.addEventListener("click", () => {
     const kol = el.dataset.kolom;
     if (state.urut.kolom === kol) state.urut.naik = !state.urut.naik;
     else state.urut = { kolom: kol, naik: true };
+    // Mengurutkan ulang sambil tertinggal di halaman 7 tidak masuk akal:
+    // yang dicari orang setelah mengurutkan adalah baris teratas.
+    state.hal = 1;
+    render();
+  }));
+  perbaruiPager();
+  perbaruiRowPager(rows.length);
+}
+
+// ---- Pagination baris -------------------------------------------------------
+
+function jumlahHalaman(total) {
+  return state.perHal > 0 ? Math.max(1, Math.ceil(total / state.perHal)) : 1;
+}
+
+function potongHalaman(rows) {
+  if (state.perHal <= 0) return rows;
+  // Halaman bisa jadi di luar jangkauan setelah filter mempersempit hasil.
+  state.hal = Math.min(Math.max(1, state.hal), jumlahHalaman(rows.length));
+  const mulai = (state.hal - 1) * state.perHal;
+  return rows.slice(mulai, mulai + state.perHal);
+}
+
+// Deret nomor halaman dengan jendela di sekitar halaman aktif; 0 berarti
+// pemisah "…" supaya 41 halaman tidak dicetak seluruhnya.
+function nomorHalaman(kini, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set([1, total, kini, kini - 1, kini + 1]);
+  if (kini <= 3) [2, 3, 4].forEach(n => set.add(n));
+  if (kini >= total - 2) [total - 1, total - 2, total - 3].forEach(n => set.add(n));
+  const urut = [...set].filter(n => n >= 1 && n <= total).sort((a, b) => a - b);
+  const hasil = [];
+  urut.forEach((n, i) => {
+    if (i && n - urut[i - 1] > 1) hasil.push(0);
+    hasil.push(n);
+  });
+  return hasil;
+}
+
+function perbaruiRowPager(total) {
+  const bar = document.getElementById("rowpager");
+  const info = document.getElementById("rp-info");
+  const nav = document.getElementById("rp-halaman");
+  if (!bar || !info || !nav) return;
+  bar.hidden = false;
+  const halTotal = jumlahHalaman(total);
+  const mulai = state.perHal > 0 ? (state.hal - 1) * state.perHal + 1 : 1;
+  const akhir = state.perHal > 0 ? Math.min(total, state.hal * state.perHal) : total;
+  info.textContent = `Menampilkan ${mulai}–${akhir} dari ${total} emiten`;
+
+  if (halTotal <= 1) { nav.innerHTML = ""; return; }
+  const tombol = [
+    `<button type="button" data-hal="${state.hal - 1}" ${state.hal === 1 ? "disabled" : ""} aria-label="Halaman sebelumnya">‹</button>`,
+  ];
+  nomorHalaman(state.hal, halTotal).forEach(n => {
+    if (n === 0) tombol.push('<span class="jeda">…</span>');
+    else tombol.push(`<button type="button" data-hal="${n}" class="${n === state.hal ? "aktif" : ""}">${n}</button>`);
+  });
+  tombol.push(`<button type="button" data-hal="${state.hal + 1}" ${state.hal === halTotal ? "disabled" : ""} aria-label="Halaman berikutnya">›</button>`);
+  nav.innerHTML = tombol.join("");
+  nav.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    const n = Number(b.dataset.hal);
+    if (!n || n === state.hal || n < 1 || n > halTotal) return;
+    state.hal = n;
     render();
   }));
 }
 
-document.querySelectorAll(".tabs button").forEach(btn =>
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    state.tab = btn.dataset.tab;
-    render();
-  }));
+// ---- Pagination mendatar ----------------------------------------------------
+// Tabel 24 kolom selalu lebih lebar dari layar. Menggulir dengan trackpad ke
+// samping merepotkan dan tidak jelas seberapa jauh sisanya, jadi disediakan
+// tombol geser satu layar penuh plus bilah ruas yang menunjukkan posisi.
 
+function sembunyikanPager() {
+  const p = document.getElementById("pager");
+  if (p) p.hidden = true;
+  const r = document.getElementById("rowpager");
+  if (r) r.hidden = true;
+}
+
+function perbaruiPager() {
+  const sc = document.getElementById("tabel");
+  const pager = document.getElementById("pager");
+  const dots = document.getElementById("pager-dots");
+  const posisi = document.getElementById("pager-posisi");
+  if (!sc || !pager || !dots) return;
+  const lebar = Number(sc.clientWidth) || 0;
+  const isi = Number(sc.scrollWidth) || 0;
+  const sisa = isi - lebar;
+  if (!lebar || sisa < 8) { pager.hidden = true; return; }
+  pager.hidden = false;
+
+  const halaman = Math.max(2, Math.ceil(isi / lebar));
+  const langkah = sisa / (halaman - 1);
+  const kini = Math.min(halaman - 1, Math.round((Number(sc.scrollLeft) || 0) / langkah));
+
+  dots.innerHTML = Array.from({ length: halaman }, (_, i) =>
+    `<button type="button" data-hal="${i}" class="${i === kini ? "aktif" : ""}" ` +
+    `aria-label="Ke bagian ${i + 1} dari ${halaman}"></button>`).join("");
+  dots.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    sc.scrollLeft = Number(b.dataset.hal) * langkah;
+  }));
+  if (posisi) posisi.textContent = `${kini + 1} / ${halaman}`;
+  document.getElementById("ke-kiri").disabled = sc.scrollLeft <= 1;
+  document.getElementById("ke-kanan").disabled = sc.scrollLeft >= sisa - 1;
+  if (sc.classList) sc.classList[sc.scrollLeft > 1 ? "add" : "remove"]("tergulir");
+}
+
+function geser(arah) {
+  const sc = document.getElementById("tabel");
+  sc.scrollLeft = (Number(sc.scrollLeft) || 0) + arah * (Number(sc.clientWidth) || 0) * 0.85;
+}
+
+document.getElementById("ke-kiri").addEventListener("click", () => geser(-1));
+document.getElementById("ke-kanan").addEventListener("click", () => geser(1));
+document.getElementById("tabel").addEventListener("scroll", perbaruiPager);
+if (typeof addEventListener === "function") addEventListener("resize", perbaruiPager);
+
+// ---- Kendali ----------------------------------------------------------------
+
+function pilihTab(tab) {
+  state.tab = tab;
+  state.hal = 1;
+  document.querySelectorAll(".tabs button").forEach(b =>
+    b.classList[b.dataset.tab === tab ? "add" : "remove"]("active"));
+  document.querySelectorAll(".tile").forEach(t =>
+    t.classList[t.dataset.tab === tab ? "add" : "remove"]("aktif"));
+  render();
+}
+
+document.querySelectorAll(".tabs button").forEach(btn =>
+  btn.addEventListener("click", () => pilihTab(btn.dataset.tab)));
+
+// Kartu ringkasan sekaligus jadi tombol tab — angkanya sudah menjawab
+// "berapa yang lolos", wajar kalau diklik untuk melihat daftarnya.
+document.querySelectorAll(".tile").forEach(t =>
+  t.addEventListener("click", () => pilihTab(t.dataset.tab)));
+
+// Setiap perubahan filter mengembalikan ke halaman 1 — hasilnya kumpulan baris
+// yang lain, jadi "halaman 5" yang lama tidak menunjuk apa pun.
 document.getElementById("cari").addEventListener("input", e => {
   state.cari = e.target.value;
+  state.hal = 1;
   render();
 });
 
 document.getElementById("grup").addEventListener("change", e => {
   state.grup = e.target.value;
+  state.hal = 1;
   render();
 });
 
 document.getElementById("status").addEventListener("change", e => {
   state.status = e.target.value;
+  state.hal = 1;
+  render();
+});
+
+document.getElementById("perhal").addEventListener("change", e => {
+  state.perHal = Number(e.target.value) || 0;
+  state.hal = 1;
+  render();
+});
+
+document.getElementById("kelompok").addEventListener("change", e => {
+  state.kelompok = e.target.value;
+  const sc = document.getElementById("tabel");
+  if (sc) sc.scrollLeft = 0;
   render();
 });
 
