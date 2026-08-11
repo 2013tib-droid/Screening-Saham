@@ -43,9 +43,9 @@ jobs:
     # menyisakan cache setengah jadi.
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -93,8 +93,23 @@ jobs:
           git add data/fundamental.csv tickers/idx.txt
           if git diff --cached --quiet; then
             echo "Tidak ada perubahan fundamental, tidak ada yang di-commit."
-          else
-            git commit -m "Perbarui cache fundamental $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
-            git pull --rebase origin "$GITHUB_REF_NAME"
-            git push
+            exit 0
           fi
+          git commit -m "Perbarui cache fundamental $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
+
+          # Pola yang sama dengan screening-malam.yml, dan di sini justru lebih
+          # penting: run ini berlangsung ~20 menit, jadi jendela waktu untuk
+          # bertabrakan dengan push lain jauh lebih lebar daripada run malam.
+          for percobaan in 1 2 3; do
+            if git push; then
+              echo "Berhasil didorong pada percobaan ke-$percobaan."
+              exit 0
+            fi
+            echo "Push ditolak pada percobaan ke-$percobaan — menarik ulang lalu mencoba lagi."
+            git pull --rebase origin "$GITHUB_REF_NAME" || {
+              echo "Rebase gagal; kemungkinan ada konflik yang tidak bisa diselesaikan otomatis." >&2
+              exit 1
+            }
+          done
+          echo "Push tetap gagal setelah 3 percobaan." >&2
+          exit 1

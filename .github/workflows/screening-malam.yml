@@ -19,6 +19,11 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  # Disyaratkan actions/deploy-pages sejak v4: ia mencari artifact lewat ID,
+  # dan itu perlu membaca API Actions. Selama ini deploy tetap jalan tanpa
+  # baris ini, tapi blok permissions yang eksplisit menyetel semua yang tidak
+  # disebut jadi none — jadi kita bergantung pada perilaku yang tidak dijanjikan.
+  actions: read
 
 # Satu grup dengan fundamental-kuartalan.yml: keduanya commit dan push ke repo
 # yang sama, dan run fundamental berlangsung ~20 menit sehingga tabrakan dengan
@@ -35,9 +40,9 @@ jobs:
   screening:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -107,11 +112,35 @@ jobs:
           git add hasil/ tickers/idx.txt
           if git diff --cached --quiet; then
             echo "Tidak ada perubahan data, tidak ada yang di-commit."
-          else
-            git commit -m "Hasil screening $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
-            git pull --rebase origin "$GITHUB_REF_NAME"
-            git push
+            exit 0
           fi
+          git commit -m "Hasil screening $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
+
+          # Push dicoba beberapa kali, dan pull --rebase hanya dijalankan
+          # ketika push benar-benar ditolak. Urutan lama (rebase dulu, lalu
+          # push sekali) tidak menutup celah balapan sama sekali: apa pun yang
+          # masuk ke remote di antara kedua perintah itu membuat push gagal
+          # dan seluruh langkah ini mati.
+          #
+          # Run terjadwal 10 Agu 2026 gagal di langkah ini dengan exit code 1
+          # meski commit-nya terbukti sampai ke remote. Penyebab pastinya tidak
+          # bisa dipastikan tanpa log, jadi ini penanggulangan untuk kelasnya —
+          # bukan perbaikan atas sebab yang sudah terdiagnosis. Kalaupun gagal
+          # lagi, keluarannya kini menyebut percobaan keberapa dan apa yang
+          # ditolak, sehingga bisa ditelusuri dari ringkasan run.
+          for percobaan in 1 2 3; do
+            if git push; then
+              echo "Berhasil didorong pada percobaan ke-$percobaan."
+              exit 0
+            fi
+            echo "Push ditolak pada percobaan ke-$percobaan — menarik ulang lalu mencoba lagi."
+            git pull --rebase origin "$GITHUB_REF_NAME" || {
+              echo "Rebase gagal; kemungkinan ada konflik yang tidak bisa diselesaikan otomatis." >&2
+              exit 1
+            }
+          done
+          echo "Push tetap gagal setelah 3 percobaan." >&2
+          exit 1
 
       - name: Susun situs dashboard
         run: |
@@ -120,11 +149,11 @@ jobs:
           cp -r hasil _site/
 
       - name: Aktifkan & konfigurasi GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
         with:
           enablement: true
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -141,4 +170,4 @@ jobs:
     steps:
       - name: Deploy ke GitHub Pages
         id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
