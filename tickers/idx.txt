@@ -8,7 +8,7 @@
 # Kriteria: emiten Indonesia (Yahoo region=id) dengan kapitalisasi pasar
 #   di atas 1 triliun rupiah, diurut dari yang terbesar,
 #   maksimal 400 nama.
-# Diperbarui: 2026-08-10 — 400 emiten.
+# Diperbarui: 2026-08-11 — 400 emiten.
 
 BBCA  # Bank Central Asia Tbk — 783.3 T
 DCII  # DCI Indonesia Tbk. — 491.3 T
@@ -57,7 +57,7 @@ INCO  # Vale Indonesia Tbk. — 56.7 T
 GOTO  # GoTo Gojek Tokopedia Tbk. — 53.3 T
 PTRO  # Petrosea Tbk — 50.7 T
 CPIN  # Charoen Pokphand Indonesia Tbk — 50.5 T
-MEGA  # Bank Mega Tbk — 46.1 T
+MEGA  # Bank Mega Tbk — 46.6 T
 INKP  # Indah Kiat Pulp & Paper Tbk. — 45.8 T
 PGEO  # Pertamina Geothermal Energy Tbk — 45.7 T
 EXCL  # XLSMART Telecom Sejahtera Tbk. — 45.5 T
@@ -179,10 +179,10 @@ SSMS  # Sawit Sumbermas Sarana Tbk. — 9.0 T
 RMKE  # RMK Energy Tbk. — 8.9 T
 AGII  # Samator Indo Gas Tbk. — 8.9 T
 GMFI  # Garuda Maintenance Facility Aer — 8.9 T
+PACK  # Abadi Nusantara Hijau Investama — 8.6 T
 POLU  # Golden Flower Tbk. — 8.6 T
 SINI  # Singaraja Putra Tbk. — 8.5 T
 BJBR  # Bank Pembangunan Daerah Jawa Ba — 8.4 T
-PACK  # Abadi Nusantara Hijau Investama — 8.3 T
 KPIG  # MNC Tourism Indonesia Tbk. — 8.3 T
 BBMD  # Bank Mestika Dharma Tbk. — 8.2 T
 INPP  # Indonesian Paradise Property Tb — 8.2 T
