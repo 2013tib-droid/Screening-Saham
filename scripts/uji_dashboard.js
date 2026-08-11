@@ -99,6 +99,13 @@ function periksa(nama, lulus, keterangan = "") {
 
 function ujiTab(tab) {
   konteks.__state.tab = tab;
+  // Dashboard membatasi 10 baris per halaman. Pemeriksaan di bawah ini soal
+  // kelengkapan data — setiap kolom terender, setiap flag jadi chip — jadi
+  // pagination dimatikan dulu (perHal = 0) supaya yang diperiksa seluruh baris,
+  // bukan sepuluh baris pertama. Pagination-nya sendiri diuji terpisah di
+  // ujiPagination().
+  konteks.__state.perHal = 0;
+  konteks.__state.hal = 1;
   konteks.__render();
   const tabel = simpan["tabel"] || "";
   console.log(`\n=== tab "${tab}" ===`);
@@ -135,6 +142,51 @@ function ujiTab(tab) {
           `${chip} chip untuk ${totalFlag} flag pada ${berflag} emiten`);
 }
 
+function barisTabel() {
+  return (simpan["tabel"] || "").split("<tr>").length - 2;   // dikurangi header
+}
+
+// Pagination baris: dibatasi supaya tab "semua" (402 emiten) tidak jadi halaman
+// sepanjang tiga meter. Yang diperiksa: halaman penuh berisi persis perHal
+// baris, halaman terakhir berisi sisanya, halaman berbeda berisi baris berbeda,
+// dan halaman di luar jangkauan dijepit ke halaman terakhir, bukan kosong.
+function ujiPagination() {
+  console.log("\n=== pagination baris ===");
+  const st = konteks.__state;
+  st.tab = "semua";
+  st.perHal = 10;
+  const total = (st.data.semua || []).length;
+  const halTotal = Math.ceil(total / 10);
+
+  st.hal = 1;
+  konteks.__render();
+  const hal1 = simpan["tabel"] || "";
+  periksa("halaman 1 berisi 10 baris", barisTabel() === 10, `${barisTabel()} baris`);
+
+  st.hal = 2;
+  konteks.__render();
+  const hal2 = simpan["tabel"] || "";
+  periksa("halaman 2 berisi 10 baris", barisTabel() === 10, `${barisTabel()} baris`);
+  periksa("halaman 2 berbeda dari halaman 1", hal1 !== hal2);
+
+  st.hal = halTotal;
+  konteks.__render();
+  const sisa = total - (halTotal - 1) * 10;
+  periksa("halaman terakhir berisi sisanya", barisTabel() === sisa,
+          `${barisTabel()} baris, seharusnya ${sisa} (dari ${total} emiten, ${halTotal} halaman)`);
+
+  st.hal = halTotal + 50;
+  konteks.__render();
+  periksa("halaman di luar jangkauan dijepit, tidak kosong", barisTabel() === sisa,
+          `${barisTabel()} baris`);
+
+  st.perHal = 0;
+  st.hal = 1;
+  konteks.__render();
+  periksa('pilihan "Semua" menampilkan seluruh baris', barisTabel() === total,
+          `${barisTabel()} baris`);
+}
+
 console.log(`Menguji ${path.relative(REPO, BERKAS)} terhadap CSV di hasil/`);
 console.log(`Kolom yang dideklarasikan (${KOLOM.length}): ` +
             KOLOM.map(k => k.k).join(", "));
@@ -150,6 +202,7 @@ setTimeout(() => {
           Boolean(simpan["pembaruan:teks"]), simpan["pembaruan:teks"] || "");
 
   tiles.forEach(ujiTab);
+  ujiPagination();
 
   console.log(gagal ? `\n${gagal} pemeriksaan GAGAL.` : "\nSemua pemeriksaan lolos.");
   console.log("Catatan: ini tidak memeriksa tampilan sama sekali — lebar kolom, " +
