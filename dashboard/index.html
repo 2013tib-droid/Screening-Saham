@@ -113,7 +113,7 @@
     border-radius: 10px;
     background: var(--surface-raised);
   }
-  table { border-collapse: collapse; width: 100%; min-width: 1240px; font-size: .88rem; }
+  table { border-collapse: collapse; width: 100%; min-width: 1640px; font-size: .88rem; }
   thead th {
     position: sticky; top: 0;
     background: var(--surface-raised);
@@ -183,6 +183,27 @@
   .skor.sk-kuat   { background: var(--pos-bg);  color: var(--pos-fg); }
   .skor.sk-sedang { background: var(--warn-bg); color: var(--warn-fg); }
   .skor.sk-lemah  { background: var(--neg-bg);  color: var(--neg-fg); }
+
+  /* Red flag ditampilkan sebagai deretan label kecil, bukan satu teks panjang,
+     supaya emiten dengan empat cacat langsung terbaca berat sekali pandang.
+     Warnanya sengaja sama dengan skor terendah: keduanya menyampaikan kabar
+     buruk, dan tidak ada gunanya menciptakan kosakata warna kedua. */
+  .flag {
+    display: inline-block;
+    margin: 1px 3px 1px 0;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: .68rem;
+    font-weight: 700;
+    white-space: nowrap;
+    background: var(--neg-bg);
+    color: var(--neg-fg);
+  }
+  .flag-kosong { color: var(--text-muted); }
+  /* Rasio terhadap median sektor: di bawah 1 berarti lebih murah dari
+     sektornya sendiri, di atas 1 lebih mahal. */
+  .rel-murah { color: var(--pos-fg); font-weight: 600; }
+  .rel-mahal { color: var(--neg-fg); }
   .kosong, .gagal {
     padding: 28px 16px;
     text-align: center;
@@ -250,22 +271,54 @@
         </ul>
       </dd>
       <dt>Skor</dt><dd>Kesimpulan fundamental dalam satu angka <strong>1–100</strong>: makin tinggi
-      makin sehat perusahaannya. Rata-rata tertimbang dari ROE (25%), pertumbuhan laba YoY (20%),
-      PER (20%), pertumbuhan omzet YoY (15%), PBV (10%), dan dividend yield (10%). Komponen yang
-      datanya kosong dibuang dan bobotnya dibagi ke sisanya; kalau data yang ada kurang dari
-      separuh bobot, kolomnya dikosongkan. PER atau PBV negatif (perusahaan rugi / ekuitas minus)
-      dihitung 0, bukan diabaikan.
+      makin sehat perusahaannya. Disusun dari lima kategori berbobot — valuasi (25), profitabilitas
+      &amp; kualitas laba (25), kesehatan keuangan (20), pertumbuhan (20), serta arus kas &amp;
+      alokasi modal (10). Bobotnya disesuaikan per sektor: bank tidak dinilai dengan DER dan rasio
+      likuiditas (utang bank adalah bisnisnya, bukan bebannya) melainkan lebih berat ke P/B dan ROE,
+      emiten energi lebih berat ke utang bersih terhadap EBITDA, dan emiten teknologi diberi
+      toleransi valuasi tapi ditagih lebih keras soal dilusi dan bakar kas.
         <ul style="margin:6px 0 0; padding-left:18px">
-          <li><span class="skor sk-kuat">70+</span> fundamental kuat — untung besar, tumbuh, valuasi masih wajar.</li>
-          <li><span class="skor sk-sedang">40–69</span> menengah — ada yang bagus, ada yang tidak.</li>
-          <li><span class="skor sk-lemah">&lt;40</span> lemah — rugi, menyusut, atau harganya kemahalan.</li>
+          <li><span class="skor sk-kuat">65+</span> Good ke atas — untung besar, tumbuh, neraca sehat, valuasi masih wajar.</li>
+          <li><span class="skor sk-sedang">50–64</span> Average / Fair — ada yang bagus, ada yang tidak.</li>
+          <li><span class="skor sk-lemah">&lt;50</span> Weak / Poor — rugi, menyusut, kelebihan utang, atau kemahalan.</li>
         </ul>
-        Ini murni hitungan dari angka lapkeu di kolom-kolom sebelah kanan, <strong>bukan
-        rekomendasi</strong>: skor tidak tahu soal utang, kualitas manajemen, atau prospek industri.
-        Skor tinggi + Status JUAL berarti perusahaannya bagus tapi harganya sedang turun tren.</dd>
+        Komponen yang datanya kosong dibuang dan bobotnya dibagi ke sisanya; kategori yang datanya
+        kurang dari 40% bobotnya dibuang seluruhnya. Kalau yang tersisa kurang dari separuh total
+        bobot, kolomnya dikosongkan. PER, PBV, atau EV/EBITDA negatif (rugi / ekuitas minus)
+        dihitung 0, bukan diabaikan — kalau dilewati, emiten rugi justru diuntungkan karena
+        komponen terburuknya menghilang.
+        Ini murni hitungan dari angka lapkeu, <strong>bukan rekomendasi</strong>: skor tidak tahu
+        soal kualitas manajemen atau prospek industri. Skor tinggi + Status JUAL berarti
+        perusahaannya bagus tapi harganya sedang turun tren.</dd>
+      <dt>Red flag</dt><dd>Cacat yang <strong>menolak dirata-ratakan</strong>. Skor adalah rata-rata,
+      dan rata-rata bisa menutupi satu lubang besar dengan banyak angka bagus — emiten berekuitas
+      negatif tetap bisa dapat skor menengah kalau valuasinya kebetulan tampak murah. Karena itu
+      kolom ini dihitung terpisah dan <strong>tidak</strong> mengurangi Skor; keduanya menjawab
+      pertanyaan yang berbeda.
+        <ul style="margin:6px 0 0; padding-left:18px">
+          <li><span class="flag">ekuitas-</span> kewajiban melebihi seluruh asetnya &nbsp;
+              <span class="flag">rugi</span> masih merugi periode terakhir</li>
+          <li><span class="flag">OCF-</span> / <span class="flag">FCF-</span> arus kas operasi / arus kas bebas negatif &nbsp;
+              <span class="flag">kas&lt;laba</span> kas operasi kurang dari separuh laba</li>
+          <li><span class="flag">DER&gt;3</span> utang lebih dari 3× ekuitas &nbsp;
+              <span class="flag">bunga&lt;1.5</span> laba operasi nyaris tidak menutup beban bunga</li>
+          <li><span class="flag">laba-30%</span> laba turun &gt; 30% YoY &nbsp;
+              <span class="flag">dilusi</span> saham bertambah &gt; 10% setahun &nbsp;
+              <span class="flag">payout&gt;100</span> dividen melebihi laba</li>
+        </ul>
+        Flag <span class="flag">OCF-</span>, <span class="flag">FCF-</span>,
+        <span class="flag">kas&lt;laba</span>, dan <span class="flag">DER&gt;3</span> dimatikan untuk
+        sektor perbankan: penyaluran kredit menyerap kas, jadi arus kas operasi bank sering negatif
+        justru ketika sedang tumbuh. Dibiarkan menyala, flag itu akan menandai hampir seluruh sektor
+        dan berhenti berarti.</dd>
       <dt>PER</dt><dd>Price-to-Earnings Ratio — makin kecil makin murah relatif terhadap laba.</dd>
       <dt>PBV</dt><dd>Price-to-Book Value — harga dibanding nilai buku.</dd>
+      <dt>PER / PBV vs sektor</dt><dd>Rasio terhadap <strong>median sektornya sendiri</strong>:
+      1,00 = persis median, 0,70 = 30% lebih murah, 1,40 = 40% lebih mahal. Inilah yang membuat
+      valuasi bisa dibaca lintas industri — PBV 2,5 di bank dan PBV 2,5 di emiten batubara bukan hal
+      yang sama. Kosong bila sektornya berisi kurang dari tiga pembanding.</dd>
       <dt>ROE%</dt><dd>Return on Equity — efisiensi perusahaan menghasilkan laba.</dd>
+      <dt>DER</dt><dd>Debt to Equity — total utang dibanding ekuitas. Tidak bermakna untuk bank.</dd>
       <dt>Laba YoY%</dt><dd>Pertumbuhan laba kuartal terakhir dibanding kuartal yang sama setahun
       lalu — angka inilah yang paling dekat dengan "laporan keuangan terakhir bagus atau tidak".
       Ikut ritme rilis lapkeu (triwulanan), jadi bisa tertinggal beberapa minggu dari berita.</dd>
@@ -294,12 +347,20 @@ const KOLOM = [
   { k: "Ticker",       label: "Ticker" },
   { k: "Nama",         label: "Nama" },
   { k: "Grup",         label: "Grup" },
+  { k: "Sektor",       label: "Sektor" },
   { k: "Status",       label: "Status" },
   { k: "Skor",         label: "Skor",      angka: true },
+  { k: "Flag",         label: "Red flag" },
   { k: "Harga",        label: "Harga",     angka: true },
   { k: "PER",          label: "PER",       angka: true, desimal: 1 },
   { k: "PBV",          label: "PBV",       angka: true, desimal: 2 },
+  // Rasio terhadap median sektornya sendiri. Ini yang membuat valuasi bisa
+  // dibaca lintas industri: PBV 2,5 di bank bukan hal yang sama dengan PBV
+  // 2,5 di emiten batubara.
+  { k: "PERvsSektor",  label: "PER vs sektor", angka: true, desimal: 2, relatif: true },
+  { k: "PBVvsSektor",  label: "PBV vs sektor", angka: true, desimal: 2, relatif: true },
   { k: "ROE%",         label: "ROE%",      angka: true, desimal: 1 },
+  { k: "DER",          label: "DER",       angka: true, desimal: 2 },
   { k: "LabaYoY%",     label: "Laba YoY%", angka: true, desimal: 1 },
   { k: "OmzetYoY%",    label: "Omzet YoY%", angka: true, desimal: 1 },
   { k: "Dividen%",     label: "Dividen%",  angka: true, desimal: 2 },
@@ -423,16 +484,35 @@ function render() {
       if (k.k === "Ticker") return `<td class="ticker">${r.Ticker}</td>`;
       if (k.k === "Nama") return `<td><span class="nama">${r.Nama || "–"}</span></td>`;
       if (k.k === "Grup") return `<td><span class="nama">${r.Grup || "–"}</span></td>`;
+      if (k.k === "Sektor") return `<td><span class="nama">${r.Sektor || "–"}</span></td>`;
       if (k.k === "Status") {
         const s = r.Status || "-";
         return `<td><span class="status s-${s.toLowerCase()}">${s}</span></td>`;
+      }
+      if (k.k === "Flag") {
+        const f = String(r.Flag || "").trim();
+        if (!f) return '<td><span class="flag-kosong">–</span></td>';
+        return "<td>" + f.split(",").filter(Boolean)
+          .map(x => `<span class="flag">${x}</span>`).join("") + "</td>";
       }
       const isi = angka(r[k.k], k.desimal || 0);
       if (k.k === "Skor") {
         const s = r.Skor;
         if (s === null || s === undefined || s === "") return "<td>–</td>";
-        const band = s >= 70 ? "kuat" : s >= 40 ? "sedang" : "lemah";
+        // Ambang mengikuti kategori skor 100 poin: 65 ke atas Good/Excellent,
+        // 50-64 Average/Fair, di bawah 50 Weak/Poor. Sebelumnya 70/40, yang
+        // sudah tidak cocok lagi sejak skornya disusun dari lima kategori.
+        const band = s >= 65 ? "kuat" : s >= 50 ? "sedang" : "lemah";
         return `<td><span class="skor sk-${band}">${isi}</span></td>`;
+      }
+      // Warnai rasio relatif-sektor: di bawah 1 lebih murah dari sektornya,
+      // di atas 1 lebih mahal. Netral di sekitar 1 supaya tidak setiap angka
+      // tampak sebagai sinyal.
+      if (k.relatif) {
+        const v = r[k.k];
+        if (v === null || v === undefined || v === "") return "<td>–</td>";
+        const kelas = v < 0.85 ? "rel-murah" : v > 1.15 ? "rel-mahal" : "";
+        return `<td class="${kelas}">${isi}</td>`;
       }
       if (k.k === "RSI14") return "<td>" + isi + chip + "</td>";
       if (k.k === "VolSpike") return "<td>" + isi + chipVol + "</td>";
