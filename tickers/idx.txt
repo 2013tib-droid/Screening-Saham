@@ -10,12 +10,12 @@
 #   maksimal 400 nama.
 # Diperbarui: 2026-08-11 — 400 emiten.
 
-BBCA  # Bank Central Asia Tbk — 783.3 T
+BBCA  # Bank Central Asia Tbk — 783.1 T
 DCII  # DCI Indonesia Tbk. — 491.3 T
 BBRI  # Bank Rakyat Indonesia (Persero) — 465.3 T
 BREN  # Barito Renewables Energy Tbk. — 450.8 T
 BYAN  # Bayan Resources Tbk — 400.8 T
-BMRI  # Bank Mandiri (Persero) Tbk — 390.1 T
+BMRI  # Bank Mandiri (Persero) Tbk — 388.6 T
 AMMN  # Amman Mineral Internasional Tbk — 316.4 T
 TLKM  # Telkom Indonesia (Persero) Tbk. — 258.3 T
 ASII  # Astra International Tbk — 199.6 T
@@ -24,7 +24,7 @@ BRPT  # Barito Pacific Tbk. — 174.3 T
 SRAJ  # Sejahteraraya Anugrahjaya Tbk. — 159.1 T
 DSSA  # Dian Swastatika Sentosa Tbk — 152.4 T
 DNET  # Indoritel Makmur Internasional — 141.8 T
-BBNI  # Bank Negara Indonesia  (Persero — 135.9 T
+BBNI  # Bank Negara Indonesia  (Persero — 136.0 T
 SMMA  # Sinarmas Multiartha Tbk. — 128.3 T
 MORA  # Ekamas Mora Republik Tbk. — 123.0 T
 MPRO  # Maha Properti Indonesia Tbk. — 119.6 T
@@ -58,10 +58,10 @@ GOTO  # GoTo Gojek Tokopedia Tbk. — 53.3 T
 PTRO  # Petrosea Tbk — 50.7 T
 CPIN  # Charoen Pokphand Indonesia Tbk — 50.5 T
 MEGA  # Bank Mega Tbk — 46.6 T
+BNBR  # Bakrie & Brothers Tbk — 45.9 T
 INKP  # Indah Kiat Pulp & Paper Tbk. — 45.8 T
 PGEO  # Pertamina Geothermal Energy Tbk — 45.7 T
 EXCL  # XLSMART Telecom Sejahtera Tbk. — 45.5 T
-BNBR  # Bakrie & Brothers Tbk — 45.1 T
 PGUN  # Pradiksi Gunatama Tbk. — 43.6 T
 BDMN  # Bank Danamon Indonesia Tbk. — 42.4 T
 BNGA  # Bank CIMB Niaga Tbk. — 41.7 T
@@ -100,7 +100,7 @@ BTPN  # Bank SMBC Indonesia Tbk. — 23.0 T
 TOWR  # Sarana Menara Nusantara Tbk. — 22.9 T
 TKIM  # Pabrik Kertas Tjiwi Kimia Tbk — 22.3 T
 PNBN  # Bank Pan Indonesia Tbk — 21.9 T
-CBDK  # Bangun Kosambi Sukses Tbk. — 21.5 T
+CBDK  # Bangun Kosambi Sukses Tbk. — 21.4 T
 TCPI  # Transcoal Pacific Tbk. — 20.9 T
 MKPI  # Metropolitan Kentjana Tbk — 20.8 T
 JSMR  # Jasa Marga (Persero) Tbk — 20.1 T
