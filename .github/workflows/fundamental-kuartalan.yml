@@ -1,0 +1,100 @@
+name: Fundamental Kuartalan
+
+# Laporan keuangan hanya berubah empat kali setahun, jadi cache fundamental
+# tidak perlu ikut run malam. Workflow ini dijadwalkan di bulan-bulan setelah
+# batas penyampaian laporan ke IDX, bukan tiap kuartal kalender:
+#
+#   Apr  - laporan tahunan audited (batas akhir Maret)
+#   Mei  - laporan kuartal I (batas akhir April)
+#   Agu  - laporan semester I (batas akhir Juli/Agustus)
+#   Nov  - laporan kuartal III (batas akhir Oktober)
+#
+# Tanggal 5 dipilih supaya emiten yang menyampaikan di hari-hari terakhir
+# tetap ikut terambil.
+on:
+  schedule:
+    - cron: "17 13 5 4,5,8,11 *"   # 20:17 WIB
+  workflow_dispatch:
+    inputs:
+      maks_umur:
+        description: >-
+          Lewati emiten yang barisnya lebih baru dari sekian hari
+          (0 = ambil ulang semua)
+        default: "0"
+        required: false
+
+permissions:
+  contents: write
+
+# Digabung satu grup dengan screening malam: keduanya menulis dan mendorong ke
+# repo yang sama, dan run fundamental berlangsung ~20 menit sehingga peluang
+# bertabrakan dengan run malam nyata. cancel-in-progress sengaja false — lebih
+# baik antre daripada satu pekerjaan terpotong di tengah.
+concurrency:
+  group: tulis-repo
+  cancel-in-progress: false
+
+jobs:
+  fundamental:
+    runs-on: ubuntu-latest
+    # Pengambilan 400-an emiten x 4 laporan memakan ~20 menit, dan Yahoo
+    # melambat setelah beberapa ratus panggilan. Batas dinaikkan dari default
+    # supaya run yang kebetulan lambat tidak terbunuh di tengah jalan dan
+    # menyisakan cache setengah jadi.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependensi
+        run: pip install -r requirements.txt
+
+      # Universe diperbarui lebih dulu supaya emiten yang baru masuk daftar
+      # langsung ikut terambil fundamentalnya, bukan menunggu musim berikutnya.
+      - name: Perbarui universe IDX
+        continue-on-error: true
+        run: python scripts/perbarui_universe.py --min-mcap 1 --maks 400
+
+      - name: Ambil laporan keuangan
+        run: >
+          python scripts/perbarui_fundamental.py
+          --maks-umur ${{ github.event.inputs.maks_umur || '0' }}
+
+      # Pemeriksaan waras sebelum commit. Skrip mempertahankan baris lama saat
+      # sebuah emiten gagal diambil, jadi kegagalan sebagian tidak terlihat
+      # dari exit code — tapi kalau Yahoo sedang rusak total, cache bisa
+      # terisi baris tanpa isi. Lebih baik gagal di sini daripada mendorong
+      # cache kosong yang membuat seluruh kolom Skor menghilang malam itu.
+      - name: Periksa kewajaran cache
+        run: |
+          python - <<'PY'
+          import sys
+          import pandas as pd
+
+          d = pd.read_csv("data/fundamental.csv")
+          terisi = d["EPS"].notna().sum()
+          print(f"{len(d)} baris, {terisi} punya EPS")
+          print(d["Basis"].value_counts(dropna=False).to_string())
+          if len(d) < 100:
+              sys.exit(f"Cache cuma {len(d)} baris — terlalu sedikit, dibatalkan.")
+          if terisi < 0.7 * len(d):
+              sys.exit(f"Hanya {terisi}/{len(d)} punya EPS — "
+                       "kemungkinan Yahoo sedang bermasalah, dibatalkan.")
+          PY
+
+      - name: Commit cache
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/fundamental.csv tickers/idx.txt
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan fundamental, tidak ada yang di-commit."
+          else
+            git commit -m "Perbarui cache fundamental $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
+            git pull --rebase origin "$GITHUB_REF_NAME"
+            git push
+          fi

@@ -24,11 +24,38 @@ from pathlib import Path
 import pandas as pd
 
 KOLOM = [
-    "Ticker", "Nama", "Grup", "Status", "Skor", "Harga", "PER", "PBV", "ROE%",
-    "LabaYoY%", "OmzetYoY%", "Dividen%",
+    "Ticker", "Nama", "Grup", "Sektor", "Status", "Skor", "Flag", "Harga",
+    "PER", "PBV", "PERvsSektor", "PBVvsSektor", "ROE%",
+    "LabaYoY%", "OmzetYoY%", "Dividen%", "DER",
     "MarketCap(T)", "Vol20(jt)", "Nilai(M)", "VolSpike",
     "RSI14", "MA50", "MA200",
 ]
+
+# Kolom fundamental yang ikut dibawa dari cache ke CSV hasil tapi tidak
+# ditampilkan di tabel terminal — tabelnya sudah selebar layar. Semuanya tetap
+# tersimpan supaya hasil/semua.csv bisa dipakai sebagai sumber analisa lanjutan
+# tanpa menarik ulang laporan keuangan.
+KOLOM_EKSTRA = [
+    "MarginKotor%", "MarginOperasi%", "MarginBersih%", "ROA%",
+    "UtangBersih/EBITDA", "CurrentRatio", "QuickRatio", "InterestCoverage",
+    "EV/EBITDA", "OCF/Laba", "FCFYield%", "Payout%", "Capex/OCF",
+    "SkorValuasi", "SkorProfitabilitas", "SkorKesehatan",
+    "SkorPertumbuhan", "SkorArusKas",
+    "OmzetCAGR3%", "LabaCAGR3%", "TahunLabaNaik", "SahamYoY%",
+    # Angka absolut ikut disimpan supaya CSV hasil berdiri sendiri: red flag
+    # dan analisa lanjutan bisa dihitung ulang dari file ini lewat --dari-csv
+    # tanpa perlu membaca cache fundamental atau menarik ulang dari Yahoo.
+    "EPS", "BVPS", "DPS", "Saham",
+    "Omzet", "LabaBersih", "EBITDA", "EBIT",
+    "TotalUtang", "Kas", "UtangBersih", "TotalAset", "Ekuitas",
+    "OCF", "Capex", "FCF",
+    "Periode", "Basis", "MataUang",
+]
+
+# Cache fundamental: hasil scripts/perbarui_fundamental.py. Isinya hanya
+# berubah tiap emiten merilis laporan kuartalan, jadi run malam membacanya
+# dari disk alih-alih menarik ulang dari Yahoo.
+CACHE_FUNDAMENTAL = "data/fundamental.csv"
 
 # Status = ringkasan mekanis posisi harga terhadap trennya. Murni aturan
 # teknikal dari kolom yang sudah ada (harga, MA50, MA200, RSI, volume,
@@ -125,43 +152,178 @@ def hitung_status(r) -> str:
     return "WSE"
 
 
-# Skor = kesimpulan fundamental satu saham dalam satu angka 1-100. Perusahaan
-# sehat (untung besar, tumbuh, valuasi wajar) dapat angka tinggi; yang rugi,
-# menyusut, atau kemahalan dapat angka rendah.
+# Skor = kesimpulan fundamental satu saham dalam satu angka 1-100, disusun
+# dari lima kategori dengan bobot tetap. Perusahaan sehat (untung besar,
+# tumbuh, tidak kelebihan utang, kasnya nyata, valuasi wajar) dapat angka
+# tinggi.
 #
-# Bobot tiap komponen. Profitabilitas dan pertumbuhan diberi porsi terbesar
-# karena itu yang menentukan sehat-tidaknya bisnisnya; valuasi ikut karena
-# perusahaan bagus di harga kemahalan bukan investasi bagus; dividen paling
-# kecil karena tidak membayar dividen belum tentu jelek (bisa dipakai
-# ekspansi).
-BOBOT_SKOR = {
-    "ROE%": 25,
-    "LabaYoY%": 20,
-    "PER": 20,
-    "OmzetYoY%": 15,
-    "PBV": 10,
-    "Dividen%": 10,
+# Bobot kategori mengikuti kerangka penilaian fundamental yang umum dipakai:
+# valuasi dan profitabilitas paling menentukan, kesehatan neraca dan
+# pertumbuhan menyusul, arus kas jadi pelengkap karena sebagian datanya
+# paling sering tidak lengkap.
+BOBOT_KATEGORI = {
+    "Valuasi": 25,
+    "Profitabilitas": 25,
+    "Kesehatan": 20,
+    "Pertumbuhan": 20,
+    "ArusKas": 10,
 }
 
-# Titik-titik konversi nilai mentah -> skor 0-100 per komponen, diurut naik.
-# Di antara dua titik dipakai interpolasi linier; di luar rentang dipakai
-# nilai ujungnya. Angkanya dipilih dari kebiasaan pasar Indonesia, mis. ROE
-# 15% dianggap layak dan PER 10 dianggap murah — bukan hasil optimasi
-# statistik, jadi jangan dibaca lebih presisi dari sebenarnya.
-TITIK_SKOR = {
-    "ROE%":      [(0, 0), (5, 25), (10, 45), (15, 65), (20, 80), (30, 95), (40, 100)],
-    "LabaYoY%":  [(-50, 0), (-20, 15), (0, 40), (20, 65), (50, 85), (100, 100)],
-    "OmzetYoY%": [(-30, 0), (-10, 20), (0, 40), (10, 60), (25, 80), (50, 100)],
-    # PER & PBV: makin kecil makin murah, jadi skornya menurun.
-    "PER":       [(5, 100), (10, 85), (15, 70), (20, 55), (25, 40), (35, 20), (50, 5)],
-    "PBV":       [(0.5, 100), (1, 90), (2, 70), (3, 55), (5, 30), (8, 10)],
-    # Yield 0 tidak dihukum berat — perusahaan tumbuh wajar menahan labanya.
-    "Dividen%":  [(0, 30), (2, 55), (4, 75), (6, 90), (8, 100)],
+# Isi tiap kategori: kolom -> (bobot relatif di dalam kategorinya, titik acuan).
+#
+# Titik acuan memetakan nilai mentah ke skor 0-100 lewat interpolasi linier;
+# di luar rentang dipakai nilai ujungnya. Angkanya dipilih dari kebiasaan
+# pasar Indonesia (ROE 15% layak, PER 10 murah, DER di atas 2 berat), bukan
+# hasil optimasi statistik — jangan dibaca lebih presisi dari sebenarnya.
+#
+# Bobot ditulis relatif, bukan absolut, supaya komponen yang tidak berlaku
+# untuk sebuah sektor bisa dibuang dan sisanya otomatis menutup porsinya.
+KOMPONEN_SKOR = {
+    "Valuasi": {
+        # Perbandingan terhadap median sektor diberi porsi terbesar: PBV 2,5
+        # di bank dan PBV 2,5 di emiten batubara bukan hal yang sama, dan
+        # angka absolut tidak bisa membedakannya.
+        "PERvsSektor": (30, [(0.4, 100), (0.6, 90), (0.8, 75), (1.0, 60),
+                             (1.3, 40), (1.8, 20), (2.5, 5)]),
+        "PBVvsSektor": (25, [(0.4, 100), (0.6, 90), (0.8, 75), (1.0, 60),
+                             (1.3, 40), (1.8, 20), (2.5, 5)]),
+        "PER":         (15, [(5, 100), (10, 85), (15, 70), (20, 55),
+                             (25, 40), (35, 20), (50, 5)]),
+        "EV/EBITDA":   (15, [(3, 100), (5, 90), (7, 78), (10, 60),
+                             (14, 38), (20, 15), (30, 5)]),
+        # Yield 0 tidak dihukum berat — perusahaan tumbuh wajar menahan labanya.
+        "Dividen%":    (15, [(0, 30), (2, 55), (4, 75), (6, 90), (8, 100)]),
+    },
+    "Profitabilitas": {
+        "ROE%":           (28, [(0, 0), (5, 25), (10, 45), (15, 65),
+                                (20, 80), (30, 95), (40, 100)]),
+        "ROA%":           (14, [(0, 0), (2, 25), (5, 50), (8, 70),
+                                (12, 88), (18, 100)]),
+        "MarginBersih%":  (16, [(0, 10), (3, 30), (6, 50), (10, 70),
+                                (15, 85), (25, 100)]),
+        "MarginOperasi%": (14, [(0, 10), (5, 35), (10, 55), (15, 72),
+                                (22, 88), (30, 100)]),
+        # Kualitas laba: laba akuntansi yang tidak diikuti kas masuk adalah
+        # laba di atas kertas. Rasio di bawah 1 berarti sebagian labanya masih
+        # berupa piutang atau persediaan, bukan uang.
+        "OCF/Laba":       (28, [(-0.5, 0), (0, 10), (0.5, 40), (0.8, 65),
+                                (1.0, 82), (1.5, 95), (2.5, 100)]),
+    },
+    "Kesehatan": {
+        "DER":                (28, [(0, 100), (0.3, 90), (0.6, 78), (1.0, 62),
+                                    (1.5, 45), (2.5, 22), (4.0, 5)]),
+        # Negatif berarti net cash, jadi ujung kiri diberi nilai penuh.
+        "UtangBersih/EBITDA": (24, [(-1, 100), (0, 95), (1, 82), (2, 65),
+                                    (3, 45), (4.5, 22), (6, 5)]),
+        "InterestCoverage":   (24, [(0, 0), (1.5, 20), (3, 45), (5, 65),
+                                    (10, 85), (20, 100)]),
+        "CurrentRatio":       (14, [(0.5, 5), (1.0, 40), (1.3, 62), (1.8, 82),
+                                    (2.5, 95), (4, 100)]),
+        "QuickRatio":         (10, [(0.3, 5), (0.8, 40), (1.0, 60), (1.5, 82),
+                                    (2.5, 100)]),
+    },
+    "Pertumbuhan": {
+        "LabaYoY%":     (25, [(-50, 0), (-20, 15), (0, 40), (20, 65),
+                              (50, 85), (100, 100)]),
+        "OmzetYoY%":    (20, [(-30, 0), (-10, 20), (0, 40), (10, 60),
+                              (25, 80), (50, 100)]),
+        # CAGR tiga tahun menyaring lonjakan sesaat: laba yang naik 200%
+        # sekali lalu anjlok dua kali tidak akan terlihat bagus di sini.
+        "LabaCAGR3%":   (25, [(-20, 0), (-5, 25), (5, 50), (15, 72),
+                              (25, 88), (40, 100)]),
+        "OmzetCAGR3%":  (15, [(-15, 0), (-5, 25), (3, 50), (10, 72),
+                              (18, 88), (30, 100)]),
+        # Berapa dari 3 tahun terakhir labanya naik — ukuran konsistensi,
+        # bukan besaran.
+        "TahunLabaNaik": (15, [(0, 10), (1, 40), (2, 72), (3, 100)]),
+    },
+    "ArusKas": {
+        "FCFYield%": (30, [(-10, 0), (-2, 20), (0, 35), (3, 60),
+                           (6, 80), (10, 95), (15, 100)]),
+        # Payout dinilai berpuncak di tengah: nol berarti tidak berbagi hasil,
+        # di atas 100% berarti dividennya melebihi laba dan tidak lestari.
+        "Payout%":   (25, [(0, 40), (15, 65), (30, 85), (50, 95), (70, 85),
+                           (100, 55), (130, 20), (200, 5)]),
+        # Positif = jumlah saham bertambah = pemegang saham lama terdilusi.
+        # Negatif = buyback, dan itu dihargai.
+        "SahamYoY%": (25, [(-5, 100), (-1, 90), (0, 78), (2, 60),
+                           (5, 35), (10, 12), (20, 0)]),
+        # Berpuncak di tengah: capex sangat rendah bisa berarti bisnis ringan
+        # modal, tapi bisa juga berarti perusahaannya berhenti berinvestasi.
+        "Capex/OCF": (20, [(0, 55), (0.15, 85), (0.35, 90), (0.6, 72),
+                           (0.9, 45), (1.3, 20), (2.0, 5)]),
+    },
 }
 
-# Skor hanya dikeluarkan bila komponen yang tersedia mencakup minimal porsi
-# ini dari total bobot. Di bawah itu angkanya lebih menyesatkan daripada
-# berguna — lebih baik kosong.
+# Penyesuaian sektoral. Faktor pengali bobot komponen; 0 berarti komponennya
+# tidak dipakai sama sekali untuk sektor itu, dan porsinya dibagi ulang ke
+# komponen lain dalam kategori yang sama.
+#
+# Ini bukan penghalusan opsional. Tanpa penyesuaian, bank selalu terlihat
+# berutang ekstrem (Total Debt bank adalah bisnisnya, bukan bebannya) dan
+# emiten teknologi yang belum untung selalu terlihat kemahalan meski memang
+# begitu tahap hidupnya.
+PENYESUAIAN_SEKTOR = {
+    "Financial Services": {
+        # Neraca bank tidak mengenal aset lancar, dan utangnya adalah dana
+        # pihak ketiga — rasio utang ala perusahaan biasa tidak berlaku.
+        # Sebagai gantinya bobot pindah ke ROE dan valuasi berbasis P/B, yang
+        # memang metrik utama untuk menilai bank.
+        "DER": 0, "UtangBersih/EBITDA": 0, "CurrentRatio": 0, "QuickRatio": 0,
+        "InterestCoverage": 0, "EV/EBITDA": 0, "MarginOperasi%": 0,
+        # Arus kas bank ikut dimatikan, dengan alasan yang sama seperti
+        # flag-nya: penyaluran kredit menyerap kas sehingga OCF bank sering
+        # negatif justru ketika sedang tumbuh. Dibiarkan, komponen ini
+        # menghukum bank yang ekspansif — BBRI sempat turun ke Profitabilitas
+        # 53 melawan BBCA 81 semata karena OCF/Laba-nya minus.
+        "OCF/Laba": 0, "Capex/OCF": 0, "FCFYield%": 0,
+        # Yang tersisa di kategori arus kas: kelestarian dividen dan dilusi,
+        # dua hal yang tetap bermakna untuk bank.
+        "PBVvsSektor": 1.6, "ROE%": 1.4,
+    },
+    "Energy": {
+        # Komoditas: yang menentukan bertahan-tidaknya melewati siklus adalah
+        # beban utang bersih terhadap kas yang dihasilkan, bukan laba satu
+        # tahun yang kebetulan sedang di puncak harga komoditas.
+        "UtangBersih/EBITDA": 1.6, "FCFYield%": 1.3,
+        "PER": 0.6, "LabaYoY%": 0.7,
+    },
+    "Basic Materials": {
+        "UtangBersih/EBITDA": 1.6, "FCFYield%": 1.3,
+        "PER": 0.6, "LabaYoY%": 0.7,
+    },
+    "Real Estate": {
+        # Properti: gearing dan kemampuan mendanai proyek yang menentukan.
+        # Laba akuntansinya sering mendahului kasnya, jadi OCF/Laba dinaikkan.
+        "DER": 1.5, "CurrentRatio": 1.3, "OCF/Laba": 1.3,
+        "PBVvsSektor": 1.3,
+    },
+    "Consumer Defensive": {
+        # Consumer: yang membedakan pemenang adalah margin yang bertahan dan
+        # kas yang benar-benar masuk.
+        "MarginBersih%": 1.4, "MarginOperasi%": 1.3, "OCF/Laba": 1.3,
+    },
+    "Consumer Cyclical": {
+        "MarginBersih%": 1.4, "MarginOperasi%": 1.3, "OCF/Laba": 1.3,
+    },
+    "Technology": {
+        # Teknologi diberi toleransi valuasi lebih tinggi, tapi ditagih lebih
+        # keras soal kualitas pertumbuhan, kas yang terbakar, dan dilusi —
+        # tiga hal yang menentukan apakah ia sampai ke profitabilitas.
+        "PER": 0.4, "EV/EBITDA": 0.5, "Dividen%": 0.3,
+        "OmzetYoY%": 1.5, "OmzetCAGR3%": 1.4,
+        "FCFYield%": 1.4, "SahamYoY%": 1.5,
+    },
+}
+
+# Kategori dinilai hanya bila komponen yang datanya ada mencakup minimal porsi
+# ini dari bobot kategorinya. Di bawah itu kategorinya dibuang seluruhnya dan
+# bobotnya dibagi ulang ke kategori lain.
+MIN_CAKUPAN_KATEGORI = 0.4
+
+# Skor akhir hanya dikeluarkan bila kategori yang berhasil dinilai mencakup
+# minimal porsi ini dari total 100. Di bawah itu angkanya lebih menyesatkan
+# daripada berguna — lebih baik kosong.
 MIN_CAKUPAN_SKOR = 0.5
 
 
@@ -177,36 +339,132 @@ def _interpolasi(nilai: float, titik: list[tuple[float, float]]) -> float:
     return titik[-1][1]
 
 
+def _angka(r, kolom: str) -> float | None:
+    nilai = r.get(kolom)
+    if nilai is None or pd.isna(nilai):
+        return None
+    try:
+        return float(nilai)
+    except (TypeError, ValueError):
+        return None
+
+
+def skor_kategori(r, kategori: str, sektor: str) -> tuple[float | None, float]:
+    """Nilai satu kategori untuk satu emiten.
+
+    Mengembalikan (skor 0-100, porsi bobot yang datanya tersedia). Porsi itu
+    dipakai pemanggil untuk memutuskan apakah kategorinya layak dihitung.
+
+    PER, PBV, dan EV/EBITDA yang nol atau negatif bukan data hilang melainkan
+    kabar buruk: PER negatif berarti perusahaannya rugi dan PBV negatif berarti
+    ekuitasnya minus. Keduanya diberi skor 0, bukan dilewati — kalau dilewati,
+    emiten rugi justru diuntungkan karena komponen terburuknya menghilang.
+    """
+    penyesuaian = PENYESUAIAN_SEKTOR.get(sektor, {})
+    total_bobot = 0.0
+    bobot_terpakai = 0.0
+    total_skor = 0.0
+
+    for kolom, (bobot_dasar, titik) in KOMPONEN_SKOR[kategori].items():
+        bobot = bobot_dasar * penyesuaian.get(kolom, 1.0)
+        if bobot <= 0:
+            continue
+        total_bobot += bobot
+        nilai = _angka(r, kolom)
+        if nilai is None:
+            continue
+        if kolom in ("PER", "PBV", "PERvsSektor", "PBVvsSektor", "EV/EBITDA") \
+                and nilai <= 0:
+            skor = 0.0
+        else:
+            skor = _interpolasi(nilai, titik)
+        total_skor += skor * bobot
+        bobot_terpakai += bobot
+
+    if not total_bobot or not bobot_terpakai:
+        return None, 0.0
+    return total_skor / bobot_terpakai, bobot_terpakai / total_bobot
+
+
 def hitung_skor(r) -> int | None:
     """Ringkas fundamental satu saham jadi skor 1-100 (makin tinggi makin sehat).
 
-    Rata-rata tertimbang dari komponen yang datanya ada. Komponen yang kosong
-    dibuang dan bobotnya dibagi ulang ke sisanya, jadi saham yang belum bagi
-    dividen tidak otomatis kalah dari yang sudah — asal data lain lengkap.
-    Kalau yang tersedia terlalu sedikit, hasilnya None (kolom kosong).
-
-    PER atau PBV yang nol/negatif bukan data hilang melainkan kabar buruk:
-    PER negatif berarti perusahaannya rugi, PBV negatif berarti ekuitasnya
-    minus. Keduanya diberi skor 0, bukan dilewati.
+    Rata-rata tertimbang lima kategori. Kategori yang datanya terlalu tipis
+    dibuang dan bobotnya dibagi ulang ke sisanya, jadi bank tidak dihukum
+    karena tidak punya current ratio, dan emiten yang belum bagi dividen tidak
+    otomatis kalah dari yang sudah. Kalau yang tersisa kurang dari separuh
+    total bobot, hasilnya None — kolom kosong lebih jujur daripada angka yang
+    disusun dari dua-tiga komponen.
     """
+    sektor = str(r.get("Sektor") or "")
     total_bobot = 0.0
     total_skor = 0.0
-    for kolom, bobot in BOBOT_SKOR.items():
-        nilai = r.get(kolom)
-        if nilai is None or pd.isna(nilai):
+    for kategori, bobot in BOBOT_KATEGORI.items():
+        skor, cakupan = skor_kategori(r, kategori, sektor)
+        if skor is None or cakupan < MIN_CAKUPAN_KATEGORI:
             continue
-        nilai = float(nilai)
-        if kolom in ("PER", "PBV") and nilai <= 0:
-            skor = 0.0
-        else:
-            skor = _interpolasi(nilai, TITIK_SKOR[kolom])
         total_skor += skor * bobot
         total_bobot += bobot
 
-    if total_bobot < MIN_CAKUPAN_SKOR * sum(BOBOT_SKOR.values()):
+    if total_bobot < MIN_CAKUPAN_SKOR * sum(BOBOT_KATEGORI.values()):
         return None
     # Dibatasi minimal 1: skor 0 mudah tertukar dengan "tidak ada data".
     return max(1, min(100, round(total_skor / total_bobot)))
+
+
+# Red flag: kondisi yang harus terbaca terpisah dari skor. Skor adalah
+# rata-rata, dan rata-rata bisa menutupi satu cacat berat dengan banyak angka
+# bagus — emiten dengan ekuitas negatif tetap bisa mendapat skor menengah
+# kalau pertumbuhan dan valuasinya kebetulan tampak murah. Kolom ini menolak
+# dirata-ratakan.
+#
+# Tiap entri: (kode singkat, fungsi penguji, penjelasan).
+RED_FLAG = [
+    ("ekuitas-",  lambda r: (_angka(r, "Ekuitas") or 1) < 0,
+     "ekuitas negatif — kewajiban melebihi seluruh asetnya"),
+    ("rugi",      lambda r: (_angka(r, "LabaBersih") or 0) < 0,
+     "masih merugi pada periode terakhir"),
+    ("OCF-",      lambda r: (_angka(r, "OCF") or 0) < 0,
+     "arus kas operasi negatif — operasinya menyedot kas, bukan menghasilkan"),
+    ("FCF-",      lambda r: (_angka(r, "FCF") or 0) < 0,
+     "arus kas bebas negatif"),
+    ("kas<laba",  lambda r: (v := _angka(r, "OCF/Laba")) is not None
+     and 0 <= v < 0.5 and (_angka(r, "LabaBersih") or 0) > 0,
+     "kas operasi kurang dari separuh laba — kualitas laba dipertanyakan"),
+    ("DER>3",     lambda r: (v := _angka(r, "DER")) is not None and v > 3,
+     "utang lebih dari tiga kali ekuitas"),
+    ("bunga<1.5", lambda r: (v := _angka(r, "InterestCoverage")) is not None
+     and v < 1.5,
+     "laba operasi nyaris tidak menutup beban bunga"),
+    ("laba-30%",  lambda r: (v := _angka(r, "LabaYoY%")) is not None and v < -30,
+     "laba turun lebih dari 30% YoY"),
+    ("dilusi",    lambda r: (v := _angka(r, "SahamYoY%")) is not None and v > 10,
+     "jumlah saham bertambah lebih dari 10% setahun"),
+    ("payout>100", lambda r: (v := _angka(r, "Payout%")) is not None and v > 100,
+     "dividen melebihi laba — belum tentu bisa dipertahankan"),
+]
+
+
+# Flag yang tidak berlaku untuk sektor tertentu, dengan alasan yang sama
+# seperti penyesuaian bobotnya: arus kas operasi bank memang sering negatif
+# karena penyaluran kredit menyerap kas, dan itu tanda bank sedang tumbuh —
+# bukan tanda bahaya. Dibiarkan menyala, flag ini akan menandai hampir seluruh
+# sektor perbankan dan justru membuat kolomnya berhenti berarti.
+FLAG_TIDAK_BERLAKU = {
+    "Financial Services": {"OCF-", "FCF-", "kas<laba", "DER>3"},
+}
+
+
+def hitung_flag(r) -> str:
+    """Daftar red flag satu emiten, dipisah koma; kosong bila tidak ada.
+
+    Sengaja kode singkat tanpa emoji: keluaran ini ikut masuk CSV dan terminal
+    Windows yang codepage-nya bukan UTF-8, tempat karakter di luar ASCII
+    berubah jadi tanda tanya.
+    """
+    kecuali = FLAG_TIDAK_BERLAKU.get(str(r.get("Sektor") or ""), set())
+    return ",".join(kode for kode, uji, _ in RED_FLAG
+                    if kode not in kecuali and uji(r))
 
 
 # Daftar default. Daftar kurasi (LQ45, grup konglomerasi, tema) ditaruh lebih
@@ -280,27 +538,15 @@ def hitung_rsi(close: pd.Series, periode: int = 14) -> float | None:
     return round(100 - 100 / (1 + rs), 1)
 
 
-def normalisasi_persen(nilai) -> float | None:
-    """yfinance kadang mengembalikan yield sebagai fraksi (0.035) dan kadang
-    sudah persen (3.5), tergantung versi. Nilai <= 1 dianggap fraksi."""
-    if nilai is None:
-        return None
-    return round(nilai * 100, 2) if nilai <= 1 else round(nilai, 2)
+def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None) -> pd.DataFrame:
+    """Ambil kolom yang memang berubah tiap hari: harga, volume, MA, RSI.
 
-
-def persen_pertumbuhan(nilai) -> float | None:
-    """Ubah pertumbuhan dari fraksi ke persen.
-
-    Beda dari normalisasi_persen(): pertumbuhan selalu dikirim yfinance
-    sebagai fraksi dan boleh negatif atau lebih besar dari 1 (laba naik 3x =
-    2.0), jadi tebakan "kalau <= 1 berarti fraksi" tidak berlaku di sini.
+    Sengaja tidak menyentuh `.info` lagi. Dulu fungsi ini menariknya untuk
+    mendapat ROE, PER, PBV, dan pertumbuhan — padahal semua itu berasal dari
+    laporan keuangan yang cuma berubah empat kali setahun, jadi 400-an request
+    tiap malam dipakai mengambil angka yang sama persis seperti kemarin.
+    Sekarang angka-angka itu datang dari cache fundamental.
     """
-    if nilai is None or pd.isna(nilai):
-        return None
-    return round(nilai * 100, 1)
-
-
-def ambil_data(tickers: list[str], grup: dict[str, str] | None = None) -> pd.DataFrame:
     import yfinance as yf
 
     baris_data = []
@@ -309,7 +555,6 @@ def ambil_data(tickers: list[str], grup: dict[str, str] | None = None) -> pd.Dat
         print(f"  [{i}/{len(tickers)}] {tkr} ...", file=sys.stderr)
         try:
             saham = yf.Ticker(tkr)
-            info = saham.info or {}
             hist = saham.history(period="1y")
 
             # Bar hari ini dibuang selama sesi masih berjalan, supaya seluruh
@@ -318,13 +563,11 @@ def ambil_data(tickers: list[str], grup: dict[str, str] | None = None) -> pd.Dat
             # di jam bursa menghasilkan tabel yang tampak wajar tapi kolom
             # volumenya salah total.
             #
-            # Yang dipotong hanya kolom turunan histori (Harga, MA, RSI,
-            # volume). Rasio dari .info (PER, PBV) tetap dihitung Yahoo dari
-            # harga berjalan, jadi saat sesi hidup keduanya beda selisih
-            # pergerakan satu hari — biasanya di bawah 2% dan tidak menggeser
-            # Skor secara berarti. Dibiarkan begitu karena menghitung ulang
-            # PER/PBV sendiri berarti ikut menanggung definisi EPS dan nilai
-            # buku Yahoo yang tidak selalu konsisten antar emiten.
+            # Sejak PER/PBV dihitung sendiri dari harga penutupan (lihat
+            # gabung_fundamental), pemotongan ini berlaku untuk seluruh tabel
+            # tanpa kecuali. Sebelumnya PER dan PBV datang jadi dari Yahoo yang
+            # memakai harga berjalan, jadi saat sesi hidup dua kolom itu
+            # mengacu ke titik waktu yang berbeda dari kolom lainnya.
             belum_final = bar_terakhir_belum_final(hist)
             if belum_final:
                 if not sudah_diberitahu:
@@ -336,14 +579,7 @@ def ambil_data(tickers: list[str], grup: dict[str, str] | None = None) -> pd.Dat
             close = hist["Close"] if not hist.empty else pd.Series(dtype=float)
             vol = hist["Volume"] if not hist.empty else pd.Series(dtype=float)
 
-            penutupan = round(close.iloc[-1]) if len(close) else None
-            # currentPrice adalah harga berjalan; memakainya saat sesi belum
-            # tuntas akan mencampur harga intraday dengan volume dan MA yang
-            # sudah dipotong ke kemarin.
-            harga = penutupan if belum_final else (
-                info.get("currentPrice") or penutupan)
-            roe = info.get("returnOnEquity")
-            mcap = info.get("marketCap")
+            harga = round(close.iloc[-1]) if len(close) else None
             vol20 = vol.tail(20).mean() if len(vol) >= 20 else None
             if vol20 is None or pd.isna(vol20) or vol20 <= 0:
                 vol20 = None
@@ -352,20 +588,8 @@ def ambil_data(tickers: list[str], grup: dict[str, str] | None = None) -> pd.Dat
                 nilai20 = None
             baris_data.append({
                 "Ticker": tkr.removesuffix(".JK"),
-                "Nama": (info.get("shortName") or "")[:28],
                 "Grup": (grup or {}).get(tkr.removesuffix(".JK"), ""),
                 "Harga": harga,
-                "PER": round(info["trailingPE"], 1) if info.get("trailingPE") else None,
-                "PBV": round(info["priceToBook"], 2) if info.get("priceToBook") else None,
-                "ROE%": round(roe * 100, 1) if roe is not None else None,
-                # Pertumbuhan kuartal terakhir dibanding kuartal yang sama
-                # setahun lalu (YoY) — ini yang paling dekat dengan "lapkeu
-                # terakhir bagus atau tidak". Ikut dari .info yang sudah
-                # diambil, jadi tidak menambah request.
-                "LabaYoY%": persen_pertumbuhan(info.get("earningsQuarterlyGrowth")),
-                "OmzetYoY%": persen_pertumbuhan(info.get("revenueGrowth")),
-                "Dividen%": normalisasi_persen(info.get("dividendYield")),
-                "MarketCap(T)": round(mcap / 1e12, 1) if mcap else None,
                 "Vol20(jt)": round(vol20 / 1e6, 2) if vol20 else None,
                 "Nilai(M)": round(nilai20 / 1e9, 1) if nilai20 else None,
                 "VolSpike": round(vol.iloc[-1] / vol20, 2) if vol20 else None,
@@ -375,7 +599,127 @@ def ambil_data(tickers: list[str], grup: dict[str, str] | None = None) -> pd.Dat
             })
         except Exception as e:
             print(f"      gagal: {e}", file=sys.stderr)
-    return pd.DataFrame(baris_data, columns=KOLOM)
+    return pd.DataFrame(baris_data)
+
+
+def baca_cache_fundamental(path: str) -> pd.DataFrame:
+    """Baca cache lapkeu. Kosong (dengan peringatan) bila filenya belum ada.
+
+    Bukan error: repo yang baru di-clone belum punya cache, dan screening
+    teknikal tetap berguna tanpa kolom fundamental. Yang hilang hanya Skor —
+    dan itu memang jawaban yang benar ketika fundamentalnya tidak diketahui.
+    """
+    p = Path(path)
+    if not p.exists():
+        print(f"Cache fundamental {path} tidak ada — kolom fundamental dikosongkan.\n"
+              f"  Jalankan: python scripts/perbarui_fundamental.py",
+              file=sys.stderr)
+        return pd.DataFrame()
+    df = pd.read_csv(p)
+    umur = df["Periode"].dropna()
+    if not umur.empty:
+        print(f"Cache fundamental: {len(df)} emiten, periode lapkeu terbaru "
+              f"{umur.max()}.", file=sys.stderr)
+    return df
+
+
+def gabung_fundamental(hist: pd.DataFrame, fund: pd.DataFrame) -> pd.DataFrame:
+    """Gabungkan histori harga dengan cache lapkeu, lalu hitung rasio harga.
+
+    PER, PBV, dividend yield, dan market cap sengaja dihitung di sini alih-alih
+    diambil jadi dari Yahoo. Alasannya bukan ketelitian desimal melainkan titik
+    waktu: rasio Yahoo memakai harga berjalan, sedangkan seluruh kolom lain di
+    tabel ini berasal dari penutupan terakhir. Dengan EPS dan nilai buku
+    dikunci di cache, satu-satunya variabel harian adalah harga — jadi semua
+    kolom akhirnya mengacu ke hari yang sama.
+    """
+    if fund.empty:
+        df = hist.copy()
+        for kolom in ("Nama", "Sektor"):
+            df[kolom] = ""
+        return df
+
+    kolom_fund = [k for k in fund.columns if k not in ("Diperbarui",)]
+    df = hist.merge(fund[kolom_fund], on="Ticker", how="left")
+
+    # Ticker yang tidak ada di cache tetap lolos dengan seluruh kolom
+    # fundamentalnya kosong. Tanpa peringatan ini, screening atas daftar
+    # ticker khusus akan tampak berjalan normal padahal Skor dan Flag-nya
+    # kosong semata-mata karena cache-nya belum pernah mencakup emiten itu.
+    hilang = df.loc[df["Periode"].isna() & df["EPS"].isna(), "Ticker"].tolist()
+    if hilang:
+        print(f"{len(hilang)} ticker tidak ada di cache fundamental "
+              f"(fundamentalnya kosong): {', '.join(hilang[:12])}"
+              + (" ..." if len(hilang) > 12 else "")
+              + "\n  Perbarui dengan: python scripts/perbarui_fundamental.py "
+                "--tickers <daftar>", file=sys.stderr)
+
+    harga = pd.to_numeric(df["Harga"], errors="coerce")
+    eps = pd.to_numeric(df["EPS"], errors="coerce")
+    bvps = pd.to_numeric(df["BVPS"], errors="coerce")
+    dps = pd.to_numeric(df["DPS"], errors="coerce")
+    saham = pd.to_numeric(df["Saham"], errors="coerce")
+
+    # EPS/BVPS nol dibuang lebih dulu: hasil bagi dengan nol menghasilkan inf,
+    # yang lolos dari pd.isna() dan akan merusak median sektor di bawah.
+    df["PER"] = (harga / eps.where(eps != 0)).round(1)
+    df["PBV"] = (harga / bvps.where(bvps != 0)).round(2)
+    df["Dividen%"] = (dps.fillna(0) / harga * 100).round(2)
+    mcap = harga * saham
+    df["MarketCap(T)"] = (mcap / 1e12).round(1)
+    # FCF Yield baru bisa dihitung di sini karena butuh kapitalisasi pasar,
+    # yang berubah tiap hari mengikuti harga.
+    df["FCFYield%"] = (pd.to_numeric(df["FCF"], errors="coerce") / mcap * 100).round(2)
+
+    # EV/EBITDA juga bergantung harga lewat kapitalisasi pasarnya. Gunanya
+    # melengkapi PER: enterprise value ikut menghitung utang, jadi dua emiten
+    # dengan PER sama tapi beban utang jauh berbeda tidak lagi terbaca sama
+    # murahnya. EBITDA non-positif dilewati — rasionya jadi tak bermakna.
+    ebitda = pd.to_numeric(df["EBITDA"], errors="coerce")
+    ev = mcap + pd.to_numeric(df["UtangBersih"], errors="coerce")
+    df["EV/EBITDA"] = (ev / ebitda.where(ebitda > 0)).round(2)
+
+    # Seberapa besar kas operasi yang habis terpakai belanja modal. Rendah
+    # berarti bisnisnya ringan modal, tapi terlalu rendah bisa berarti
+    # investasinya kurang — jadi penilaiannya nanti berpuncak di tengah,
+    # bukan makin rendah makin baik.
+    ocf = pd.to_numeric(df["OCF"], errors="coerce")
+    df["Capex/OCF"] = (pd.to_numeric(df["Capex"], errors="coerce").abs()
+                       / ocf.where(ocf > 0)).round(2)
+    return df
+
+
+def tambah_median_sektor(df: pd.DataFrame) -> pd.DataFrame:
+    """Bandingkan PER dan PBV tiap emiten terhadap median sektornya.
+
+    Ini yang membuat valuasi bisa dibaca lintas sektor. PBV 2,5 di bank dan
+    PBV 2,5 di emiten batubara bukan hal yang sama — yang pertama biasa saja,
+    yang kedua mahal. Angka absolutnya tetap ditampilkan, tapi kolom
+    PERvsSektor/PBVvsSektor-lah yang menjawab "mahal dibanding siapa".
+
+    Rasio 1,0 = persis median sektornya; 0,7 = 30% lebih murah; 1,4 = 40%
+    lebih mahal. Hanya nilai positif yang ikut menghitung median: PER negatif
+    berarti emitennya rugi, dan memasukkannya akan menarik median ke bawah
+    seolah-olah sektornya sedang murah.
+    """
+    for kolom, nama in (("PER", "PERvsSektor"), ("PBV", "PBVvsSektor")):
+        df[nama] = None
+        if "Sektor" not in df.columns or kolom not in df.columns:
+            continue
+        sektor = df["Sektor"].fillna("").astype(str).str.strip()
+        nilai = pd.to_numeric(df[kolom], errors="coerce")
+        # Emiten tanpa label sektor dikeluarkan sama sekali, bukan dikumpulkan
+        # jadi satu grup: kalau tidak, seluruhnya dibandingkan terhadap median
+        # gabungan semua industri dan hasilnya tetap terisi seolah-olah itu
+        # perbandingan sektoral. Lebih baik kosong daripada terlihat berarti.
+        sah = nilai.where((nilai > 0) & (sektor != ""))
+        median = sah.groupby(sektor).transform("median")
+        # Sektor berisi satu-dua emiten menghasilkan median yang sebenarnya
+        # cuma emiten itu sendiri, jadi rasionya selalu ~1,0 dan tidak
+        # memberi tahu apa pun. Kurang dari 3 pembanding dianggap tidak cukup.
+        cukup = sah.groupby(sektor).transform("count") >= 3
+        df[nama] = (sah / median).where(cukup).round(2)
+    return df
 
 
 def terapkan_filter(df: pd.DataFrame, args) -> pd.DataFrame:
@@ -392,12 +736,31 @@ def terapkan_filter(df: pd.DataFrame, args) -> pd.DataFrame:
         saring(df["Status"].fillna("").str.upper().isin(pilihan))
     if args.min_skor is not None:
         saring(df["Skor"] >= args.min_skor)
+    if args.tanpa_flag:
+        saring(df["Flag"].fillna("") == "")
+    if args.kecuali_flag:
+        buang = [f.lower() for f in args.kecuali_flag]
+        saring(df["Flag"].fillna("").str.lower().apply(
+            lambda s: not any(f in s.split(",") for f in buang)))
     if args.max_per is not None:
         saring((df["PER"] > 0) & (df["PER"] <= args.max_per))
     if args.max_pbv is not None:
         saring((df["PBV"] > 0) & (df["PBV"] <= args.max_pbv))
+    if args.maks_per_sektor is not None:
+        saring(df["PERvsSektor"] <= args.maks_per_sektor)
+    if args.maks_pbv_sektor is not None:
+        saring(df["PBVvsSektor"] <= args.maks_pbv_sektor)
+    if args.sektor:
+        pilihan = [s.lower() for s in args.sektor]
+        saring(df["Sektor"].fillna("").str.lower().isin(pilihan))
     if args.min_roe is not None:
         saring(df["ROE%"] >= args.min_roe)
+    if args.maks_der is not None:
+        saring(df["DER"] <= args.maks_der)
+    if args.min_current_ratio is not None:
+        saring(df["CurrentRatio"] >= args.min_current_ratio)
+    if args.min_ocf_laba is not None:
+        saring(df["OCF/Laba"] >= args.min_ocf_laba)
     if args.min_laba_yoy is not None:
         saring(df["LabaYoY%"] >= args.min_laba_yoy)
     if args.min_omzet_yoy is not None:
@@ -445,12 +808,33 @@ def main():
     p.add_argument("--status", nargs="+", metavar="STATUS",
                    help="hanya tampilkan saham dengan status tertentu, salah satu dari: "
                         + ", ".join(STATUS))
+    p.add_argument("--cache-fundamental", default=CACHE_FUNDAMENTAL, metavar="FILE",
+                   help="cache lapkeu dari scripts/perbarui_fundamental.py")
     f = p.add_argument_group("filter fundamental")
+    f.add_argument("--sektor", nargs="+", metavar="NAMA",
+                   help="hanya sektor tertentu (mis. --sektor Technology 'Real Estate')")
+    f.add_argument("--tanpa-flag", action="store_true",
+                   help="buang saham yang punya red flag apa pun")
+    f.add_argument("--kecuali-flag", nargs="+", metavar="KODE",
+                   help="buang saham dengan red flag tertentu saja, salah satu dari: "
+                        + ", ".join(k for k, _, _ in RED_FLAG))
     f.add_argument("--min-skor", type=float, metavar="1-100",
                    help="skor fundamental minimal (mis. 70 = fundamental kuat)")
     f.add_argument("--max-per", type=float, help="PER maksimal (dan harus > 0)")
     f.add_argument("--max-pbv", type=float, help="PBV maksimal (dan harus > 0)")
+    f.add_argument("--maks-per-sektor", type=float, metavar="RASIO",
+                   help="PER maksimal relatif median sektornya "
+                        "(mis. 0.8 = minimal 20%% lebih murah dari sektornya)")
+    f.add_argument("--maks-pbv-sektor", type=float, metavar="RASIO",
+                   help="PBV maksimal relatif median sektornya")
     f.add_argument("--min-roe", type=float, help="ROE minimal dalam persen")
+    f.add_argument("--maks-der", type=float,
+                   help="Debt to Equity maksimal (mis. 1.0)")
+    f.add_argument("--min-current-ratio", type=float,
+                   help="Current Ratio minimal (mis. 1.0); bank tidak punya kolom ini")
+    f.add_argument("--min-ocf-laba", type=float, metavar="RASIO",
+                   help="rasio arus kas operasi terhadap laba bersih minimal "
+                        "(mis. 0.8 = labanya sebagian besar benar-benar jadi kas)")
     f.add_argument("--min-laba-yoy", type=float,
                    help="pertumbuhan laba kuartal terakhir (YoY) minimal, dalam persen")
     f.add_argument("--min-omzet-yoy", type=float,
@@ -479,9 +863,12 @@ def main():
         df = pd.read_csv(args.dari_csv)
     else:
         tickers, grup = baca_daftar_ticker(args.tickers)
-        print(f"Mengambil data {len(tickers)} saham dari Yahoo Finance ...",
+        fund = baca_cache_fundamental(args.cache_fundamental)
+        print(f"Mengambil histori harga {len(tickers)} saham dari Yahoo Finance ...",
               file=sys.stderr)
-        df = ambil_data(tickers, grup)
+        df = ambil_histori(tickers, grup)
+        if not df.empty:
+            df = gabung_fundamental(df, fund)
 
     if df.empty:
         sys.exit("Tidak ada data yang berhasil diambil.")
@@ -492,9 +879,13 @@ def main():
     # apa pun; itu memang perilaku yang benar untuk data yang tidak diketahui.
     if "Grup" not in df.columns:
         df["Grup"] = ""
-    for kolom in KOLOM:
+    for kolom in KOLOM + KOLOM_EKSTRA:
         if kolom not in df.columns:
             df[kolom] = None
+    # Median sektor dihitung ulang tiap run, bukan disimpan di cache: PER dan
+    # PBV bergerak tiap hari mengikuti harga, jadi median sektornya pun ikut
+    # bergerak walau lapkeu-nya sama sekali tidak berubah.
+    df = tambah_median_sektor(df)
     # Status selalu dihitung ulang, bukan dibaca dari CSV: aturannya bisa
     # berubah, dan hasilnya harus selalu cocok dengan kolom-kolom di sebelahnya.
     df["Status"] = df.apply(hitung_status, axis=1)
@@ -503,7 +894,24 @@ def main():
     # Int64 (nullable), bukan int biasa: skor boleh kosong, dan tanpa ini
     # pandas menaikkannya ke float sehingga CSV-nya berisi "72.0".
     df["Skor"] = df.apply(hitung_skor, axis=1).astype("Int64")
-    df = df.reindex(columns=[k for k in KOLOM if k in df.columns])
+    # Skor tiap kategori ikut disimpan supaya angka totalnya bisa dibongkar:
+    # dua emiten berskor 70 bisa sampai ke sana lewat jalan yang sangat
+    # berbeda — yang satu murah tapi tumbuh lambat, yang lain mahal tapi
+    # sangat menguntungkan.
+    for kategori in BOBOT_KATEGORI:
+        df[f"Skor{kategori}"] = df.apply(
+            lambda r, k=kategori: (lambda s: None if s[0] is None
+                                   or s[1] < MIN_CAKUPAN_KATEGORI
+                                   else round(s[0]))(
+                skor_kategori(r, k, str(r.get("Sektor") or ""))),
+            axis=1).astype("Int64")
+    # Flag dihitung setelah skor dan sengaja tidak ikut menguranginya: skor
+    # adalah rata-rata, dan satu cacat berat tidak boleh bisa disamarkan oleh
+    # banyak angka bagus. Dua kolom itu menjawab pertanyaan berbeda.
+    df["Flag"] = df.apply(hitung_flag, axis=1)
+    # Kolom inti dulu, kolom fundamental tambahan menyusul di belakang — yang
+    # kedua ikut tersimpan ke CSV tapi tidak ditampilkan di tabel terminal.
+    df = df.reindex(columns=[k for k in KOLOM + KOLOM_EKSTRA if k in df.columns])
 
     hasil = terapkan_filter(df, args)
     if args.urut in hasil.columns:
@@ -513,7 +921,7 @@ def main():
     if hasil.empty:
         print("Tidak ada saham yang memenuhi seluruh kriteria.")
     else:
-        print(hasil.to_string(index=False))
+        print(hasil[[k for k in KOLOM if k in hasil.columns]].to_string(index=False))
     # CSV selalu ditulis (walau kosong) agar hasil lama tidak tertinggal
     # saat dijalankan otomatis tiap malam.
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
