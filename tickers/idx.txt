@@ -8,7 +8,7 @@
 # Kriteria: emiten Indonesia (Yahoo region=id) dengan kapitalisasi pasar
 #   di atas 1 triliun rupiah, diurut dari yang terbesar,
 #   maksimal 400 nama.
-# Diperbarui: 2026-08-14 — 400 emiten.
+# Diperbarui: 2026-08-17 — 400 emiten.
 
 BBCA  # Bank Central Asia Tbk — 780.3 T
 DCII  # DCI Indonesia Tbk. — 491.1 T
@@ -63,7 +63,7 @@ MEGA  # Bank Mega Tbk — 46.5 T
 PGEO  # Pertamina Geothermal Energy Tbk — 45.9 T
 PGUN  # Pradiksi Gunatama Tbk. — 43.9 T
 BNBR  # Bakrie & Brothers Tbk — 43.4 T
-BNGA  # Bank CIMB Niaga Tbk. — 41.8 T
+BNGA  # Bank CIMB Niaga Tbk. — 41.6 T
 BDMN  # Bank Danamon Indonesia Tbk. — 40.6 T
 GGRM  # Gudang Garam Tbk — 38.9 T
 VKTR  # VKTR Teknologi Mobilitas Tbk. — 38.7 T
@@ -324,7 +324,7 @@ CENT  # Centratama Telekomunikasi Indon — 2.6 T
 RANS  # Rans Entertainmen Indonesia Tbk — 2.5 T
 BNBA  # Bank Bumi Arta Tbk — 2.5 T
 ALDO  # Alkindo Naratama Tbk. — 2.5 T
-KAEF  # Kimia Farma Tbk. — 2.4 T
+KAEF  # Kimia Farma (Persero) Tbk. — 2.4 T
 PORT  # Nusantara Pelabuhan Handal Tbk. — 2.4 T
 DAYA  # Duta Intidaya Tbk. — 2.4 T
 MSJA  # Multi Spunindo Jaya Tbk. — 2.4 T
