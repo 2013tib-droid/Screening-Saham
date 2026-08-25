@@ -8,7 +8,7 @@
 # Kriteria: emiten Indonesia (Yahoo region=id) dengan kapitalisasi pasar
 #   di atas 1 triliun rupiah, diurut dari yang terbesar,
 #   maksimal 400 nama.
-# Diperbarui: 2026-08-24 — 400 emiten.
+# Diperbarui: 2026-08-25 — 400 emiten.
 
 BBCA  # Bank Central Asia Tbk — 786.2 T
 BYAN  # Bayan Resources Tbk — 503.3 T
