@@ -274,20 +274,25 @@ Kolom `Syariah` menjawab satu pertanyaan: apakah emiten itu tercantum di **Dafta
 | `Tidak` | Tidak tercantum — DES memuat seluruh efek syariah, jadi tidak tercantum berarti non-syariah |
 | kosong | `data/syariah.txt` belum diisi. **Belum diketahui**, bukan "bukan syariah" |
 
+Contoh kenapa menghitung sendiri tidak cukup: **ASII tidak masuk DES**, padahal `TotalUtang/TotalAset` Astra cuma 23,2% — jauh di bawah ambang 45%. Anak-anak usahanya justru masuk (ASGR, AALI, AUTO). Pendekatan rasio akan melabeli induknya syariah, dan salah.
+
 ### Memperbarui daftarnya
 
 DES ditetapkan **dua kali setahun**, berlaku 1 Juni dan 1 Desember, plus penetapan insidentil untuk emiten yang baru IPO. Jadi ini pekerjaan dua kali setahun, bukan tiap malam — dan `data/syariah.txt` di-commit ke repo supaya run malam tidak pernah bergantung padanya.
 
-Berkasnya diunduh manual karena kedua sumber resminya memblokir akses otomatis (per 1 September 2026: endpoint syariah IDX menjawab 503 dari Varnish, arsip `GetIndexConstituent` berhenti di 2018, dan ojk.go.id menjawab "Request Rejected" dari WAF-nya):
+PDF-nya diunduh langsung dari OJK — **kanal `syariah`, bukan `pasar-modal`**:
 
-- **OJK** → Pasar Modal → Data dan Statistik → Daftar Efek Syariah
-- **IDX** → <https://www.idx.co.id/id/idx-syariah/saham-syariah/>
+<https://ojk.go.id/id/kanal/syariah/data-dan-statistik/daftar-efek-syariah/>
+
+Salah kanal menjawab "Request Rejected" dari WAF, dan itu gampang disalahartikan sebagai "OJK memblokir akses otomatis". Yang benar-benar terkunci cuma IDX: endpoint syariahnya menjawab 503 dari Varnish, dan arsip `GetIndexConstituent` berhenti di 2018.
 
 ```bash
-python scripts/perbarui_syariah.py --dari ~/Downloads/DES.xlsx     --berlaku 2026-12-01 --sumber "OJK Kep-xx/D.04/2026"
+python scripts/perbarui_syariah.py --dari DES.pdf     --berlaku 2026-12-01 --sumber "OJK KEP-xx/D.04/2026"
 ```
 
-Skrip itu tidak peduli tata letak berkasnya — ia menyapu seluruh teks untuk kode empat huruf, lalu **membuang yang bukan emiten tercatat** dengan mencocokkannya ke daftar securities IDX (962 emiten). Kata seperti `EFEK`, `KODE`, atau `NAMA` yang kebetulan empat huruf ikut tersaring keluar. Terima `.xlsx`, `.csv`, `.txt`, dan `.pdf`; hasil salin-tempel dari PDF ke `.txt` juga bisa.
+Kode dibaca dari **bentuk baris tabelnya** (`1 BANK PT Bank Aladin Syariah Tbk`), bukan disapu dari seluruh teks. Bedanya nyata: sapuan atas KEP-21/D.04/2026 menghasilkan 699 kandidat, dan yang lolos pencocokan ke daftar emiten IDX pun masih 625 — tiga lebih banyak daripada 622 yang sebenarnya. Kelebihannya bukan sampah yang gampang dikenali, melainkan kata di dalam **nama** perusahaan yang kebetulan juga kode sah: "PT Adhi Karya" menyumbang `ADHI`, "PT Duta Intidaya" menyumbang `DUTA`. Membaca baris tabel memberi tepat 622, cocok dengan jumlah yang diumumkan OJK.
+
+Terima `.pdf` (butuh `pdfplumber`), `.xlsx` (butuh `openpyxl`), `.csv`, dan `.txt`. Berkas yang isinya cuma daftar kode polos ditangani jalur cadangan yang lebih longgar, dan skripnya berisik soal itu.
 
 Dua pengaman: hasil di bawah 300 kode ditolak (`--min-kode`) karena itu tandanya berkasnya salah atau tata letaknya tidak terbaca, dan screener memperingatkan bila daftarnya sudah lewat 8 bulan — artinya setidaknya satu penetapan terlewat, dan daftar basi lebih berbahaya daripada kolom kosong. Pakai `--uji-coba` untuk melihat hasilnya tanpa menulis apa pun; kalau daftar lama sudah ada, skripnya juga menyebut emiten mana yang masuk dan keluar DES.
 

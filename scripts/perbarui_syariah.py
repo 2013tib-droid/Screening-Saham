@@ -1,34 +1,31 @@
 #!/usr/bin/env python3
 """Susun ulang data/syariah.txt dari Daftar Efek Syariah (DES) resmi.
 
-Kenapa skrip ini tidak menarik sendiri dari sumbernya: dicoba, dan diblokir.
-Per 1 September 2026, endpoint IDX `Index/GetConstituent` dan halaman
-`idx.co.id/id/idx-syariah/` menjawab 503 dari Varnish, endpoint arsip
-`StockData/GetIndexConstituent` berhenti di 2018, dan ojk.go.id menjawab
-"Request Rejected" dari WAF-nya. Jadi berkas DES-nya diunduh manual lewat
-browser, dan skrip ini yang mengubahnya jadi daftar kode yang bersih.
+DES ditetapkan OJK dua kali setahun (berlaku 1 Juni dan 1 Desember), plus
+penetapan insidentil untuk emiten yang baru IPO. Hasilnya di-commit ke repo
+sehingga run malam tidak pernah bergantung pada jaringan untuk kolom ini.
 
-Itu bukan kompromi yang menyakitkan: DES hanya ditetapkan dua kali setahun
-(berlaku 1 Juni dan 1 Desember), plus sesekali penetapan insidentil untuk
-emiten yang baru IPO. Pekerjaan manualnya dua kali setahun, dan hasilnya
-di-commit sehingga run malam tidak pernah bergantung padanya.
+Berkas PDF-nya bisa diunduh langsung dari OJK — inilah yang dipakai:
 
-Di mana berkasnya:
-  - OJK  https://www.ojk.go.id  ->  Pasar Modal -> Data dan Statistik
-                                    -> Daftar Efek Syariah
-  - IDX  https://www.idx.co.id/id/idx-syariah/saham-syariah/
+    https://ojk.go.id/id/kanal/syariah/data-dan-statistik/daftar-efek-syariah/
+
+Perhatikan kanalnya: **syariah**, bukan pasar-modal. Salah kanal menjawab
+"Request Rejected" dari WAF, dan itu gampang disalahartikan sebagai "OJK
+memblokir akses otomatis". Yang benar-benar terkunci cuma IDX: endpoint
+`Index/GetConstituent` dan halaman `idx.co.id/id/idx-syariah/` menjawab 503
+dari Varnish, dan arsip `StockData/GetIndexConstituent` berhenti di 2018.
 
 Pemakaian:
-    python scripts/perbarui_syariah.py --dari ~/Downloads/DES.xlsx \\
-        --berlaku 2026-06-01 --sumber "OJK Kep-45/D.04/2026"
+    python scripts/perbarui_syariah.py --dari DES.pdf \\
+        --berlaku 2026-06-01 --sumber "OJK KEP-21/D.04/2026"
 
     # periksa dulu tanpa menulis apa pun
-    python scripts/perbarui_syariah.py --dari DES.xlsx --berlaku 2026-06-01 --uji-coba
+    python scripts/perbarui_syariah.py --dari DES.pdf --berlaku 2026-06-01 --uji-coba
 
-Format masukan yang diterima: .xlsx/.xls (butuh openpyxl), .csv, .txt, atau
-apa pun yang isinya teks — termasuk hasil salin-tempel dari PDF. Skrip ini
-tidak peduli tata letaknya; ia menyapu seluruh teks untuk kode empat huruf,
-lalu membuang yang bukan emiten tercatat.
+Format masukan: .pdf (butuh pdfplumber), .xlsx/.xls (butuh openpyxl), .csv,
+.txt, atau apa pun yang isinya teks. Kode dibaca dari bentuk baris tabelnya
+("1 BANK PT Bank Aladin Syariah Tbk"); berkas yang isinya cuma daftar kode
+polos ditangani jalur cadangan yang lebih longgar dan lebih berisik.
 """
 
 import argparse
@@ -40,10 +37,13 @@ from pathlib import Path
 KELUARAN = "data/syariah.txt"
 UNIVERSE_CADANGAN = "tickers/idx.txt"
 
-# Kode saham IDX selalu empat huruf kapital. Pola ini sengaja longgar — yang
-# menyaring sungguhan adalah pencocokan dengan daftar emiten tercatat di
-# bawah, bukan regex ini. Menyaring lewat regex saja akan meloloskan kata
-# seperti "DAFTAR" atau "TOTAL" yang kebetulan ada di berkas DES.
+# Baris tabel DES: nomor urut, kode empat huruf, lalu nama penerbitnya.
+#     1 BANK PT Bank Aladin Syariah Tbk
+# Ini jalur utamanya, dan jauh lebih tepat daripada menyapu seluruh teks.
+POLA_BARIS = re.compile(r"^\s*\d+\s+([A-Z]{4})\s+\S.*$", re.M)
+
+# Cadangan untuk berkas yang isinya cuma daftar kode tanpa nomor dan nama,
+# mis. hasil salin-tempel satu kode per baris.
 POLA_KODE = re.compile(r"\b[A-Z]{4}\b")
 
 
@@ -78,6 +78,29 @@ def baca_teks(path: Path) -> str:
             return "\n".join(h.extract_text() or "" for h in pdf.pages)
 
     return path.read_text(encoding="utf-8", errors="replace")
+
+
+def ambil_kode(teks: str) -> tuple[list[str], bool]:
+    """Ambil kode saham dari teks DES. Mengembalikan (kode, terstruktur).
+
+    Dua jalur, dan yang pertama jauh lebih dipercaya.
+
+    Menyapu seluruh teks untuk kata empat huruf terdengar cukup sampai dicoba
+    pada DES sungguhan. Sapuan atas KEP-21/D.04/2026 menghasilkan 699
+    kandidat, dan yang lolos pencocokan dengan daftar emiten IDX pun masih
+    625 — tiga lebih banyak daripada 622 yang sebenarnya. Kelebihannya bukan
+    sampah yang gampang dikenali, melainkan kata di dalam NAMA perusahaan
+    yang kebetulan juga kode sah: "PT Adhi Karya" menyumbang ADHI, "PT Duta
+    Intidaya" menyumbang DUTA. Pencocokan ke daftar emiten tidak bisa
+    menolongnya, justru karena kode-kode itu memang benar-benar ada.
+
+    Jadi yang dipakai adalah bentuk barisnya. Membaca baris tabel bernomor
+    memberi tepat 622 kode, cocok dengan jumlah yang diumumkan OJK.
+    """
+    baris = POLA_BARIS.findall(teks)
+    if baris:
+        return sorted(set(baris)), True
+    return sorted(set(POLA_KODE.findall(teks.upper()))), False
 
 
 def emiten_tercatat() -> tuple[set[str], str]:
@@ -158,23 +181,42 @@ def main():
         sys.exit(f"--berlaku harus YYYY-MM-DD, bukan {args.berlaku!r}.")
 
     teks = baca_teks(sumber_berkas)
-    kandidat = set(POLA_KODE.findall(teks.upper()))
-    print(f"{len(kandidat)} kode empat huruf ditemukan di {sumber_berkas.name}.",
+    kode, terstruktur = ambil_kode(teks)
+    cara = "baris tabel bernomor" if terstruktur else "sapuan kata empat huruf"
+    print(f"{len(kode)} kode dibaca dari {sumber_berkas.name} lewat {cara}.",
           file=sys.stderr)
 
     tercatat, asal_pembanding = emiten_tercatat()
-    if tercatat:
-        kode = sorted(kandidat & tercatat)
-        dibuang = sorted(kandidat - tercatat)
-        print(f"Dicocokkan dengan {asal_pembanding}: {len(kode)} cocok, "
-              f"{len(dibuang)} dibuang.", file=sys.stderr)
+    if terstruktur:
+        # Bentuk barisnya sudah menjamin ini kolom kode, bukan kata yang
+        # kebetulan empat huruf, jadi daftar emiten IDX dipakai untuk
+        # MELAPORKAN saja — bukan menyaring. DES memuat juga perusahaan
+        # publik yang tidak tercatat di bursa (mis. Bank Muamalat), dan
+        # membuangnya akan membuat daftar ini tidak lagi sama dengan DES.
+        luar = sorted(set(kode) - tercatat) if tercatat else []
+        if luar:
+            print(f"{len(luar)} kode tidak ada di {asal_pembanding} — "
+                  f"tetap disimpan, kemungkinan perusahaan publik non-bursa "
+                  f"atau emiten yang baru tercatat: {', '.join(luar[:15])}"
+                  f"{' ...' if len(luar) > 15 else ''}", file=sys.stderr)
+    elif tercatat:
+        # Jalur sapuan tidak bisa membedakan kode dari kata, jadi di sini
+        # pencocokan ke daftar emiten benar-benar dipakai untuk menyaring —
+        # dan hasilnya tetap perlu dilihat mata sebelum di-commit.
+        semula = len(kode)
+        dibuang = sorted(set(kode) - tercatat)
+        kode = sorted(set(kode) & tercatat)
+        print(f"Dicocokkan dengan {asal_pembanding}: {len(kode)} dari {semula} "
+              f"cocok, {len(dibuang)} dibuang.", file=sys.stderr)
         if dibuang:
             print(f"  Dibuang: {', '.join(dibuang[:15])}"
                   f"{' ...' if len(dibuang) > 15 else ''}", file=sys.stderr)
+        print("PERINGATAN: berkas ini tidak berbentuk tabel bernomor, jadi "
+              "kode dibaca lewat sapuan yang bisa menangkap kata dari nama "
+              "perusahaan. Periksa jumlahnya sebelum di-commit.", file=sys.stderr)
     else:
-        kode = sorted(kandidat)
-        print("Tidak ada pembanding — seluruh kode empat huruf dipakai apa "
-              "adanya. Periksa hasilnya dengan mata.", file=sys.stderr)
+        print("Tidak ada pembanding — kode dipakai apa adanya. Periksa "
+              "hasilnya dengan mata.", file=sys.stderr)
 
     # Ambang ini yang membedakan "berkasnya terbaca" dari "berkasnya terbuka
     # tapi isinya bukan yang kita kira". Tanpa ini, salah pilih berkas
@@ -199,7 +241,7 @@ def main():
             print(f"  Keluar DES: {', '.join(keluar)}", file=sys.stderr)
 
     baris = [
-        "# Daftar Efek Syariah (DES) — saham syariah yang tercatat di IDX.",
+        "# Daftar Efek Syariah (DES) OJK - efek syariah berupa saham.",
         "#",
         "# Dibuat oleh scripts/perbarui_syariah.py. Jangan disunting tangan:",
         "# jalankan ulang skripnya atas berkas DES resmi yang baru, supaya",
