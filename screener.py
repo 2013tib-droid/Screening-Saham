@@ -579,6 +579,20 @@ def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None) -> pd.
             close = hist["Close"] if not hist.empty else pd.Series(dtype=float)
             vol = hist["Volume"] if not hist.empty else pd.Series(dtype=float)
 
+            # Baris ber-Close NaN dibuang sebelum apa pun dihitung. Yahoo
+            # sesekali mengirim bar tanpa harga — bar hari ini yang belum
+            # terisi, atau (seperti 27-31 Agu 2026, dari runner GitHub) seluruh
+            # kolom Close NaN sekaligus. Tanpa pembuangan ini `round(NaN)`
+            # melempar "cannot convert float NaN to integer", dan `except` di
+            # bawah membuang SELURUH sahamnya, bukan cuma bar yang cacat.
+            # Run 31 Agu 2026 kehilangan 398 dari 402 emiten karena itu.
+            #
+            # Volume ikut disaring dengan indeks yang sama supaya `close * vol`
+            # dan `vol.iloc[-1]` tetap menunjuk hari yang sama dengan harganya.
+            layak = close.notna()
+            close = close[layak]
+            vol = vol[layak]
+
             harga = round(close.iloc[-1]) if len(close) else None
             vol20 = vol.tail(20).mean() if len(vol) >= 20 else None
             if vol20 is None or pd.isna(vol20) or vol20 <= 0:
@@ -592,13 +606,16 @@ def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None) -> pd.
                 "Harga": harga,
                 "Vol20(jt)": round(vol20 / 1e6, 2) if vol20 else None,
                 "Nilai(M)": round(nilai20 / 1e9, 1) if nilai20 else None,
-                "VolSpike": round(vol.iloc[-1] / vol20, 2) if vol20 else None,
+                "VolSpike": round(vol.iloc[-1] / vol20, 2) if vol20 and len(vol) else None,
                 "RSI14": hitung_rsi(close),
                 "MA50": round(close.tail(50).mean()) if len(close) >= 50 else None,
                 "MA200": round(close.tail(200).mean()) if len(close) >= 200 else None,
             })
         except Exception as e:
             print(f"      gagal: {e}", file=sys.stderr)
+    gagal = len(tickers) - len(baris_data)
+    if gagal:
+        print(f"{gagal} dari {len(tickers)} emiten gagal diambil.", file=sys.stderr)
     return pd.DataFrame(baris_data)
 
 
@@ -810,6 +827,9 @@ def main():
                         + ", ".join(STATUS))
     p.add_argument("--cache-fundamental", default=CACHE_FUNDAMENTAL, metavar="FILE",
                    help="cache lapkeu dari scripts/perbarui_fundamental.py")
+    p.add_argument("--min-panen", type=float, default=0.8, metavar="RASIO",
+                   help="gagalkan run bila emiten yang berhasil diambil kurang dari "
+                        "rasio ini (default 0.8). Setel 0 untuk mematikan.")
     f = p.add_argument_group("filter fundamental")
     f.add_argument("--sektor", nargs="+", metavar="NAMA",
                    help="hanya sektor tertentu (mis. --sektor Technology 'Real Estate')")
@@ -867,6 +887,25 @@ def main():
         print(f"Mengambil histori harga {len(tickers)} saham dari Yahoo Finance ...",
               file=sys.stderr)
         df = ambil_histori(tickers, grup)
+        # Panen yang anjlok harus MENGGAGALKAN run, bukan menghasilkan tabel
+        # kecil yang tampak sah. Tiga run malam (27, 28, 31 Agu 2026) berstatus
+        # "success" sambil menerbitkan dashboard berisi 4 dari 402 emiten,
+        # karena tidak ada satu pun langkah yang memeriksa jumlah hasilnya.
+        # Keluar dengan kode != 0 di sini membuat workflow berhenti sebelum
+        # commit, sehingga data bagus dari run sebelumnya tetap tersaji.
+        #
+        # Yang dihitung adalah baris yang punya HARGA, bukan sekadar jumlah
+        # baris. Emiten yang seluruh histori harganya NaN tetap menghasilkan
+        # satu baris — kosong seluruhnya — jadi menghitung `len(df)` saja akan
+        # meloloskan persis kegagalan yang ambang ini dipasang untuk menangkap.
+        berharga = int(df["Harga"].notna().sum()) if "Harga" in df.columns else 0
+        panen = berharga / len(tickers) if tickers else 0
+        if panen < args.min_panen:
+            sys.exit(f"Hanya {berharga} dari {len(tickers)} emiten yang dapat harga "
+                     f"({panen:.0%}), di bawah ambang {args.min_panen:.0%}. "
+                     f"Hasil tidak ditulis — kemungkinan sumber data sedang bermasalah.")
+        print(f"{berharga} dari {len(tickers)} emiten dapat harga ({panen:.0%}).",
+              file=sys.stderr)
         if not df.empty:
             df = gabung_fundamental(df, fund)
 

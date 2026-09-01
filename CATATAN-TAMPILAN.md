@@ -246,6 +246,31 @@ Penjelasan lengkap tiap kolom ada di `README.md` bagian *Kolom Skor* dan
 
 ## Utang teknis yang diketahui
 
+- **Tiga run malam menerbitkan dashboard nyaris kosong sambil berstatus
+  `success` (27, 28, 31 Agu 2026).** Situs live hanya berisi 4 dari 402 emiten,
+  dan ketiga tab filter kosong total — yang tampak dari luar seperti "bug
+  dashboard", padahal dashboard-nya benar dan datanya yang hilang.
+
+  Sebabnya `round(close.iloc[-1])` di `ambil_histori`: kalau Yahoo mengirim
+  Close NaN, `round()` melempar `cannot convert float NaN to integer`, dan
+  `except` di bawahnya membuang **seluruh emiten** itu, bukan cuma bar yang
+  cacat. Log run 33422515940 memuat error itu 398 kali. Kenapa Yahoo mengirim
+  NaN ke runner GitHub sejak 27 Agu belum dipastikan — yfinance 1.7.0 (versi
+  yang dipasang CI) maupun 1.4.1 sama-sama menarik BBCA/ASII/TLKM dengan bersih
+  dari mesin lokal, jadi ini perbedaan lingkungan, bukan regresi library.
+
+  Sudah diperbaiki di dua lapis: baris ber-Close NaN dibuang sebelum dihitung
+  (satu bar cacat tidak lagi menghapus sahamnya), dan `--min-panen` (default
+  0,8) menggagalkan run bila emiten yang dapat harga kurang dari 80% —
+  sehingga CSV rusak tidak pernah ter-commit dan data bagus sebelumnya tetap
+  tersaji. Versi di `requirements.txt` juga dipin supaya CI dan mesin lokal
+  tidak diam-diam memasang yfinance yang berbeda.
+
+  Pelajaran yang lebih umum: **`except Exception` sekeliling satu emiten itu
+  murah untuk kegagalan yang jarang, dan berbahaya untuk kegagalan yang
+  serempak.** Yang membuat ini tidak ketahuan selama lima hari bukan bug-nya,
+  melainkan tidak adanya satu pun langkah yang memeriksa apakah panennya wajar.
+
 - **Job `deploy` pernah menggantung `queued` berjam-jam, dua kali berturut-turut,
   tanpa sebab yang ditemukan.** Run #33 (1j 31m) dan #34 (2j 8m), keduanya
   dengan job `screening` yang sukses normal dalam ~90 detik di runner yang sama.

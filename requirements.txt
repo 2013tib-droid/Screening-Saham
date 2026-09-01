@@ -1,2 +1,6 @@
-yfinance>=0.2.50
-pandas>=2.0
+# Versi dipin, bukan ">=". Sebelumnya `yfinance>=0.2.50` membuat runner CI
+# memasang rilis terbaru apa pun yang ada malam itu, sementara mesin lokal
+# tertinggal di versi lama — jadi "jalan di sini, rusak di CI" tidak bisa
+# dibedakan dari perubahan perilaku Yahoo. Naikkan versinya secara sadar.
+yfinance==1.7.0
+pandas==3.0.5
