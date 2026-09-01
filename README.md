@@ -248,6 +248,20 @@ Tiga hal yang perlu diketahui soal datanya:
 - **Rasio yang tidak berlaku dibiarkan kosong, bukan diisi nol.** Bank tidak memisahkan aset lancar dan tidak melaporkan gross profit maupun EBITDA, jadi current ratio dan Net Debt/EBITDA-nya memang tidak ada. `Net Debt/EBITDA` juga dikosongkan saat EBITDA negatif — penyebut minus membuat utang besar terbaca sebagai rasio kecil yang menyesatkan.
 - **`PERvsSektor` dan `PBVvsSektor`** membandingkan valuasi terhadap median sektornya: 1,0 = persis median, 0,7 = 30% lebih murah, 1,4 = 40% lebih mahal. Ini yang membuat valuasi bisa dibaca lintas industri — PBV 2,5 di bank dan PBV 2,5 di emiten batubara bukan hal yang sama. Kosong bila sektornya berisi kurang dari tiga pembanding.
 
+## Kolom Mana yang Berubah Tiap Hari
+
+Pemisahan di atas gampang disalahpahami jadi "kolom teknikal harian, kolom fundamental kuartalan". Kenyataannya ada tiga kelompok, dan kelompok tengahnya yang paling sering salah dibaca.
+
+| Kelompok | Kolom | Berubah |
+|---|---|---|
+| **Murni harga** | `Harga`, `Vol20(jt)`, `Nilai(M)`, `VolSpike`, `RSI14`, `MA50`, `MA200`, `Status` | Tiap hari bursa |
+| **Rasio harga ÷ lapkeu** | `PER`, `PBV`, `PERvsSektor`, `PBVvsSektor`, `Dividen%`, `MarketCap(T)`, `EV/EBITDA`, `FCFYield%`, `SkorValuasi` | **Tiap hari bursa** |
+| **Murni lapkeu** | `ROE%`, `ROA%`, `LabaYoY%`, `OmzetYoY%`, `DER`, semua margin, `CurrentRatio`, `QuickRatio`, `InterestCoverage`, `OCF/Laba`, `Payout%`, CAGR, `EPS`, `BVPS`, dan seluruh pos laporan keuangan | Per kuartal |
+
+Kelompok kedua ikut bergerak harian karena penyebutnya memang dihitung ulang tiap run dari harga penutupan (`df["PER"] = harga / eps` di `screener.py`), bukan diambil jadi dari Yahoo. EPS-nya baru berubah tiap kuartal, tapi PER-nya berubah tiap hari.
+
+Ikutannya: **`Skor` total pun bergeser harian**, karena `SkorValuasi` adalah salah satu komponennya. Jadi kalau skor sebuah emiten naik padahal tidak ada laporan keuangan baru, penyebabnya hampir pasti **harganya turun** — valuasinya jadi terlihat murah — bukan bisnisnya membaik. Untuk memastikan, bandingkan kolom `SkorValuasi` dengan empat skor lainnya: kalau hanya yang pertama yang berubah, itu murni gerakan harga.
+
 ## Saham Syariah (DES)
 
 Kolom `Syariah` menjawab satu pertanyaan: apakah emiten itu tercantum di **Daftar Efek Syariah (DES)** yang ditetapkan OJK.
@@ -348,6 +362,15 @@ Setiap malam workflow:
 **Menjalankan manual:** buka tab **Actions → Screening Malam → Run workflow** di GitHub, lalu pilih branch-nya.
 
 **Menjalankan dari branch selain branch default:** bisa — screening jalan dan CSV-nya di-commit ke branch itu. Yang dilewati hanya langkah deploy dashboard, karena environment `github-pages` memang dibatasi ke branch default. Job `deploy` di workflow dipisah dari job `screening` justru supaya batasan itu tidak menggagalkan seluruh run (kalau digabung, run dari branch fitur gagal dalam hitungan detik tanpa log sama sekali).
+
+### Yang Perlu Sesekali Dilirik
+
+Sistem ini dirancang jalan sendiri — tidak ada langkah harian yang menuntut kehadiranmu. Tapi ada dua kegagalan yang **tidak berisik**, jadi layak dicek sesekali:
+
+- **Fundamental kuartalan cuma jalan 4× setahun.** Kalau satu run gagal, cache bisa berbulan-bulan basi tanpa tanda apa pun di dashboard. Sehabis 5 Mei / 5 Agustus / 5 November, lihat kolom `Periode` di `hasil/semua.csv`: kalau masih menunjuk kuartal lama, run-nya bermasalah — jalankan manual lewat Actions.
+- **Langkah `Perbarui universe` memakai `continue-on-error`.** Kalau Yahoo sedang rewel, workflow diam-diam jatuh ke `tickers/idx.txt` versi commit terakhir dan screening tetap lanjut. Itu memang perilaku yang diinginkan (lebih baik universe agak lama daripada run gagal total), tapi konsekuensinya emiten baru bisa tidak ikut ter-screening tanpa peringatan. Kalau `tickers/idx.txt` tidak berubah berminggu-minggu, cek log langkah itu di run terakhir.
+
+Selain dua hal ini, tidak ada perawatan rutin yang perlu dilakukan.
 
 ### Dashboard Web
 
