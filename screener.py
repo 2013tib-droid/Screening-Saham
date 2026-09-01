@@ -18,13 +18,13 @@ Hasil ditampilkan sebagai tabel dan disimpan ke hasil_screening.csv.
 
 import argparse
 import sys
-from datetime import datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
 
 KOLOM = [
-    "Ticker", "Nama", "Grup", "Sektor", "Status", "Skor", "Flag", "Harga",
+    "Ticker", "Nama", "Grup", "Sektor", "Syariah", "Status", "Skor", "Flag", "Harga",
     "PER", "PBV", "PERvsSektor", "PBVvsSektor", "ROE%",
     "LabaYoY%", "OmzetYoY%", "Dividen%", "DER",
     "MarketCap(T)", "Vol20(jt)", "Nilai(M)", "VolSpike",
@@ -56,6 +56,19 @@ KOLOM_EKSTRA = [
 # berubah tiap emiten merilis laporan kuartalan, jadi run malam membacanya
 # dari disk alih-alih menarik ulang dari Yahoo.
 CACHE_FUNDAMENTAL = "data/fundamental.csv"
+
+# Daftar Efek Syariah (DES) yang ditetapkan OJK. Statusnya bukan angka pasar
+# melainkan keputusan regulator, jadi tidak bisa dihitung sendiri dari laporan
+# keuangan — satu-satunya sumber yang sah adalah daftar resminya. Berkasnya
+# statis dan di-commit ke repo: DES cuma diperbarui dua kali setahun (berlaku
+# 1 Juni dan 1 Desember), jadi menariknya tiap malam tidak ada gunanya dan
+# hanya menambah satu sumber kegagalan pada run yang sudah bergantung Yahoo.
+DAFTAR_SYARIAH = "data/syariah.txt"
+
+# DES berikutnya selalu terbit dalam 6 bulan. Lewat 8 bulan berarti setidaknya
+# satu penetapan terlewat, dan daftar yang basi lebih berbahaya daripada
+# kolom kosong — emiten bisa sudah dikeluarkan dari DES tanpa kita tahu.
+UMUR_SYARIAH_WAJAR = 240
 
 # Status = ringkasan mekanis posisi harga terhadap trennya. Murni aturan
 # teknikal dari kolom yang sudah ada (harga, MA50, MA200, RSI, volume,
@@ -619,6 +632,74 @@ def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None) -> pd.
     return pd.DataFrame(baris_data)
 
 
+def baca_daftar_syariah(path: str) -> tuple[set[str] | None, str]:
+    """Baca daftar saham syariah (DES) beserta keterangan asalnya.
+
+    Mengembalikan (himpunan kode tanpa .JK, keterangan). Himpunannya `None`
+    bila berkasnya tidak ada — itu dibedakan dengan sengaja dari himpunan
+    kosong: "belum tahu" dan "tidak ada satu pun yang syariah" adalah dua
+    jawaban yang sangat berbeda, dan menyamakannya akan membuat seluruh pasar
+    tampak non-syariah.
+
+    Format sama seperti berkas tickers/: satu kode per baris, '#' komentar.
+    Baris '# berlaku: YYYY-MM-DD' dipakai untuk memperingatkan daftar basi.
+    """
+    berkas = Path(path)
+    if not berkas.exists():
+        return None, "berkas tidak ada"
+
+    kode: set[str] = set()
+    berlaku = ""
+    sumber = ""
+    for baris in berkas.read_text(encoding="utf-8").splitlines():
+        ketat = baris.strip().lower()
+        if ketat.startswith("# berlaku:"):
+            berlaku = baris.split(":", 1)[1].strip()
+        elif ketat.startswith("# sumber:"):
+            sumber = baris.split(":", 1)[1].strip()
+        bersih = baris.split("#", 1)[0].strip().upper()
+        if bersih:
+            kode.add(bersih.removesuffix(".JK"))
+
+    if not kode:
+        return None, "berkas ada tapi kosong"
+
+    ket = f"{len(kode)} saham syariah"
+    if sumber:
+        ket += f", sumber {sumber}"
+    if berlaku:
+        ket += f", berlaku {berlaku}"
+        try:
+            umur = (date.today() - date.fromisoformat(berlaku)).days
+        except ValueError:
+            print(f"Tanggal '# berlaku:' di {path} tidak terbaca: {berlaku!r}. "
+                  f"Format yang diharapkan YYYY-MM-DD.", file=sys.stderr)
+        else:
+            if umur > UMUR_SYARIAH_WAJAR:
+                print(f"PERINGATAN: daftar syariah {path} berumur {umur} hari "
+                      f"(berlaku {berlaku}). DES diperbarui tiap 6 bulan, jadi "
+                      f"setidaknya satu penetapan sudah terlewat — perbarui "
+                      f"lewat scripts/perbarui_syariah.py.", file=sys.stderr)
+    return kode, ket
+
+
+def tandai_syariah(df: pd.DataFrame, syariah: set[str] | None) -> pd.DataFrame:
+    """Isi kolom Syariah dengan Ya/Tidak, atau kosongkan bila daftarnya tidak ada.
+
+    DES memuat SELURUH efek syariah yang tercatat, jadi begitu daftarnya ada,
+    emiten yang tidak tercantum memang non-syariah — "tidak ketemu" di sini
+    adalah jawaban, bukan data yang hilang. Sebaliknya bila daftarnya belum
+    dimuat, kolomnya dibiarkan kosong: menebak status syariah sebuah emiten
+    jauh lebih buruk daripada mengaku tidak tahu.
+    """
+    if syariah is None:
+        df["Syariah"] = pd.NA
+        return df
+    df["Syariah"] = df["Ticker"].astype(str).str.upper().map(
+        lambda k: "Ya" if k.removesuffix(".JK") in syariah else "Tidak")
+    return df
+
+
 def baca_cache_fundamental(path: str) -> pd.DataFrame:
     """Baca cache lapkeu. Kosong (dengan peringatan) bila filenya belum ada.
 
@@ -753,6 +834,10 @@ def terapkan_filter(df: pd.DataFrame, args) -> pd.DataFrame:
         saring(df["Status"].fillna("").str.upper().isin(pilihan))
     if args.min_skor is not None:
         saring(df["Skor"] >= args.min_skor)
+    if args.syariah:
+        saring(df["Syariah"] == "Ya")
+    if args.non_syariah:
+        saring(df["Syariah"] == "Tidak")
     if args.tanpa_flag:
         saring(df["Flag"].fillna("") == "")
     if args.kecuali_flag:
@@ -827,12 +912,22 @@ def main():
                         + ", ".join(STATUS))
     p.add_argument("--cache-fundamental", default=CACHE_FUNDAMENTAL, metavar="FILE",
                    help="cache lapkeu dari scripts/perbarui_fundamental.py")
+    p.add_argument("--daftar-syariah", default=DAFTAR_SYARIAH, metavar="FILE",
+                   help="daftar saham syariah (DES) dari scripts/perbarui_syariah.py")
     p.add_argument("--min-panen", type=float, default=0.8, metavar="RASIO",
                    help="gagalkan run bila emiten yang berhasil diambil kurang dari "
                         "rasio ini (default 0.8). Setel 0 untuk mematikan.")
     f = p.add_argument_group("filter fundamental")
     f.add_argument("--sektor", nargs="+", metavar="NAMA",
                    help="hanya sektor tertentu (mis. --sektor Technology 'Real Estate')")
+    # Saling meniadakan: "hanya syariah" dan "hanya non-syariah" sekaligus
+    # selalu menghasilkan tabel kosong, dan lebih baik ditolak argparse dengan
+    # pesan jelas daripada dijalankan lalu membingungkan.
+    sy = f.add_mutually_exclusive_group()
+    sy.add_argument("--syariah", action="store_true",
+                    help="hanya saham yang masuk Daftar Efek Syariah")
+    sy.add_argument("--non-syariah", action="store_true",
+                    help="hanya saham yang TIDAK masuk Daftar Efek Syariah")
     f.add_argument("--tanpa-flag", action="store_true",
                    help="buang saham yang punya red flag apa pun")
     f.add_argument("--kecuali-flag", nargs="+", metavar="KODE",
@@ -925,6 +1020,25 @@ def main():
     # PBV bergerak tiap hari mengikuti harga, jadi median sektornya pun ikut
     # bergerak walau lapkeu-nya sama sekali tidak berubah.
     df = tambah_median_sektor(df)
+    # Status syariah juga selalu diambil ulang dari daftarnya, bukan dari CSV,
+    # dengan alasan yang sama seperti Status di bawah: DES berubah dua kali
+    # setahun, dan hasil --dari-csv harus mencerminkan penetapan terbaru — bukan
+    # yang kebetulan tersimpan waktu CSV-nya dibuat. Kalau daftarnya tidak ada,
+    # kolom yang sudah ada di CSV dibiarkan apa adanya.
+    syariah, ket_syariah = baca_daftar_syariah(args.daftar_syariah)
+    print(f"Daftar syariah: {ket_syariah}.", file=sys.stderr)
+    if syariah is not None:
+        df = tandai_syariah(df, syariah)
+    elif args.syariah or args.non_syariah:
+        # Tanpa penjagaan ini, --syariah pada daftar yang belum ada menghasilkan
+        # tabel kosong yang tampak seperti "tidak ada yang lolos filter" —
+        # persis kelas kegagalan diam yang membuat dashboard nyaris kosong
+        # selama lima hari pada Agustus 2026.
+        sys.exit(f"--syariah/--non-syariah dipakai, tapi daftarnya belum tersedia "
+                 f"({args.daftar_syariah}: {ket_syariah}). Isi dulu lewat "
+                 f"scripts/perbarui_syariah.py — lihat bagian 'Saham Syariah (DES)' "
+                 f"di README.")
+
     # Status selalu dihitung ulang, bukan dibaca dari CSV: aturannya bisa
     # berubah, dan hasilnya harus selalu cocok dengan kolom-kolom di sebelahnya.
     df["Status"] = df.apply(hitung_status, axis=1)

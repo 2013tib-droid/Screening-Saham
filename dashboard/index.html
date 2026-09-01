@@ -411,6 +411,20 @@
     color: var(--neg-fg);
   }
   .flag-kosong { color: var(--text-muted); }
+  /* Status syariah sengaja tidak memakai hijau/merah. Ini keterangan
+     kepatuhan, bukan penilaian bagus-buruk, dan mewarnainya seperti sinyal
+     beli akan membuat kolom netral terbaca sebagai rekomendasi. Yang syariah
+     diberi latar tipis supaya gampang dipindai, yang non dibiarkan pucat. */
+  .syariah {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: .67rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .sy-ya { background: var(--chip-bg); color: var(--text-secondary); }
+  .sy-tidak { color: var(--text-muted); }
   /* Rasio terhadap median sektor: di bawah 1 berarti lebih murah dari
      sektornya sendiri, di atas 1 lebih mahal. */
   .rel-murah { color: var(--pos-fg); font-weight: 650; }
@@ -473,7 +487,7 @@
     </div>
     <div class="pisah"></div>
     <select id="kelompok" aria-label="Pilih kelompok kolom">
-      <option value="">Semua kolom (24)</option>
+      <option value="">Semua kolom (25)</option>
       <option value="ringkas">Ringkas</option>
       <option value="valuasi">Valuasi</option>
       <option value="fundamental">Fundamental</option>
@@ -484,6 +498,11 @@
     </select>
     <select id="status" aria-label="Saring berdasarkan status">
       <option value="">Semua status</option>
+    </select>
+    <select id="syariah" aria-label="Saring berdasarkan status syariah" hidden>
+      <option value="">Syariah &amp; non-syariah</option>
+      <option value="ya">Hanya syariah</option>
+      <option value="tidak">Hanya non-syariah</option>
     </select>
     <input id="cari" type="search" placeholder="Cari ticker / nama …" autocomplete="off">
     <span class="hitung" id="hitung"></span>
@@ -518,6 +537,13 @@
       Salim, Hapsoro), atau tema (Logam). Satu saham bisa masuk dua daftar, mis. "LQ45/Salim".
       <strong>Kosong</strong> berarti saham itu masuk dari universe pasar — seluruh emiten IDX
       berkapitalisasi di atas 1 triliun ikut di-screening, bukan cuma daftar kurasi.</dd>
+      <dt>Syariah</dt><dd>Apakah saham itu tercantum di <strong>Daftar Efek Syariah (DES)</strong>
+      yang ditetapkan OJK. Ini disalin apa adanya dari daftar resminya, bukan dihitung sendiri dari
+      laporan keuangan — kriteria DES mencakup jenis usaha dan sumber pendapatan yang tidak
+      seluruhnya terbaca dari angka. DES ditetapkan dua kali setahun, berlaku 1 Juni dan 1 Desember.
+      <strong>Tanda hubung</strong> berarti daftarnya belum dimuat ke aplikasi ini — itu "belum
+      diketahui", <em>bukan</em> "bukan syariah". Untuk keputusan yang mengikat, rujuk selalu ke
+      daftar resmi OJK, bukan ke tabel ini.</dd>
       <dt>Status</dt><dd>Ringkasan mekanis posisi harga terhadap trennya — <strong>bukan rekomendasi</strong>.
       Dihitung otomatis dari MA50, MA200, RSI, volume, dan likuiditas; tidak tahu apa pun soal
       berita, laporan keuangan, atau aliran dana bandar.
@@ -619,6 +645,7 @@ const KOLOM = [
   { k: "Nama",         label: "Nama",      kiri: true },
   { k: "Grup",         label: "Grup",      kiri: true },
   { k: "Sektor",       label: "Sektor",    kiri: true },
+  { k: "Syariah",      label: "Syariah",   kiri: true },
   { k: "Status",       label: "Status",    kiri: true },
   { k: "Skor",         label: "Skor",      angka: true },
   { k: "Flag",         label: "Red flag" },
@@ -649,7 +676,7 @@ const KOLOM = [
 // bersamaan. Empat kolom jangkar selalu ikut supaya barisnya tetap dikenali.
 const JANGKAR = ["Ticker", "Nama", "Status", "Skor"];
 const KELOMPOK = {
-  ringkas:     ["Sektor", "Flag", "Harga", "PER", "PBV", "ROE%", "Dividen%", "MarketCap(T)"],
+  ringkas:     ["Sektor", "Syariah", "Flag", "Harga", "PER", "PBV", "ROE%", "Dividen%", "MarketCap(T)"],
   valuasi:     ["Sektor", "Harga", "PER", "PBV", "PERvsSektor", "PBVvsSektor",
                 "ROE%", "DER", "Dividen%", "MarketCap(T)"],
   fundamental: ["Sektor", "Flag", "ROE%", "DER", "LabaYoY%", "OmzetYoY%",
@@ -711,6 +738,7 @@ const state = {
   cari: "",
   grup: "",
   status: "",
+  syariah: "",
   kelompok: "",
   // Tab "semua" berisi 402 emiten; menuangkan semuanya sekaligus membuat
   // halaman panjang sekali dan tidak ada yang membacanya sampai bawah.
@@ -727,6 +755,8 @@ function barisTerlihat() {
   if (state.grup) hasil = hasil.filter(r =>
     String(r.Grup || "").split("/").includes(state.grup));
   if (state.status) hasil = hasil.filter(r => r.Status === state.status);
+  if (state.syariah) hasil = hasil.filter(r =>
+    String(r.Syariah || "").trim().toLowerCase() === state.syariah);
   const q = state.cari.trim().toUpperCase();
   hasil = !q ? hasil.slice() : hasil.filter(r =>
     String(r.Ticker || "").toUpperCase().includes(q) ||
@@ -791,6 +821,16 @@ function render() {
       if (k.k === "Nama") return `<td class="${kelas}"><span class="nama">${r.Nama || "–"}</span></td>`;
       if (k.k === "Grup") return `<td class="${kelas}"><span class="nama">${r.Grup || "–"}</span></td>`;
       if (k.k === "Sektor") return `<td class="${kelas}"><span class="nama">${r.Sektor || "–"}</span></td>`;
+      // Kosong berarti daftar DES belum dimuat -- itu "belum tahu", bukan
+      // "bukan syariah", dan dua hal itu tidak boleh terlihat sama.
+      if (k.k === "Syariah") {
+        const v = String(r.Syariah || "").trim();
+        if (!v) return `<td class="${kelas}"><span class="flag-kosong" title="Daftar Efek Syariah belum dimuat">–</span></td>`;
+        const ya = v.toLowerCase() === "ya";
+        return `<td class="${kelas}"><span class="syariah ${ya ? "sy-ya" : "sy-tidak"}" ` +
+          `title="${ya ? "Masuk Daftar Efek Syariah (OJK)" : "Tidak masuk Daftar Efek Syariah (OJK)"}">` +
+          `${ya ? "Syariah" : "Non"}</span></td>`;
+      }
       if (k.k === "Status") {
         const s = r.Status || "-";
         return `<td class="${kelas}"><span class="status s-${s.toLowerCase()}">${s}</span></td>`;
@@ -1008,6 +1048,12 @@ document.getElementById("status").addEventListener("change", e => {
   render();
 });
 
+document.getElementById("syariah").addEventListener("change", e => {
+  state.syariah = e.target.value;
+  state.hal = 1;
+  render();
+});
+
 document.getElementById("perhal").addEventListener("change", e => {
   state.perHal = Number(e.target.value) || 0;
   state.hal = 1;
@@ -1034,6 +1080,15 @@ function isiPilihanStatus() {
     sel.appendChild(opt);
   });
   sel.hidden = ada.size < 2;
+}
+
+// Dropdown syariah hanya dimunculkan bila datanya memang membawa kolom itu.
+// Selama data/syariah.txt belum diisi, seluruh kolom Syariah kosong — dan
+// dropdown yang menyaring jadi nol baris tanpa sebab yang terlihat lebih
+// membingungkan daripada dropdown yang tidak muncul sama sekali.
+function isiPilihanSyariah() {
+  const ada = (state.data.semua || []).some(r => String(r.Syariah || "").trim());
+  document.getElementById("syariah").hidden = !ada;
 }
 
 // Isi dropdown grup dari kolom Grup pada tabel "semua" (satu saham bisa
@@ -1070,6 +1125,7 @@ async function muat() {
 
     isiPilihanGrup();
     isiPilihanStatus();
+    isiPilihanSyariah();
     document.getElementById("t-swing").textContent = state.data.swing.length;
     document.getElementById("t-value").textContent = state.data.value.length;
     document.getElementById("t-tumbuh").textContent = state.data.tumbuh.length;

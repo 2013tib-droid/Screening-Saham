@@ -94,6 +94,7 @@ Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
 | `--min-volspike N` | Volume terakhir minimal N× rata-rata 20 hari (mis. 1.5 = ada lonjakan minat) |
 | `--max-rsi N` / `--min-rsi N` | Batas RSI-14 (≤30 oversold, ≥70 overbought) |
 | `--di-atas-ma50` / `--di-atas-ma200` | Harga di atas moving average 50/200 hari |
+| `--syariah` / `--non-syariah` | Hanya saham yang masuk / tidak masuk [Daftar Efek Syariah](#saham-syariah-des) |
 | `--grup NAMA…` | Hanya saham dari grup tertentu (mis. `--grup Salim Bakrie`) |
 | `--status STATUS…` | Hanya saham dengan status tertentu (mis. `--status BUY BOW`) |
 | `--urut KOLOM` | Urutkan hasil (default: PER) |
@@ -246,6 +247,35 @@ Tiga hal yang perlu diketahui soal datanya:
 - **Laporan berdenominasi USD dikonversi ke rupiah.** Banyak emiten batubara, energi, dan sebagian utilitas menyusun laporan keuangannya dalam dolar sementara sahamnya diperdagangkan dalam rupiah. Tanpa konversi, EPS dan harga berasal dari satuan berbeda dan PER meleset ~17.000×: ADRO terbaca 146.821 alih-alih 8,3, dan median PER sektor Energy sempat 155.093. Kolom `MataUang` mencatat mata uang laporan aslinya. Yield dividen tidak ikut dikonversi — `dividendRate` Yahoo memang sudah dalam mata uang perdagangan.
 - **Rasio yang tidak berlaku dibiarkan kosong, bukan diisi nol.** Bank tidak memisahkan aset lancar dan tidak melaporkan gross profit maupun EBITDA, jadi current ratio dan Net Debt/EBITDA-nya memang tidak ada. `Net Debt/EBITDA` juga dikosongkan saat EBITDA negatif — penyebut minus membuat utang besar terbaca sebagai rasio kecil yang menyesatkan.
 - **`PERvsSektor` dan `PBVvsSektor`** membandingkan valuasi terhadap median sektornya: 1,0 = persis median, 0,7 = 30% lebih murah, 1,4 = 40% lebih mahal. Ini yang membuat valuasi bisa dibaca lintas industri — PBV 2,5 di bank dan PBV 2,5 di emiten batubara bukan hal yang sama. Kosong bila sektornya berisi kurang dari tiga pembanding.
+
+## Saham Syariah (DES)
+
+Kolom `Syariah` menjawab satu pertanyaan: apakah emiten itu tercantum di **Daftar Efek Syariah (DES)** yang ditetapkan OJK.
+
+**Nilainya disalin dari daftar resmi, bukan dihitung sendiri.** Ini keputusan yang disengaja. Kriteria DES memang sebagian berupa rasio yang bisa dihitung — utang berbasis bunga terhadap total aset ≤ 45%, pendapatan non-halal terhadap total pendapatan ≤ 10% — tapi kriteria pertamanya kualitatif (jenis usaha tidak bertentangan dengan prinsip syariah), dan "utang berbasis bunga" bukan hal yang sama dengan `TotalUtang` di cache fundamental. Menghitung sendiri akan menghasilkan tebakan yang kadang benar, dan sebuah tebakan yang salah pada kolom ini menyesatkan orang dalam keputusan keagamaan — biaya yang tidak sebanding dengan kenyamanannya. Jadi yang tidak diketahui dibiarkan kosong.
+
+| Nilai | Arti |
+|---|---|
+| `Ya` | Tercantum di DES |
+| `Tidak` | Tidak tercantum — DES memuat seluruh efek syariah, jadi tidak tercantum berarti non-syariah |
+| kosong | `data/syariah.txt` belum diisi. **Belum diketahui**, bukan "bukan syariah" |
+
+### Memperbarui daftarnya
+
+DES ditetapkan **dua kali setahun**, berlaku 1 Juni dan 1 Desember, plus penetapan insidentil untuk emiten yang baru IPO. Jadi ini pekerjaan dua kali setahun, bukan tiap malam — dan `data/syariah.txt` di-commit ke repo supaya run malam tidak pernah bergantung padanya.
+
+Berkasnya diunduh manual karena kedua sumber resminya memblokir akses otomatis (per 1 September 2026: endpoint syariah IDX menjawab 503 dari Varnish, arsip `GetIndexConstituent` berhenti di 2018, dan ojk.go.id menjawab "Request Rejected" dari WAF-nya):
+
+- **OJK** → Pasar Modal → Data dan Statistik → Daftar Efek Syariah
+- **IDX** → <https://www.idx.co.id/id/idx-syariah/saham-syariah/>
+
+```bash
+python scripts/perbarui_syariah.py --dari ~/Downloads/DES.xlsx     --berlaku 2026-12-01 --sumber "OJK Kep-xx/D.04/2026"
+```
+
+Skrip itu tidak peduli tata letak berkasnya — ia menyapu seluruh teks untuk kode empat huruf, lalu **membuang yang bukan emiten tercatat** dengan mencocokkannya ke daftar securities IDX (962 emiten). Kata seperti `EFEK`, `KODE`, atau `NAMA` yang kebetulan empat huruf ikut tersaring keluar. Terima `.xlsx`, `.csv`, `.txt`, dan `.pdf`; hasil salin-tempel dari PDF ke `.txt` juga bisa.
+
+Dua pengaman: hasil di bawah 300 kode ditolak (`--min-kode`) karena itu tandanya berkasnya salah atau tata letaknya tidak terbaca, dan screener memperingatkan bila daftarnya sudah lewat 8 bulan — artinya setidaknya satu penetapan terlewat, dan daftar basi lebih berbahaya daripada kolom kosong. Pakai `--uji-coba` untuk melihat hasilnya tanpa menulis apa pun; kalau daftar lama sudah ada, skripnya juga menyebut emiten mana yang masuk dan keluar DES.
 
 ## Selalu Data Penutupan
 
