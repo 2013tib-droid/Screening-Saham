@@ -233,7 +233,7 @@ def batas(atr: float, harga: float, n_atr: float, pct: float) -> float:
 def zona_entri(hasil: dict[str, dict], harga: float, atr: float) -> dict | None:
     """Zona beli terdekat di bawah harga: OB fresh atau FVG bullish yang masih terbuka.
 
-    Dikumpulkan dari D1 dan H1 sekaligus lalu diambil yang paling dekat ke
+    Dikumpulkan dari D1 dan SESI sekaligus lalu diambil yang paling dekat ke
     harga, tapi hanya yang masih dalam jangkauan pullback yang wajar ditunggu.
     Timeframe mana saja yang boleh menyumbang diatur lewat TF_ENTRI.
     """

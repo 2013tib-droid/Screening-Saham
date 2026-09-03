@@ -645,6 +645,84 @@
     dari harga penutupan (sumber: Yahoo Finance, delay ±15 menit).</p>
   </details>
 
+  <details>
+    <summary>Tab SMC: arti sinyal, zona, dan angkanya</summary>
+    <p>Tab SMC menjawab pertanyaan yang berbeda dari tab lain. Tab Swing/Value/Tumbuh menjawab
+    <strong>"saham apa"</strong> dari sisi fundamental dan tren; tab SMC menjawab
+    <strong>"masuk di harga berapa, batal di harga berapa"</strong> dari bentuk pergerakan harga
+    saja. Isinya hanya emiten yang lolos filter swing, dan angkanya dihitung ulang tiap malam.</p>
+    <dl>
+      <dt>Sinyal</dt><dd>Kesiapan struktur harga — <strong>bukan rekomendasi</strong>, dan skalanya
+      berbeda dari kolom Status di tab lain. Diperiksa berurutan, yang pertama cocok itu yang dipakai:
+        <ul style="margin:6px 0 0; padding-left:18px">
+          <li><span class="status s-hindari">HINDARI</span> tren harian masih turun. Diperiksa
+              paling awal, jadi RR sebagus apa pun tetap kalah oleh ini — melawan tren harian.</li>
+          <li><span class="status s-tunggu">TUNGGU</span> rencananya belum utuh (alasannya ada di
+              kolom Catatan), atau harga sedang di zona premium sehingga perlu menunggu pullback dulu.</li>
+          <li><span class="status s-siap">SIAP</span> tren harian naik, harga tidak di premium,
+              zona dan stop dan target lengkap, dan <strong>RR ≥ 2</strong>.</li>
+          <li><span class="status s-pantau">PANTAU</span> semua syarat SIAP terpenuhi kecuali
+              RR-nya masih di bawah 2 — layak diikuti, belum layak dikejar.</li>
+          <li><span class="status s-kurang">DATA KURANG</span> bar hariannya kurang dari 60,
+              tidak cukup untuk membaca struktur. Biasa terjadi pada emiten yang baru IPO.</li>
+        </ul>
+      </dd>
+      <dt>Zona</dt><dd>Posisi harga sekarang di dalam rentang naik-turun terakhir (diukur dari 30
+      pivot terakhir di grafik harian). Bawah rentang = 0%, atas rentang = 100%.
+      <strong>DISCOUNT</strong> di bawah 38% — harga di bagian murah rentangnya;
+      <strong>EQUILIBRIUM</strong> 38–62% — di tengah;
+      <strong>PREMIUM</strong> di atas 62% — di bagian mahal, sudah jauh dari titik pantulan
+      terakhir. Membeli di premium berarti membayar sesudah kenaikannya terjadi, itu sebabnya
+      sinyalnya dipaksa jadi TUNGGU meski angkanya bagus.</dd>
+      <dt>Dasar zona</dt><dd>Alasan teknikal kenapa zona entri ditaruh di situ — bukan angka bulat
+      pilihan sendiri.
+        <ul style="margin:6px 0 0; padding-left:18px">
+          <li><strong>OB</strong> (<em>order block</em>) candle turun terakhir sebelum harga
+              menembus ke atas. Yang dipakai hanya yang <em>fresh</em>: harga belum pernah kembali
+              ke situ sejak breakout.</li>
+          <li><strong>FVG</strong> (<em>fair value gap</em>) celah yang tertinggal ketika tiga
+              candle bergerak terlalu cepat sehingga ada rentang harga yang terlewat. Dipakai
+              selama belum terisi separuh.</li>
+        </ul>
+        Akhiran <strong>D1</strong> berarti zona itu terbaca di grafik harian,
+        <strong>SESI</strong> di grafik satu-bar-per-sesi-bursa (09–11 dan 13–16). SESI dipakai
+        sebagai pengganti H4 karena hari bursa IDX cuma 6,5 jam dan terpotong jeda makan siang,
+        jadi bucket 4 jam kalender selalu mencampur dua sesi atau menempel ke gap semalam.
+        <strong>Kosong</strong> berarti tidak ada OB atau FVG dalam jangkauan pullback yang wajar
+        ditunggu (paling jauh 3× ATR atau 8% di bawah harga sekarang) — bukan berarti sahamnya jelek,
+        cuma tidak ada titik masuk yang jelas saat ini.</dd>
+      <dt>Tren D1 / Tren sesi</dt><dd><span class="nilai n-dingin">▲ naik</span> puncak dan lembahnya
+      makin tinggi, <span class="nilai n-panas">▼ turun</span> makin rendah. Dua timeframe ditampilkan
+      supaya beda arah kelihatan: harian naik tapi sesi turun artinya sedang koreksi di dalam tren
+      naik — justru kondisi yang dicari untuk masuk.</dd>
+      <dt>Entri bawah – Entri atas</dt><dd>Batas bawah dan atas zona tadi. Ini <strong>rentang</strong>,
+      bukan satu harga pasti: rencananya menunggu harga turun masuk ke pita itu, bukan membeli di
+      harga sekarang. Lebar zona dibatasi 1,5× ATR — yang lebih lebar dari itu dibuang karena
+      risikonya jadi tidak terukur.</dd>
+      <dt>Stop</dt><dd>Harga yang <strong>membatalkan rencananya</strong>, bukan sekadar batas rugi
+      sekian persen. Ditaruh di bawah lembah terakhir yang masih di bawah zona entri: kalau tembus,
+      alasan struktural untuk membeli sudah hilang. Stop tidak pernah digeser mendekat supaya RR-nya
+      terlihat enak — kalau kelewat lebar (di atas 4× ATR atau 15% dari harga), rencananya yang
+      dibatalkan.</dd>
+      <dt>Target</dt><dd>Kumpulan puncak sejajar terdekat di atas harga — tempat stop order banyak
+      menumpuk, sehingga harga cenderung tertarik ke sana. Yang dipakai hanya yang jaraknya masuk
+      akal: minimal 1× ATR atau 3%, maksimal 8× ATR atau 25%. Lebih rapat dari itu bukan target,
+      lebih jauh bukan swing lagi.</dd>
+      <dt>RR</dt><dd><em>Risk/reward</em> — jarak ke target dibanding jarak ke stop, dihitung dari
+      <strong>tengah zona entri</strong>, bukan dari harga sekarang. RR 3 berarti kalau benar
+      untungnya 3× lebih besar daripada ruginya kalau salah. Ambang 2 dipakai sebagai batas SIAP.</dd>
+      <dt>Jarak entri%</dt><dd>Berapa persen harga harus turun dulu sebelum menyentuh zona. Angka
+      besar berarti masih lama menunggu — bukan alasan untuk masuk lebih awal.</dd>
+      <dt>Kolom kosong</dt><dd>Tanda hubung di Stop/Target/RR berarti rencananya
+      <strong>ditolak</strong>, dan alasannya selalu ditulis di kolom <strong>Catatan</strong> paling
+      kanan. Baris tanpa rencana sengaja tetap ditampilkan supaya terlihat bahwa emitennya sudah
+      diperiksa, bukan terlewat.</dd>
+    </dl>
+    <p>Semua level dihitung dari data harga, tidak ada angka yang diketik manual. Ambangnya masih
+    tuningan awal dan belum teruji lintas kondisi pasar — kalau hasilnya terasa aneh, curigai ambang
+    itu lebih dulu. Ini pembacaan teknikal, bukan saran investasi.</p>
+  </details>
+
   <footer>Bukan rekomendasi investasi — selalu lakukan analisis sendiri sebelum membeli.
   Dibuat dengan <a href="https://github.com/2013tib-droid/Screening-Saham">Screening-Saham</a>.</footer>
 </div>
