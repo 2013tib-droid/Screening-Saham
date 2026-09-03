@@ -486,7 +486,7 @@
     <button type="button" class="tile" data-tab="value"><div class="label">Lolos filter value</div><div class="value" id="t-value">–</div><div class="sub">PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%</div></button>
     <button type="button" class="tile" data-tab="tumbuh"><div class="label">Lolos filter tumbuh</div><div class="value" id="t-tumbuh">–</div><div class="sub">Laba YoY ≥ 20%, ROE ≥ 10%, PER ≤ 25</div></button>
     <button type="button" class="tile" data-tab="semua"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">Seluruh emiten IDX di atas 1 T, plus daftar kurasi</div></button>
-    <button type="button" class="tile" data-tab="smc"><div class="label">Punya rencana entri</div><div class="value" id="t-smc">–</div><div class="sub">Struktur SMC kandidat swing: zona, stop, target</div></button>
+    <button type="button" class="tile" data-tab="smc"><div class="label">Zona &amp; target lengkap</div><div class="value" id="t-smc">–</div><div class="sub">Rencana SMC utuh — kelayakannya dibaca di kolom Sinyal</div></button>
   </div>
 
   <div class="controls">
@@ -717,6 +717,11 @@
       <strong>ditolak</strong>, dan alasannya selalu ditulis di kolom <strong>Catatan</strong> paling
       kanan. Baris tanpa rencana sengaja tetap ditampilkan supaya terlihat bahwa emitennya sudah
       diperiksa, bukan terlewat.</dd>
+      <dt>Kartu &quot;Zona &amp; target lengkap&quot;</dt><dd>Menghitung baris yang rencananya utuh,
+      yaitu yang kolom RR-nya terisi — <strong>bukan</strong> berapa yang layak dibeli. Emiten yang
+      tren hariannya turun tetap ikut terhitung selama zona, stop, dan target-nya ketemu, dan
+      malam dengan angka 4 pun bisa berisi nol <span class="status s-siap">SIAP</span>. Yang
+      menjawab layak atau tidak hanya kolom Sinyal.</dd>
     </dl>
     <p>Semua level dihitung dari data harga, tidak ada angka yang diketik manual. Ambangnya masih
     tuningan awal dan belum teruji lintas kondisi pasar — kalau hasilnya terasa aneh, curigai ambang
@@ -1322,6 +1327,13 @@ async function muat() {
     // Angka di kartu SMC adalah yang punya rencana utuh (zona + stop +
     // target), bukan jumlah baris — baris yang ditolak tetap ditampilkan
     // di tabel lengkap dengan alasannya.
+    //
+    // Ini kelengkapan rencana, BUKAN kelayakan beli: emiten yang tren
+    // hariannya turun tetap ikut terhitung selama zona/stop/target-nya
+    // ketemu. Label kartunya pernah berbunyi "Punya rencana entri" dan
+    // terbaca sebagai "sekian yang boleh dibeli" — padahal malam dengan
+    // angka 4 pun bisa berisi nol SIAP. Yang menjawab layak atau tidak
+    // cuma kolom Sinyal.
     document.getElementById("t-smc").textContent =
       state.data.smc.filter(r => r.RR !== null && r.RR !== undefined && r.RR !== "").length;
     document.getElementById("tiles").hidden = false;
