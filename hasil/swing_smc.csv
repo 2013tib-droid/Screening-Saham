@@ -1,0 +1,13 @@
+Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
+MEDC,Medco Energi Internasional T,60,BUY,1445,up,EQUILIBRIUM,47,BOS bull,up,up,OB SESI,1420,1390,1320,1565,1.88,1.7,4.1,BSL raid @ 1455,PANTAU,RR baru 1.88 — di bawah 2
+SMSM,Selamat Sempurna Tbk,82,BUY,1720,up,PREMIUM,64,BOS bull,up,up,OB SESI,1680,1670,1655,1775,5.0,2.3,1.0,BSL raid @ 1730,TUNGGU,harga di premium — tunggu pullback ke zona
+GJTL,Gajah Tunggal Tbk,75,BUY,1380,up,PREMIUM,87,BOS bull,down,down,OB SESI,1340,1330,1280,1455,2.18,2.9,2.7,BSL raid @ 1235,TUNGGU,harga di premium — tunggu pullback ke zona
+VKTR,VKTR Teknologi Mobilitas Tbk,30,BUY,935,up,EQUILIBRIUM,55,BOS bull,up,up,OB D1,895,830,795,,,4.3,7.1,BSL raid @ 960,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+OASA,Maharaksa Biru Energi Tbk.,26,BUY,326,up,DISCOUNT,31,CHoCH bull,up,up,,,,,,,,4.9,BSL raid @ 372,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+ELSA,Elnusa Tbk,84,BUY,715,up,EQUILIBRIUM,50,BOS bull,up,down,FVG D1,710,700,660,,,0.7,3.5,BSL raid @ 740,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+ADRO,Alamtri Resources Indonesia ,73,BUY,2650,up,PREMIUM,105,BOS bull,up,up,OB D1,2530,2460,2390,,,4.5,3.2,BSL raid @ 2560,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+BYAN,Bayan Resources Tbk,61,BUY,13700,up,EQUILIBRIUM,50,BOS bull,down,down,,,,,,,,9.5,BSL raid @ 13975,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+HATM,Habco Trans Maritima Tbk.,46,BUY,605,up,PREMIUM,81,BOS bull,up,down,,,,,,,,9.3,BSL raid @ 595,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+ICBP,Indofood CBP Sukses Makmur T,71,BOW,7375,down,PREMIUM,64,CHoCH bear,down,down,OB SESI,7225,7150,6875,8300,3.56,2.0,2.6,SSL raid @ 7450,HINDARI,struktur D1 masih bearish
+INDF,Indofood Sukses Makmur Tbk,75,BOW,7175,down,PREMIUM,95,CHoCH bear,down,down,,,,,,,,2.1,BSL raid @ 7475,HINDARI,struktur D1 masih bearish
+NSSS,Nusantara Sawit Sejahtera Tb,65,BUY,900,down,DISCOUNT,30,BOS bear,down,up,,,,,,,,6.4,SSL raid @ 840,HINDARI,struktur D1 masih bearish

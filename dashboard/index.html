@@ -149,6 +149,7 @@
   .tile[data-tab="value"]  { --pita: #17915a; }
   .tile[data-tab="tumbuh"] { --pita: #c07a11; }
   .tile[data-tab="semua"]  { --pita: #7a6ce0; }
+  .tile[data-tab="smc"]    { --pita: #0f766e; }
 
   /* ---- Kendali ---- */
   .controls {
@@ -379,6 +380,15 @@
   .status.s-wse   { background: var(--warn-bg); color: var(--warn-fg); }
   .status.s-jual  { background: var(--neg-bg);  color: var(--neg-fg); }
   .status.s-tipis { background: var(--chip-bg); color: var(--text-muted); }
+  /* Sinyal SMC memakai badge yang sama tapi skalanya lain: ini kesiapan
+     struktur harga, bukan penilaian fundamental seperti kolom Status. */
+  .status.s-siap    { background: var(--pos-bg);  color: var(--pos-fg); }
+  .status.s-pantau  { background: var(--info-bg); color: var(--info-fg); }
+  .status.s-tunggu  { background: var(--warn-bg); color: var(--warn-fg); }
+  .status.s-hindari { background: var(--neg-bg);  color: var(--neg-fg); }
+  .status.s-kurang  { background: var(--chip-bg); color: var(--text-muted); }
+  .status.s-siap, .status.s-pantau, .status.s-tunggu,
+  .status.s-hindari, .status.s-kurang { min-width: 62px; }
 
   .skor {
     display: inline-block;
@@ -476,6 +486,7 @@
     <button type="button" class="tile" data-tab="value"><div class="label">Lolos filter value</div><div class="value" id="t-value">–</div><div class="sub">PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%</div></button>
     <button type="button" class="tile" data-tab="tumbuh"><div class="label">Lolos filter tumbuh</div><div class="value" id="t-tumbuh">–</div><div class="sub">Laba YoY ≥ 20%, ROE ≥ 10%, PER ≤ 25</div></button>
     <button type="button" class="tile" data-tab="semua"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">Seluruh emiten IDX di atas 1 T, plus daftar kurasi</div></button>
+    <button type="button" class="tile" data-tab="smc"><div class="label">Punya rencana entri</div><div class="value" id="t-smc">–</div><div class="sub">Struktur SMC kandidat swing: zona, stop, target</div></button>
   </div>
 
   <div class="controls">
@@ -484,6 +495,7 @@
       <button data-tab="value">Value</button>
       <button data-tab="tumbuh">Tumbuh</button>
       <button data-tab="semua">Semua</button>
+      <button data-tab="smc">SMC</button>
     </div>
     <div class="pisah"></div>
     <select id="kelompok" aria-label="Pilih kelompok kolom">
@@ -671,6 +683,31 @@ const KOLOM = [
   { k: "MA200",        label: "MA200",     angka: true },
 ];
 
+// Tab SMC memakai kolom yang sama sekali lain: ini pembacaan struktur harga,
+// bukan fundamental. Angkanya hasil analisa_smc.py atas kandidat swing.
+const KOLOM_SMC = [
+  { k: "Ticker",      label: "Ticker",     kiri: true },
+  { k: "Nama",        label: "Nama",       kiri: true },
+  { k: "Sinyal",      label: "Sinyal",     kiri: true },
+  { k: "Harga",       label: "Harga",      angka: true },
+  { k: "TrenD1",      label: "Tren D1",    kiri: true },
+  { k: "TrenSesi",    label: "Tren sesi",  kiri: true },
+  { k: "ZonaD1",      label: "Zona",       kiri: true },
+  { k: "TipeEntri",   label: "Dasar zona", kiri: true },
+  { k: "EntriBawah",  label: "Entri bawah", angka: true },
+  { k: "EntriAtas",   label: "Entri atas", angka: true },
+  { k: "Stop",        label: "Stop",       angka: true },
+  { k: "Target",      label: "Target",     angka: true },
+  { k: "RR",          label: "RR",         angka: true, desimal: 2 },
+  { k: "JarakEntri%", label: "Jarak entri%", angka: true, desimal: 1 },
+  { k: "Catatan",     label: "Catatan",    kiri: true },
+];
+
+// Kolom mana yang berlaku untuk satu tab. Dipakai juga oleh parseCSV supaya
+// kolom angka benar-benar diubah jadi angka: tanpa ini RR dan Stop masuk
+// sebagai teks dan pengurutannya jadi alfabetis ("1200" di bawah "980").
+function kolomSet(tab) { return tab === "smc" ? KOLOM_SMC : KOLOM; }
+
 // Kelompok kolom: 24 kolom tidak pernah muat sekaligus, jadi selain menggeser
 // mendatar, tabelnya bisa dipotong jadi sekumpulan kolom yang memang dibaca
 // bersamaan. Empat kolom jangkar selalu ikut supaya barisnya tetap dikenali.
@@ -685,6 +722,9 @@ const KELOMPOK = {
 };
 
 function kolomTampil() {
+  // Tab SMC cuma 15 kolom dan semuanya dibaca bersama, jadi tidak ikut
+  // pemotongan kelompok.
+  if (state.tab === "smc") return KOLOM_SMC;
   const daftar = KELOMPOK[state.kelompok];
   if (!daftar) return KOLOM;
   const pilih = new Set(JANGKAR.concat(daftar));
@@ -701,7 +741,7 @@ function angka(n, desimal = 0) {
 }
 
 // Parser CSV kecil dengan dukungan tanda kutip (nama emiten bisa memuat koma).
-function parseCSV(teks) {
+function parseCSV(teks, kolomDef = KOLOM) {
   const baris = [];
   let sel = "", row = [], dalamKutip = false;
   for (let i = 0; i < teks.length; i++) {
@@ -726,7 +766,7 @@ function parseCSV(teks) {
     const obj = {};
     header.forEach((h, i) => {
       const mentah = r[i] ?? "";
-      const kol = KOLOM.find(k => k.k === h);
+      const kol = kolomDef.find(k => k.k === h);
       obj[h] = kol && kol.angka ? (mentah === "" ? null : Number(mentah)) : mentah;
     });
     return obj;
@@ -745,17 +785,21 @@ const state = {
   // 0 berarti tanpa pagination (pilihan "Semua").
   perHal: 10,
   hal: 1,
-  data: { swing: null, value: null, tumbuh: null, semua: null },
+  data: { swing: null, value: null, tumbuh: null, semua: null, smc: null },
   urut: { kolom: null, naik: true },
   gagal: false,
 };
 
 function barisTerlihat() {
   let hasil = state.data[state.tab] || [];
-  if (state.grup) hasil = hasil.filter(r =>
+  // Tabel SMC tidak membawa kolom Grup/Status/Syariah. Kalau filter itu tetap
+  // diterapkan, seluruh barisnya tersaring habis dan tabnya tampak kosong
+  // seolah-olah datanya gagal dimuat.
+  const smc = state.tab === "smc";
+  if (!smc && state.grup) hasil = hasil.filter(r =>
     String(r.Grup || "").split("/").includes(state.grup));
-  if (state.status) hasil = hasil.filter(r => r.Status === state.status);
-  if (state.syariah) hasil = hasil.filter(r =>
+  if (!smc && state.status) hasil = hasil.filter(r => r.Status === state.status);
+  if (!smc && state.syariah) hasil = hasil.filter(r =>
     String(r.Syariah || "").trim().toLowerCase() === state.syariah);
   const q = state.cari.trim().toUpperCase();
   hasil = !q ? hasil.slice() : hasil.filter(r =>
@@ -763,7 +807,7 @@ function barisTerlihat() {
     String(r.Nama || "").toUpperCase().includes(q));
   const { kolom, naik } = state.urut;
   if (kolom) {
-    const numerik = KOLOM.find(k => k.k === kolom)?.angka;
+    const numerik = kolomSet(state.tab).find(k => k.k === kolom)?.angka;
     hasil.sort((a, b) => {
       const va = a[kolom], vb = b[kolom];
       if (va === null || va === undefined || va === "") return 1;   // kosong selalu di bawah
@@ -771,6 +815,8 @@ function barisTerlihat() {
       // Status diurut menurut skala BUY→TIPIS, bukan alfabetis.
       const cmp = kolom === "Status"
         ? URUT_STATUS.indexOf(va) - URUT_STATUS.indexOf(vb)
+        : kolom === "Sinyal"
+        ? URUT_SINYAL.indexOf(va) - URUT_SINYAL.indexOf(vb)
         : numerik ? va - vb : String(va).localeCompare(String(vb));
       return naik ? cmp : -cmp;
     });
@@ -799,9 +845,16 @@ function render() {
     ? `${total} emiten`
     : `${rows.length} dari ${total} emiten`;
   if (!rows.length) {
-    wadah.innerHTML = '<div class="kosong">' + (state.cari || state.grup || state.status
+    // Tab SMC bisa kosong karena dua sebab yang sama sekali beda: memang tidak
+    // ada kandidat, atau langkah analisanya gagal semalam sehingga CSV-nya tak
+    // pernah ditulis. Tab lain tidak punya ambiguitas itu.
+    const sebab = state.cari || state.grup || state.status
       ? "Tidak ada yang cocok dengan pencarian / filter."
-      : "Tidak ada saham yang lolos filter ini malam ini.") + "</div>";
+      : state.tab === "smc"
+      ? "Belum ada analisa struktur untuk malam ini — kandidat swing kosong, "
+        + "atau langkah SMC pada run terakhir tidak selesai."
+      : "Tidak ada saham yang lolos filter ini malam ini.";
+    wadah.innerHTML = '<div class="kosong">' + sebab + "</div>";
     sembunyikanPager();
     return;
   }
@@ -834,6 +887,28 @@ function render() {
       if (k.k === "Status") {
         const s = r.Status || "-";
         return `<td class="${kelas}"><span class="status s-${s.toLowerCase()}">${s}</span></td>`;
+      }
+      // "DATA KURANG" bespasi, jadi tidak bisa langsung jadi nama kelas.
+      if (k.k === "Sinyal") {
+        const v = String(r.Sinyal || "").trim();
+        if (!v) return `<td class="${kelas}">–</td>`;
+        const slug = v.split(" ").pop().toLowerCase();
+        return `<td class="${kelas}"><span class="status s-${slug}">${v}</span></td>`;
+      }
+      if (k.k === "Catatan") {
+        const v = String(r.Catatan || "").trim();
+        return `<td class="${kelas}"><span class="nama">${v || "–"}</span></td>`;
+      }
+      if (k.k === "TrenD1" || k.k === "TrenSesi") {
+        const v = String(r[k.k] || "").trim();
+        if (!v) return `<td class="${kelas}">–</td>`;
+        const naik = v === "up";
+        return `<td class="${kelas}"><span class="nilai ${naik ? "n-dingin" : "n-panas"}">` +
+               `${naik ? "▲ naik" : "▼ turun"}</span></td>`;
+      }
+      if (k.k === "ZonaD1" || k.k === "TipeEntri") {
+        const v = String(r[k.k] || "").trim();
+        return `<td class="${kelas}">${v || "–"}</td>`;
       }
       if (k.k === "Flag") {
         const f = String(r.Flag || "").trim();
@@ -1013,6 +1088,20 @@ if (typeof addEventListener === "function") addEventListener("resize", perbaruiP
 function pilihTab(tab) {
   state.tab = tab;
   state.hal = 1;
+  // Kolom yang jadi dasar pengurutan sebelumnya belum tentu ada di tab tujuan
+  // (misal pindah dari Skor ke tab SMC), dan pengurutan atas kolom yang tidak
+  // ada membuat seluruh baris dianggap kosong lalu urutannya acak.
+  if (state.urut.kolom && !kolomSet(tab).some(k => k.k === state.urut.kolom)) {
+    state.urut = { kolom: null, naik: true };
+  }
+  // Grup, Status, dan Syariah tidak ada di tabel SMC; menampilkan pilihan yang
+  // tidak berpengaruh apa-apa lebih membingungkan daripada menyembunyikannya.
+  const smc = tab === "smc";
+  document.getElementById("kelompok").hidden = smc;
+  ["grup", "status", "syariah"].forEach(id => {
+    const el = document.getElementById(id);
+    el.hidden = smc || el.dataset.layak !== "1";
+  });
   document.querySelectorAll(".tabs button").forEach(b =>
     b.classList[b.dataset.tab === tab ? "add" : "remove"]("active"));
   document.querySelectorAll(".tile").forEach(t =>
@@ -1070,6 +1159,8 @@ document.getElementById("kelompok").addEventListener("change", e => {
 // Urutan status dari paling positif ke paling negatif, bukan alfabetis —
 // dropdown-nya jadi terbaca sebagai skala.
 const URUT_STATUS = ["BUY", "BOW", "HOLD", "WSE", "JUAL", "TIPIS", "-"];
+// Skala kesiapan, bukan abjad: yang bisa ditindaklanjuti hari ini di atas.
+const URUT_SINYAL = ["SIAP", "PANTAU", "TUNGGU", "HINDARI", "DATA KURANG"];
 
 function isiPilihanStatus() {
   const ada = new Set((state.data.semua || []).map(r => r.Status).filter(Boolean));
@@ -1079,16 +1170,23 @@ function isiPilihanStatus() {
     opt.value = opt.textContent = s;
     sel.appendChild(opt);
   });
-  sel.hidden = ada.size < 2;
+  setTampil(sel, ada.size >= 2);
 }
 
 // Dropdown syariah hanya dimunculkan bila datanya memang membawa kolom itu.
 // Selama data/syariah.txt belum diisi, seluruh kolom Syariah kosong — dan
 // dropdown yang menyaring jadi nol baris tanpa sebab yang terlihat lebih
 // membingungkan daripada dropdown yang tidak muncul sama sekali.
+// Satu tempat untuk "apakah filter ini ada gunanya", supaya pilihTab bisa
+// memulihkan keadaan aslinya setelah keluar dari tab SMC.
+function setTampil(el, layak) {
+  el.dataset.layak = layak ? "1" : "0";
+  el.hidden = !layak;
+}
+
 function isiPilihanSyariah() {
   const ada = (state.data.semua || []).some(r => String(r.Syariah || "").trim());
-  document.getElementById("syariah").hidden = !ada;
+  setTampil(document.getElementById("syariah"), ada);
 }
 
 // Isi dropdown grup dari kolom Grup pada tabel "semua" (satu saham bisa
@@ -1103,25 +1201,27 @@ function isiPilihanGrup() {
     opt.value = opt.textContent = g;
     sel.appendChild(opt);
   });
-  sel.hidden = set.size < 2;
+  setTampil(sel, set.size >= 2);
 }
 
 async function muat() {
   const t = Date.now();
   try {
-    const [semua, swing, value, tumbuh, meta] = await Promise.all([
+    const [semua, swing, value, tumbuh, smc, meta] = await Promise.all([
       fetch(`hasil/semua.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       fetch(`hasil/swing.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       fetch(`hasil/value.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       // Tab terbaru: sengaja tidak membuat seluruh dashboard gagal kalau
       // filenya belum ada (run malam pertama setelah fitur ini ditambahkan).
       fetch(`hasil/tumbuh.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
+      fetch(`hasil/swing_smc.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
       fetch(`hasil/meta.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
     state.data.semua = parseCSV(semua);
     state.data.swing = parseCSV(swing);
     state.data.value = parseCSV(value);
     state.data.tumbuh = tumbuh ? parseCSV(tumbuh) : [];
+    state.data.smc = smc ? parseCSV(smc, KOLOM_SMC) : [];
 
     isiPilihanGrup();
     isiPilihanStatus();
@@ -1130,6 +1230,11 @@ async function muat() {
     document.getElementById("t-value").textContent = state.data.value.length;
     document.getElementById("t-tumbuh").textContent = state.data.tumbuh.length;
     document.getElementById("t-semua").textContent = state.data.semua.length;
+    // Angka di kartu SMC adalah yang punya rencana utuh (zona + stop +
+    // target), bukan jumlah baris — baris yang ditolak tetap ditampilkan
+    // di tabel lengkap dengan alasannya.
+    document.getElementById("t-smc").textContent =
+      state.data.smc.filter(r => r.RR !== null && r.RR !== undefined && r.RR !== "").length;
     document.getElementById("tiles").hidden = false;
 
     const p = document.getElementById("pembaruan");

@@ -99,6 +99,21 @@ jobs:
           --min-laba-yoy 20 --min-roe 10 --max-per 25 --min-nilai 1
           --output hasil/tumbuh.csv
 
+      # Struktur harga untuk kandidat swing: zona entri, invalidasi, target.
+      # Screening menjawab "saham apa", langkah ini "masuk di harga berapa".
+      # Sengaja hanya atas swing.csv (~5-10 nama): value.csv dan tumbuh.csv
+      # adalah saringan fundamental tanpa syarat teknikal, jadi isinya banyak
+      # yang strukturnya sedang jelek dan hasilnya cuma deretan "HINDARI".
+      #
+      # continue-on-error: langkah ini menarik data intraday, jalur Yahoo yang
+      # berbeda dari harga harian yang dipakai screener. Kalau jalur itu sedang
+      # rewel, seluruh tabel fundamental yang sudah jadi tidak boleh ikut hangus
+      # — dashboard menangani hasil/swing_smc.csv yang hilang dengan tab kosong,
+      # bukan dengan gagal memuat.
+      - name: Analisa struktur SMC untuk kandidat swing
+        continue-on-error: true
+        run: python analisa_smc.py --dari-csv hasil/swing.csv --output hasil/swing_smc.csv
+
       - name: Catat waktu pembaruan
         run: |
           printf '{"diperbarui": "%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > hasil/meta.json

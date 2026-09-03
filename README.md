@@ -125,6 +125,47 @@ Isi laporannya: tabel skor lima kategori, rincian tiap metrik beserta bobot dan 
 
 **Tingkat keyakinan** mengukur seberapa jauh angka di laporan boleh dipercaya — bukan seberapa yakin sahamnya akan naik. Turun bila basisnya laporan tahunan (−25), metrik inti kosong (−6 per metrik), pembanding sektornya kurang dari 3 emiten (−15), likuiditasnya tipis (−10), atau emitennya bank (−10, karena NIM/NPL/CAR/LDR tidak tersedia di sumber gratis ini padahal itu metrik penilai utama sebuah bank).
 
+## Struktur Harga & Rencana Entri (`analisa_smc.py`)
+
+Screener menjawab *"saham apa"*. `analisa.py` menjawab *"emiten ini bagaimana"*. Pertanyaan ketiga — *"masuk di harga berapa, batal di harga berapa"* — dijawab `analisa_smc.py`, yang membaca struktur harga dengan metode Smart Money Concepts:
+
+```bash
+python analisa_smc.py                        # dari hasil/swing.csv
+python analisa_smc.py --detail               # + laporan struktur per timeframe
+python analisa_smc.py --ticker BBCA TLKM     # ad-hoc, tanpa CSV
+```
+
+Hasilnya `hasil/swing_smc.csv`: zona entri, stop, target, risk/reward, dan satu label kesiapan (SIAP / PANTAU / TUNGGU / HINDARI / DATA KURANG) beserta alasannya. Mesin deteksinya ada terpisah di [`smc.py`](smc.py) — pivot fractal, BOS/CHoCH, fair value gap, order block, kolam likuiditas, sweep, dan premium/discount.
+
+### Tiga timeframe, tanpa M15
+
+`D1`, `SESI`, dan `H1`. Bar 15 menit sengaja tidak dipakai: untuk horizon swing saham isinya hampir seluruhnya noise mikro, dan zona yang lahir dari situ terlalu tipis untuk jadi dasar order.
+
+**`SESI` adalah pengganti H4 untuk IDX.** Bucket 4 jam kalender tidak punya arti di sini — hari bursa cuma 6,5 jam dan terpotong jeda makan siang, jadi tiap bucket akan mencampur potongan sesi pagi dengan sesi siang, atau menempel ke gap semalam. Yang alami adalah sesi bursanya sendiri: data Yahoo jatuh persis di dua kelompok (09–11 dan 13–16, jam 12 nyaris selalu kosong), jadi satu hari = tepat dua bar. Bar sesi diturunkan dari bar 1 jam, jadi tidak menambah request ke Yahoo.
+
+### Gap sesi bukan fair value gap
+
+Emas jalan 24 jam, jadi imbalance tiga candle di sana murni order flow. Saham tutup tiap malam, jadi di timeframe intraday gap pembukaan sesi akan terbaca sebagai FVG **setiap hari**. Efeknya besar — pada 500 bar H1, SMSM menghasilkan 69 FVG tanpa filter dan 25 dengan filter; di M15 bahkan 15 dari 17 FVG-nya ternyata cuma gap semalam. Karena itu `fvg()` menolak pola yang ketiga barnya tidak berada di sesi yang sama. Untuk D1 dan SESI penolakan ini justru dimatikan: di sana bar berurutan memang selalu terpisah jeda bursa, dan lompatannya adalah sinyalnya.
+
+### Kenapa banyak baris ditolak
+
+Level yang benar secara struktur belum tentu bisa dipakai. Tanpa batas jarak, target bisa jatuh 81% di atas harga (equal-high dari puncak dua tahun lalu) atau 0,87% (kebetulan ada EQH persis di atas harga) — risk/reward yang lahir dari situ tidak mengukur apa pun. Karena itu setiap rencana harus lolos empat saringan sekaligus:
+
+| Saringan | Menolak |
+|---|---|
+| Jarak entri | zona pullback yang terlalu jauh untuk ditunggu |
+| Pita target | target yang terlalu rapat maupun terlalu jauh untuk satu ayunan |
+| Lantai risiko | stop yang lebih rapat dari 1× ATR — di dalam gerak harian biasa, hampir pasti tersentuh |
+| Lebar zona | "zona" yang begitu tinggi sampai hasilnya beda jauh tergantung di mana persisnya kena |
+
+Ambangnya kombinasi **kelipatan ATR dan persentase harga**, dan yang berlaku selalu yang lebih ketat. Sendirian keduanya pincang: murni ATR gagal di saham bergejolak (IATA ber-ATR harian 9,2%, "8× ATR" berarti target 74%), murni persentase gagal di saham tenang (SMSM ber-ATR 1,0%, target 25% berarti 25 hari perdagangan searah tanpa jeda). Semua konstantanya ada di kepala `analisa_smc.py` dengan alasan masing-masing.
+
+Baris yang ditolak **tetap muncul** di tabel lengkap dengan alasannya di kolom `Catatan` — "stop struktural terlalu lebar (10% dari harga)" lebih berguna daripada baris yang hilang diam-diam.
+
+### Level dibulatkan ke fraksi harga IDX
+
+Angka mentah keluar seperti 7.183,4 dan tidak bisa dipasang jadi order. Semua level dibulatkan ke fraksi yang sah (Rp 1 di bawah 200, Rp 2 sampai 500, Rp 5 sampai 2.000, Rp 10 sampai 5.000, Rp 25 di atasnya). Arah pembulatannya selalu yang membuat risk/reward **lebih konservatif**, tidak pernah lebih optimis.
+
 ## Kolom Status
 
 Tiap saham dapat satu label ringkas yang merangkum posisi harganya terhadap tren:
@@ -359,8 +400,9 @@ Setiap malam workflow:
    - `hasil/swing.csv` — masih uptrend dan belum overbought, **dengan konfirmasi volume** (RSI ≤ 65, harga di atas MA200, volume terakhir ≥ 1,2× rata-rata 20 hari, nilai transaksi ≥ 5 miliar Rp). Ambang RSI sengaja tidak dipatok 50: `--max-rsi` dan `--min-volspike` saling menggerus, karena volume yang masuk hari ini justru yang mengangkat RSI. Menuntut "harga lagi lemah" sekaligus "volume lagi ramai" menghasilkan tabel kosong hampir tiap malam — bukan sinyal yang lebih tajam, cuma daftar yang tidak pernah terisi.
    - `hasil/value.csv` — value stock profil **medium risk** (PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%). PBV dipatok 3,5 (bukan 2) supaya blue chip berkualitas yang memang selalu dihargai premium — BBCA, SIDO — tidak otomatis tersaring keluar.
    - `hasil/tumbuh.csv` — **lapkeu terakhir bagus**: laba kuartalan naik ≥ 20% YoY, ROE ≥ 10%, PER ≤ 25, dan nilai transaksi ≥ 1 miliar Rp. Murni saringan fundamental, tanpa syarat teknikal.
-4. Meng-commit hasilnya ke repo (termasuk `tickers/idx.txt` yang dipakai malam itu), jadi tiap pagi tinggal buka file-file di folder `hasil/`. Riwayat screening malam-malam sebelumnya tersimpan otomatis di git history.
-5. Men-deploy **dashboard web** ke GitHub Pages (lihat di bawah).
+4. Menjalankan `analisa_smc.py` atas `hasil/swing.csv` menjadi `hasil/swing_smc.csv` — zona entri, stop, target, dan risk/reward untuk tiap kandidat. Sengaja hanya atas `swing.csv`: `value.csv` dan `tumbuh.csv` adalah saringan fundamental tanpa syarat teknikal, jadi isinya banyak yang strukturnya sedang jelek dan hasilnya cuma deretan "HINDARI". Langkah ini `continue-on-error` karena menarik data intraday — jalur Yahoo yang berbeda dari harga harian — dan kalau jalur itu rewel, tabel fundamental yang sudah jadi tidak boleh ikut hangus.
+5. Meng-commit hasilnya ke repo (termasuk `tickers/idx.txt` yang dipakai malam itu), jadi tiap pagi tinggal buka file-file di folder `hasil/`. Riwayat screening malam-malam sebelumnya tersimpan otomatis di git history.
+6. Men-deploy **dashboard web** ke GitHub Pages (lihat di bawah).
 
 **Mengubah kriteria:** edit langkah-langkah screening di file workflow — argumennya sama persis dengan CLI `screener.py`. Mau menambah profil screening ketiga? Duplikat saja salah satu langkah `--dari-csv` dengan filter dan nama output berbeda.
 
@@ -385,7 +427,8 @@ Hasil screening bisa dilihat lewat dashboard di:
 
 Fitur dashboard:
 
-- Tiga tab: **Swing**, **Value**, dan **Semua** (tabel lengkap seluruh saham yang dipantau), plus ringkasan jumlah saham yang lolos tiap filter.
+- Lima tab: **Swing**, **Value**, **Tumbuh**, **Semua** (tabel lengkap seluruh saham yang dipantau), dan **SMC**, plus ringkasan jumlah saham yang lolos tiap filter.
+- Tab **SMC** menampilkan rencana entri kandidat swing: tren D1 dan tren sesi, zona premium/discount, dasar zona (order block atau FVG), batas entri, stop, target, dan risk/reward. Kolom **Sinyal** berwarna dan diurut menurut kesiapan (SIAP → HINDARI), bukan abjad. Angka pada kartunya menghitung yang punya rencana utuh, bukan jumlah baris.
 - Kolom **Grup** dan dropdown **filter grup** — bisa lihat khusus saham grup Prajogo, Bakrie, Salim, Hapsoro, atau LQ45 saja.
 - Kolom **Status** berwarna (BUY / BOW / HOLD / WSE / JUAL / TIPIS) plus dropdown filter status; klik judul kolomnya untuk mengurutkan dari paling positif ke paling negatif.
 - Kolom **Skor** berwarna (hijau ≥ 70, kuning 40–69, merah < 40) — kesimpulan fundamental 1–100; klik judulnya untuk mengurutkan dari fundamental terkuat.

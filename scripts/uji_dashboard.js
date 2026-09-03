@@ -86,9 +86,11 @@ vm.createContext(konteks);
 vm.runInContext(
   js + "\nglobalThis.__KOLOM = KOLOM;" +
        "\nglobalThis.__state = state;" +
-       "\nglobalThis.__render = render;",
+       "\nglobalThis.__render = render;" +
+       "\nglobalThis.__kolomSet = kolomSet;",
   konteks);
 const KOLOM = konteks.__KOLOM;
+const kolomSet = konteks.__kolomSet;
 
 // ---- Pemeriksaan ------------------------------------------------------------
 let gagal = 0;
@@ -115,14 +117,17 @@ function ujiTab(tab) {
   const kolomTabel = [...tabel.matchAll(/<th data-kolom="([^"]+)"/g)].map(m => m[1]);
   const baris = tabel.split("<tr>").length - 2;   // dikurangi baris header
   const data = konteks.__state.data[tab] || [];
+  // Tab SMC memakai daftar kolomnya sendiri. Memakai KOLOM untuk semua tab
+  // membuat pemeriksaan di bawah menuduh kolom hilang padahal memang beda set.
+  const kolomTab = kolomSet(tab);
 
   periksa("jumlah baris cocok dengan data", baris === data.length,
           `${baris} baris tabel vs ${data.length} baris data`);
-  periksa("semua kolom terender", kolomTabel.length === KOLOM.length,
+  periksa("semua kolom terender", kolomTabel.length === kolomTab.length,
           `${kolomTabel.length} kolom`);
 
   if (data.length) {
-    const hilang = KOLOM.map(k => k.k).filter(k => !(k in data[0]));
+    const hilang = kolomTab.map(k => k.k).filter(k => !(k in data[0]));
     periksa("setiap kolom ada di CSV", hilang.length === 0,
             hilang.length ? "tidak ada di CSV: " + hilang.join(", ") : "");
   }
@@ -133,6 +138,28 @@ function ujiTab(tab) {
           !tabel.includes('>""<') && !tabel.includes("&quot;&quot;"));
   periksa("tidak ada 'undefined' atau 'NaN' bocor",
           !/>undefined<|>NaN</.test(tabel));
+
+  if (tab === "smc") {
+    // Setiap baris harus punya badge sinyal. Kalau slug kelasnya meleset,
+    // badge tetap muncul tapi tanpa warna — jadi kelasnya ikut diperiksa,
+    // bukan cuma keberadaannya.
+    const badge = [...tabel.matchAll(/class="status s-([a-z]+)"/g)].map(m => m[1]);
+    const sah = ["siap", "pantau", "tunggu", "hindari", "kurang"];
+    periksa("setiap baris punya badge sinyal", badge.length === data.length,
+            `${badge.length} badge untuk ${data.length} baris`);
+    periksa("kelas badge sinyal dikenali CSS", badge.every(b => sah.includes(b)),
+            "ditemukan: " + [...new Set(badge)].join(", "));
+    // RR harus jadi angka, bukan teks: kalau tidak, pengurutan kolomnya
+    // alfabetis dan "1.2" jatuh di bawah "9.8".
+    const berRR = data.filter(r => r.RR !== null && r.RR !== "");
+    periksa("RR terparse sebagai angka", berRR.every(r => typeof r.RR === "number"),
+            `${berRR.length} baris punya rencana utuh`);
+    periksa("baris tanpa rencana tetap memberi alasan",
+            data.filter(r => r.RR === null || r.RR === "")
+                .every(r => String(r.Catatan || "").trim().length > 0),
+            `${data.length - berRR.length} baris tanpa rencana`);
+    return;
+  }
 
   const chip = (tabel.match(/class="flag"/g) || []).length;
   const berflag = data.filter(r => String(r.Flag || "").trim()).length;
@@ -193,7 +220,7 @@ console.log(`Kolom yang dideklarasikan (${KOLOM.length}): ` +
 
 // Pemuatan data berjalan asinkron lewat fetch tiruan; beri kesempatan selesai.
 setTimeout(() => {
-  const tiles = ["semua", "swing", "value", "tumbuh"];
+  const tiles = ["semua", "swing", "value", "tumbuh", "smc"];
   console.log("\n=== pemuatan ===");
   tiles.forEach(t => periksa(`data ${t} termuat`,
     Array.isArray(konteks.__state.data[t]) && konteks.__state.data[t].length >= 0,
