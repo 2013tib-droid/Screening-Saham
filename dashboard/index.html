@@ -645,7 +645,7 @@
     dari harga penutupan (sumber: Yahoo Finance, delay ±15 menit).</p>
   </details>
 
-  <details>
+  <details id="ket-smc">
     <summary>Tab SMC: arti sinyal, zona, dan angkanya</summary>
     <p>Tab SMC menjawab pertanyaan yang berbeda dari tab lain. Tab Swing/Value/Tumbuh menjawab
     <strong>"saham apa"</strong> dari sisi fundamental dan tren; tab SMC menjawab
@@ -866,6 +866,8 @@ const state = {
   data: { swing: null, value: null, tumbuh: null, semua: null, smc: null },
   urut: { kolom: null, naik: true },
   gagal: false,
+  // Sekali saja per kunjungan: lihat pilihTab.
+  ketSmcDibuka: false,
 };
 
 function barisTerlihat() {
@@ -1180,6 +1182,15 @@ function pilihTab(tab) {
     const el = document.getElementById(id);
     el.hidden = smc || el.dataset.layak !== "1";
   });
+  // Kosakata tab SMC (premium/discount, order block, RR) tidak muncul di tab
+  // mana pun yang lain, dan keterangannya duduk di bawah tabel yang panjang —
+  // praktis tidak akan ditemukan sendiri. Jadi dibuka sekali saat pertama kali
+  // masuk tab ini. Sekali saja: kalau ditutup, ganti tab tidak membukanya lagi.
+  if (smc && !state.ketSmcDibuka) {
+    state.ketSmcDibuka = true;
+    const ket = document.getElementById("ket-smc");
+    if (ket) ket.open = true;
+  }
   document.querySelectorAll(".tabs button").forEach(b =>
     b.classList[b.dataset.tab === tab ? "add" : "remove"]("active"));
   document.querySelectorAll(".tile").forEach(t =>
