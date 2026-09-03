@@ -27,10 +27,15 @@
     --neg-bg: #fbe7e5; --neg-fg: #a3261d;
     --warn-bg: #fbeed6; --warn-fg: #7a5200;
     --info-bg: #e8f0fb; --info-fg: #1c5fae;
-    /* Penanda "rencananya utuh" di tab SMC. Teal, sengaja di luar kosakata
-       hijau/kuning/merah yang sudah dipakai Status dan Sinyal: yang ditandai
-       adalah kelengkapan rencana, bukan bagus atau jeleknya sahamnya. */
-    --rencana-fg: #0f766e;
+    /* Penanda "rencananya utuh" di tab SMC. Ungu, dan alasannya bukan selera:
+       warna ini harus berada di luar kosakata hijau/kuning/merah yang sudah
+       dipakai Status dan Sinyal, sebab yang ditandai adalah kelengkapan
+       rencana — bukan bagus atau jeleknya saham. Percobaan pertama memakai
+       teal #0f766e dengan alasan yang sama, dan langsung ditanya "kenapa ICBP
+       hijau padahal trennya turun": teal terbaca hijau, terlebih bersebelahan
+       dengan badge SIAP yang memang hijau. Ungu tidak punya arti bagus/jelek
+       di tabel ini, jadi tidak bisa disalahbaca jadi anjuran. */
+    --rencana-fg: #6d4aca;
     --shadow-sm: 0 1px 2px rgba(16,15,14,.05);
     --shadow-md: 0 2px 4px rgba(16,15,14,.06), 0 8px 24px -12px rgba(16,15,14,.14);
     --sticky-shadow: 10px 0 12px -10px rgba(16,15,14,.35);
@@ -57,7 +62,7 @@
       --neg-bg: #3b1e1b; --neg-fg: #f19b93;
       --warn-bg: #372d15; --warn-fg: #e3bd6b;
       --info-bg: #1e3350; --info-fg: #83b3f2;
-      --rencana-fg: #5ecfc0;
+      --rencana-fg: #b6a2f5;
       --shadow-sm: 0 1px 2px rgba(0,0,0,.35);
       --shadow-md: 0 2px 4px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.7);
       --sticky-shadow: 10px 0 12px -10px rgba(0,0,0,.75);
@@ -276,7 +281,14 @@
      melihat tabel ini selalu "yang mana yang angkanya sudah jadi" —
      dan menjawabnya lewat kolom RR di ujung kanan berarti harus menggeser
      tabel dulu. Kelayakannya tetap cuma dijawab kolom Sinyal. */
-  td.ticker.ada-rencana { color: var(--rencana-fg); }
+  td.ticker.ada-rencana {
+    color: var(--rencana-fg);
+    /* Warna saja tidak cukup: sebagian orang tidak membedakan hue dengan
+       andal, dan penandanya tetap harus terbaca di cetakan hitam-putih atau
+       tangkapan layar. Garis titik-titik sekaligus memberi tahu bahwa ada
+       keterangan yang muncul kalau kursornya diarahkan ke situ. */
+    border-bottom: 1px dotted var(--rencana-fg);
+  }
   td .nama { color: var(--text-secondary); }
 
   /* ---- Pagination mendatar ---- */
@@ -725,7 +737,8 @@
       <dt>Jarak entri%</dt><dd>Berapa persen harga harus turun dulu sebelum menyentuh zona. Angka
       besar berarti masih lama menunggu — bukan alasan untuk masuk lebih awal.</dd>
       <dt>Kode saham berwarna</dt><dd>Kode yang tampil <span style="color:var(--rencana-fg);
-      font-weight:680">bercetak teal</span> berarti rencananya utuh — zona, stop, dan target
+      font-weight:680;border-bottom:1px dotted var(--rencana-fg)">bercetak ungu bergaris titik</span>
+      berarti rencananya utuh — zona, stop, dan target
       ketiganya ketemu. Jumlahnya selalu sama dengan angka di kartu
       <strong>Zona &amp; target lengkap</strong>. Warnanya sengaja bukan hijau atau merah: yang
       ditandai adalah kelengkapan rencana, <strong>bukan</strong> bagus atau jeleknya sahamnya —
