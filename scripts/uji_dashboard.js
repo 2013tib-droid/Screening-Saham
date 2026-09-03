@@ -158,6 +158,14 @@ function ujiTab(tab) {
             data.filter(r => r.RR === null || r.RR === "")
                 .every(r => String(r.Catatan || "").trim().length > 0),
             `${data.length - berRR.length} baris tanpa rencana`);
+    // Kode saham berwarna dan angka di kartu "Zona & target lengkap" dihitung
+    // dari syarat yang sama. Kalau salah satunya kelak diubah sendirian,
+    // tabel dan kartu diam-diam bercerita beda — dan itu justru kebingungan
+    // yang ingin dihilangkan oleh pewarnaan ini.
+    const berwarna = (tabel.match(/class="ticker ada-rencana/g) || []).length;
+    periksa("kode saham berwarna sebanyak yang rencananya utuh",
+            berwarna === berRR.length,
+            `${berwarna} kode berwarna untuk ${berRR.length} rencana utuh`);
     return;
   }
 

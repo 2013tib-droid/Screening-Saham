@@ -27,6 +27,10 @@
     --neg-bg: #fbe7e5; --neg-fg: #a3261d;
     --warn-bg: #fbeed6; --warn-fg: #7a5200;
     --info-bg: #e8f0fb; --info-fg: #1c5fae;
+    /* Penanda "rencananya utuh" di tab SMC. Teal, sengaja di luar kosakata
+       hijau/kuning/merah yang sudah dipakai Status dan Sinyal: yang ditandai
+       adalah kelengkapan rencana, bukan bagus atau jeleknya sahamnya. */
+    --rencana-fg: #0f766e;
     --shadow-sm: 0 1px 2px rgba(16,15,14,.05);
     --shadow-md: 0 2px 4px rgba(16,15,14,.06), 0 8px 24px -12px rgba(16,15,14,.14);
     --sticky-shadow: 10px 0 12px -10px rgba(16,15,14,.35);
@@ -53,6 +57,7 @@
       --neg-bg: #3b1e1b; --neg-fg: #f19b93;
       --warn-bg: #372d15; --warn-fg: #e3bd6b;
       --info-bg: #1e3350; --info-fg: #83b3f2;
+      --rencana-fg: #5ecfc0;
       --shadow-sm: 0 1px 2px rgba(0,0,0,.35);
       --shadow-md: 0 2px 4px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.7);
       --sticky-shadow: 10px 0 12px -10px rgba(0,0,0,.75);
@@ -266,6 +271,12 @@
   .tablewrap.tergulir td.lengket { box-shadow: var(--sticky-shadow); }
 
   td.ticker { font-weight: 680; letter-spacing: .01em; }
+  /* Tab SMC saja: kode saham yang zona, stop, dan target-nya lengkap.
+     Dipisahkan lewat warna karena pertanyaan pertama yang muncul saat
+     melihat tabel ini selalu "yang mana yang angkanya sudah jadi" —
+     dan menjawabnya lewat kolom RR di ujung kanan berarti harus menggeser
+     tabel dulu. Kelayakannya tetap cuma dijawab kolom Sinyal. */
+  td.ticker.ada-rencana { color: var(--rencana-fg); }
   td .nama { color: var(--text-secondary); }
 
   /* ---- Pagination mendatar ---- */
@@ -713,6 +724,13 @@
       untungnya 3× lebih besar daripada ruginya kalau salah. Ambang 2 dipakai sebagai batas SIAP.</dd>
       <dt>Jarak entri%</dt><dd>Berapa persen harga harus turun dulu sebelum menyentuh zona. Angka
       besar berarti masih lama menunggu — bukan alasan untuk masuk lebih awal.</dd>
+      <dt>Kode saham berwarna</dt><dd>Kode yang tampil <span style="color:var(--rencana-fg);
+      font-weight:680">bercetak teal</span> berarti rencananya utuh — zona, stop, dan target
+      ketiganya ketemu. Jumlahnya selalu sama dengan angka di kartu
+      <strong>Zona &amp; target lengkap</strong>. Warnanya sengaja bukan hijau atau merah: yang
+      ditandai adalah kelengkapan rencana, <strong>bukan</strong> bagus atau jeleknya sahamnya —
+      ICBP di bawah ini berwarna, dan sinyalnya tetap
+      <span class="status s-hindari">HINDARI</span>.</dd>
       <dt>Kolom kosong</dt><dd>Tanda hubung di Stop/Target/RR berarti rencananya
       <strong>ditolak</strong>, dan alasannya selalu ditulis di kolom <strong>Catatan</strong> paling
       kanan. Baris tanpa rencana sengaja tetap ditampilkan supaya terlihat bahwa emitennya sudah
@@ -955,7 +973,18 @@ function render() {
   const td = halaman.map(r => {
     return "<tr>" + kolom.map((k, i) => {
       const kelas = [k.kiri ? "kiri" : "", i === 0 ? "lengket" : ""].filter(Boolean).join(" ");
-      if (k.k === "Ticker") return `<td class="ticker ${kelas}">${r.Ticker}</td>`;
+      if (k.k === "Ticker") {
+        // RR hanya ada di tab SMC, dan hanya terisi ketika zona, stop, dan
+        // target ketiganya ketemu — penanda yang sama persis dengan yang
+        // dihitung kartu "Zona & target lengkap", jadi angka di kartu dan
+        // jumlah kode berwarna di tabel selalu cocok.
+        const utuh = state.tab === "smc"
+          && r.RR !== null && r.RR !== undefined && r.RR !== "";
+        const judul = utuh
+          ? ' title="Zona, stop, dan target lengkap — kelayakannya tetap dibaca di kolom Sinyal"'
+          : "";
+        return `<td class="ticker ${utuh ? "ada-rencana " : ""}${kelas}"${judul}>${r.Ticker}</td>`;
+      }
       if (k.k === "Nama") return `<td class="${kelas}"><span class="nama">${r.Nama || "–"}</span></td>`;
       if (k.k === "Grup") return `<td class="${kelas}"><span class="nama">${r.Grup || "–"}</span></td>`;
       if (k.k === "Sektor") return `<td class="${kelas}"><span class="nama">${r.Sektor || "–"}</span></td>`;
