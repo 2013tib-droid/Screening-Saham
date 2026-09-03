@@ -129,30 +129,57 @@ jobs:
             echo "Tidak ada perubahan data, tidak ada yang di-commit."
             exit 0
           fi
-          git commit -m "Hasil screening $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
+          pesan="Hasil screening $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
+          git commit -m "$pesan"
 
-          # Push dicoba beberapa kali, dan pull --rebase hanya dijalankan
-          # ketika push benar-benar ditolak. Urutan lama (rebase dulu, lalu
-          # push sekali) tidak menutup celah balapan sama sekali: apa pun yang
-          # masuk ke remote di antara kedua perintah itu membuat push gagal
-          # dan seluruh langkah ini mati.
+          # Push dicoba beberapa kali, dan penyelarasan hanya dijalankan ketika
+          # push benar-benar ditolak. Urutan lama (selaraskan dulu, lalu push
+          # sekali) tidak menutup celah balapan sama sekali: apa pun yang masuk
+          # ke remote di antara kedua perintah itu membuat push gagal dan
+          # seluruh langkah ini mati.
           #
           # Run terjadwal 10 Agu 2026 gagal di langkah ini dengan exit code 1
           # meski commit-nya terbukti sampai ke remote. Penyebab pastinya tidak
-          # bisa dipastikan tanpa log, jadi ini penanggulangan untuk kelasnya —
-          # bukan perbaikan atas sebab yang sudah terdiagnosis. Kalaupun gagal
-          # lagi, keluarannya kini menyebut percobaan keberapa dan apa yang
-          # ditolak, sehingga bisa ditelusuri dari ringkasan run.
+          # bisa dipastikan tanpa log, jadi percobaan berulang ini adalah
+          # penanggulangan untuk kelasnya, bukan perbaikan atas sebab yang
+          # sudah terdiagnosis.
+          #
+          # Penyelarasannya TIDAK memakai rebase. Isi hasil/ dan tickers/idx.txt
+          # ditulis ulang dari nol tiap run, jadi ketika dua run bertabrakan,
+          # kedua versinya sama-sama utuh dan sama-sama benar — tidak ada yang
+          # perlu digabungkan baris per baris. Rebase justru memaksa git
+          # membandingkan dua tabel 400 baris yang ditulis terpisah, dan itu
+          # selalu berakhir konflik: persis yang menggagalkan run 33704972188
+          # pada 3 Sep 2026, ketika satu push memicu dua run sekaligus.
+          #
+          # Jadi: ambil ulang keadaan remote apa adanya, lalu timpa kembali
+          # berkas yang dihasilkan run ini. Yang ditimpa hanya berkas itu —
+          # perubahan run lain di luar hasil/ (mis. dashboard) tetap utuh, dan
+          # berkas di hasil/ yang tidak dihasilkan run ini (mis. swing_smc.csv
+          # ketika langkah SMC-nya gagal) tidak ikut terhapus.
+          simpan="$(mktemp -d)"
+          cp -r hasil "$simpan/hasil"
+          cp tickers/idx.txt "$simpan/idx.txt"
+
           for percobaan in 1 2 3; do
             if git push; then
               echo "Berhasil didorong pada percobaan ke-$percobaan."
               exit 0
             fi
-            echo "Push ditolak pada percobaan ke-$percobaan — menarik ulang lalu mencoba lagi."
-            git pull --rebase origin "$GITHUB_REF_NAME" || {
-              echo "Rebase gagal; kemungkinan ada konflik yang tidak bisa diselesaikan otomatis." >&2
+            echo "Push ditolak pada percobaan ke-$percobaan — menyelaraskan ke remote lalu menulis ulang commit."
+            git fetch origin "$GITHUB_REF_NAME" || {
+              echo "Gagal mengambil keadaan remote." >&2
               exit 1
             }
+            git reset --hard FETCH_HEAD
+            cp -r "$simpan/hasil/." hasil/
+            cp "$simpan/idx.txt" tickers/idx.txt
+            git add hasil/ tickers/idx.txt
+            if git diff --cached --quiet; then
+              echo "Run lain sudah menulis hasil yang sama persis — tidak ada yang perlu didorong."
+              exit 0
+            fi
+            git commit -m "$pesan"
           done
           echo "Push tetap gagal setelah 3 percobaan." >&2
           exit 1
