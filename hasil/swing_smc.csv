@@ -1,7 +1,11 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-MEDC,Medco Energi Internasional T,60,BUY,1485,up,EQUILIBRIUM,51,BOS bull,up,up,OB SESI,1420,1390,1320,1565,1.88,4.4,3.8,BSL raid @ 1535,PANTAU,RR baru 1.88 — di bawah 2
-SMSM,Selamat Sempurna Tbk,82,BUY,1740,up,PREMIUM,70,BOS bull,up,up,OB SESI,1680,1670,1650,1795,4.8,3.4,1.2,BSL raid @ 1730,TUNGGU,harga di premium — tunggu pullback ke zona
-MMIX,Multi Medika Internasional T,53,BUY,805,up,PREMIUM,84,CHoCH bull,up,up,,,,,,,,3.2,SSL raid @ 630,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-INDF,Indofood Sukses Makmur Tbk,74,BUY,7350,down,PREMIUM,106,CHoCH bear,down,down,FVG SESI,7300,7250,7075,7850,2.88,0.7,1.8,SSL raid @ 7200,HINDARI,struktur D1 masih bearish
-AKRA,AKR Corporindo Tbk,77,BUY,1450,down,PREMIUM,87,CHoCH bear,down,up,FVG SESI,1415,1395,1350,1500,1.73,2.4,2.8,SSL raid @ 1385,HINDARI,struktur D1 masih bearish
-MDIA,Intermedia Capital Tbk.,35,BUY,250,down,PREMIUM,83,CHoCH bear,down,up,,,,,,,,8.5,SSL raid @ 228,HINDARI,struktur D1 masih bearish
+INTP,Indocement Tunggal Prakarsa ,83,BUY,5500,up,EQUILIBRIUM,62,BOS bull,up,up,FVG SESI,5200,5050,4530,6075,1.6,5.5,3.0,BSL raid @ 5675,PANTAU,RR baru 1.6 — di bawah 2
+BBNI,Bank Negara Indonesia  (Pers,67,BUY,3870,up,PREMIUM,65,BOS bull,up,up,FVG D1,3860,3780,3620,4080,1.3,0.3,2.1,SSL raid @ 3910,TUNGGU,harga di premium — tunggu pullback ke zona
+MDKA,Merdeka Copper Gold Tbk.,31,BUY,3120,up,EQUILIBRIUM,57,BOS bull,down,up,,,,,,,,3.4,SSL raid @ 3090,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+PSKT,Red Planet Indonesia Tbk.,30,BUY,254,up,EQUILIBRIUM,38,BOS bull,down,down,,,,,,,,8.2,BSL raid @ 268,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+SIMP,Salim Ivomas Pratama Tbk.,78,BUY,635,up,EQUILIBRIUM,43,BOS bull,up,up,FVG SESI,610,600,575,,,3.9,3.1,BSL raid @ 645,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+FPNI,Lotte Chemical Titan Tbk.,72,BUY,570,up,DISCOUNT,22,BOS bull,down,down,OB SESI,560,540,408,,,1.8,11.2,BSL raid @ 670,TUNGGU,stop struktural terlalu lebar (25% dari harga)
+MARK,Mark Dynamics Indonesia Tbk.,80,BUY,1080,up,PREMIUM,91,CHoCH bull,down,down,,,,,,,,2.2,BSL raid @ 1085,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+ENRG,Energi Mega Persada Tbk,58,BUY,1470,up,EQUILIBRIUM,39,CHoCH bull,up,up,FVG SESI,1430,1380,1165,,,2.7,3.9,BSL raid @ 1355,TUNGGU,stop struktural terlalu lebar (16% dari harga)
+INDF,Indofood Sukses Makmur Tbk,74,BUY,7500,down,PREMIUM,115,CHoCH bear,down,up,FVG D1,7325,7275,7075,7850,2.44,2.3,1.9,BSL raid @ 7575,HINDARI,struktur D1 masih bearish
+MDIA,Intermedia Capital Tbk.,35,BUY,236,down,PREMIUM,76,CHoCH bear,down,up,,,,,,,,9.7,SSL raid @ 228,HINDARI,struktur D1 masih bearish
