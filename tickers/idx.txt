@@ -10,12 +10,12 @@
 #   maksimal 400 nama.
 # Diperbarui: 2026-09-09 — 400 emiten.
 
-BBCA  # Bank Central Asia Tbk — 801.8 T
-BBRI  # Bank Rakyat Indonesia (Persero) — 515.0 T
+BBCA  # Bank Central Asia Tbk — 801.5 T
+BBRI  # Bank Rakyat Indonesia (Persero) — 515.3 T
 DCII  # DCI Indonesia Tbk. — 480.6 T
 BYAN  # Bayan Resources Tbk — 459.2 T
 BREN  # Barito Renewables Energy Tbk. — 441.5 T
-BMRI  # Bank Mandiri (Persero) Tbk — 409.7 T
+BMRI  # Bank Mandiri (Persero) Tbk — 408.2 T
 AMMN  # Amman Mineral Internasional Tbk — 355.5 T
 TLKM  # Telkom Indonesia (Persero) Tbk. — 262.2 T
 MORA  # Ekamas Mora Republik Tbk. — 258.0 T
@@ -24,7 +24,7 @@ DSSA  # Dian Swastatika Sentosa Tbk — 181.0 T
 TPIA  # Chandra Asri Pacific Tbk. — 167.3 T
 BRPT  # Barito Pacific Tbk. — 162.6 T
 SRAJ  # Sejahteraraya Anugrahjaya Tbk. — 161.2 T
-BBNI  # Bank Negara Indonesia  (Persero — 142.2 T
+BBNI  # Bank Negara Indonesia  (Persero — 142.3 T
 DNET  # Indoritel Makmur Internasional — 141.8 T
 SMMA  # Sinarmas Multiartha Tbk. — 127.5 T
 EMAS  # Merdeka Gold Resources Tbk. — 126.7 T
@@ -58,12 +58,12 @@ AMRT  # Sumber Alfaria Trijaya Tbk — 53.8 T
 CPIN  # Charoen Pokphand Indonesia Tbk — 53.5 T
 GOTO  # GoTo Gojek Tokopedia Tbk. — 53.3 T
 INCO  # Vale Indonesia Tbk. — 51.6 T
+BNBR  # Bakrie & Brothers Tbk — 51.6 T
 ENRG  # Energi Mega Persada Tbk — 51.6 T
 INKP  # Indah Kiat Pulp & Paper Tbk. — 50.9 T
 EXCL  # XLSMART Telecom Sejahtera Tbk. — 49.7 T
 TAPG  # Triputra Agro Persada Tbk. — 48.6 T
 MEGA  # Bank Mega Tbk — 46.5 T
-BNBR  # Bakrie & Brothers Tbk — 45.5 T
 GEMS  # Golden Energy Mines Tbk. — 45.1 T
 BDMN  # Bank Danamon Indonesia Tbk. — 44.4 T
 BNGA  # Bank CIMB Niaga Tbk. — 44.2 T
@@ -84,12 +84,12 @@ MYOR  # Mayora Indah Tbk — 33.6 T
 EMTK  # Elang Mahkota Teknologi Tbk — 31.5 T
 JARR  # Jhonlin Agro Raya Tbk. — 31.5 T
 AKRA  # AKR Corporindo Tbk — 30.7 T
-ITMG  # Indo Tambangraya Megah Tbk — 29.3 T
+ITMG  # Indo Tambangraya Megah Tbk — 29.6 T
 NISP  # Bank OCBC NISP Tbk — 28.9 T
 MGLV  # NexAI Digital Infrastruktur Tbk — 28.3 T
 TOWR  # Sarana Menara Nusantara Tbk. — 28.2 T
 GIAA  # Garuda Indonesia (Persero) Tbk. — 27.7 T
-JPFA  # Japfa Comfeed Indonesia Tbk. — 27.2 T
+JPFA  # Japfa Comfeed Indonesia Tbk. — 27.4 T
 SILO  # Siloam International Hospitals — 27.0 T
 LIFE  # MSIG Life Insurance Indonesia T — 26.7 T
 MIKA  # Mitra Keluarga Karyasehat Tbk. — 26.3 T
@@ -99,8 +99,8 @@ BINA  # Bank Ina Perdana Tbk. — 25.6 T
 TKIM  # Pabrik Kertas Tjiwi Kimia Tbk — 25.6 T
 SRTG  # Saratoga Investama Sedaya Tbk. — 25.0 T
 MDIY  # Daya Intiguna Yasa Tbk. — 23.6 T
-CBDK  # Bangun Kosambi Sukses Tbk. — 22.8 T
 SOHO  # Soho Global Health Tbk. — 22.8 T
+CBDK  # Bangun Kosambi Sukses Tbk. — 22.7 T
 BSIM  # Bank Sinarmas Tbk. — 22.7 T
 MAPI  # Mitra Adiperkasa Tbk — 22.6 T
 PNBN  # Bank Pan Indonesia Tbk — 21.9 T
@@ -165,7 +165,6 @@ WIFI  # Solusi Sinergi Digital Tbk. — 11.2 T
 ADMF  # Adira Dinamika Multi Finance Tb — 10.7 T
 SGER  # Sumber Global Energy Tbk. — 10.6 T
 BUKA  # Bukalapak.com Tbk. — 10.5 T
-CLEO  # Sariguna Primatirta Tbk.
 HRTA  # Hartadinata Abadi Tbk. — 10.4 T
 SIDO  # Industri Jamu dan Farmasi Sido — 10.4 T
 PRAY  # Famon Awal Bros Sedaya Tbk. — 10.3 T
@@ -177,7 +176,7 @@ CMNP  # Citra Marga Nusaphala Persada T — 10.0 T
 SIMP  # Salim Ivomas Pratama Tbk. — 9.8 T
 DMAS  # Puradelta Lestari Tbk. — 9.6 T
 BMAS  # Bank Kasikorn Indonesia Tbk. — 9.6 T
-RMKE  # RMK Energy Tbk. — 1.9 T
+RMKE  # RMK Energy Tbk. — 9.5 T
 ERAA  # Erajaya Swasembada Tbk. — 9.5 T
 SMMT  # Golden Eagle Energy Tbk. — 9.4 T
 FILM  # MD Entertainment Tbk. — 9.2 T
@@ -235,9 +234,9 @@ TRIM  # Trimegah Sekuritas Indonesia Tb — 5.1 T
 MBSS  # Mitrabahtera Segara Sejati Tbk. — 5.0 T
 KRAS  # Krakatau Steel (Persero) Tbk. — 4.9 T
 DRMA  # Dharma Polimetal Tbk. — 4.8 T
+TOBA  # TBS Energi Utama Tbk. — 4.8 T
 TUGU  # Asuransi Tugu Pratama Indonesia — 4.8 T
 GJTL  # Gajah Tunggal Tbk — 4.8 T
-TOBA  # TBS Energi Utama Tbk. — 4.8 T
 SOCI  # Soechi Lines Tbk. — 4.8 T
 MASB  # Bank Multiarta Sentosa Tbk. — 4.8 T
 BPII  # Batavia Prosperindo Internasion — 4.7 T
@@ -410,3 +409,4 @@ CARS  # Industri dan Perdagangan Bintra — 1.7 T
 ERAL  # Sinar Eka Selaras Tbk. — 1.7 T
 FORU  # Fortune Indonesia Tbk — 1.7 T
 SUNI  # Sunindo Pratama Tbk. — 1.7 T
+CSAP  # Catur Sentosa Adiprana Tbk. — 1.7 T
