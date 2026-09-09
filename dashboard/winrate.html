@@ -202,6 +202,11 @@
   .status.s-bow { background: var(--info-bg); color: var(--info-fg); }
   .status.s-hold { background: var(--chip-bg); color: var(--text-secondary); }
   .status.s-wse { background: var(--warn-bg); color: var(--warn-fg); }
+  /* JUAL dan TIPIS jarang lolos filter swing, tapi bukan mustahil: filternya
+     teknikal (RSI, MA200, volume), bukan berdasar kolom Status. Tanpa kelas
+     ini badge-nya tampil polos tanpa warna. */
+  .status.s-jual { background: var(--neg-bg); color: var(--neg-fg); }
+  .status.s-tipis { background: var(--chip-bg); color: var(--text-muted); }
   .jalan { font-size: .7rem; color: var(--text-muted); }
   .kosong, .gagal { padding: 40px 16px; text-align: center; color: var(--text-secondary); font-size: .92rem; }
 
@@ -846,21 +851,18 @@ function render() {
 }
 
 function perbaruiPager(total) {
-  const bar = document.getElementById("rowpager");
-  if (!state.perHal || total <= state.perHal) {
-    bar.hidden = !state.perHal ? false : true;
-    if (!state.perHal) {
-      document.getElementById("rp-info").textContent = `${total} posisi`;
-      document.getElementById("halaman").innerHTML = "";
-    }
-    return;
-  }
-  bar.hidden = false;
-  const jumlah = Math.ceil(total / state.perHal);
-  state.hal = Math.min(state.hal, jumlah);
-  const dari = (state.hal - 1) * state.perHal + 1;
+  // Bilahnya selalu tampil, bahkan ketika seluruh baris muat di satu halaman:
+  // di situlah pilihan "baris per halaman" berada, dan menyembunyikannya
+  // membuat pembaca yang menyetel 100 lalu menyaring sampai tersisa 30 baris
+  // kehilangan satu-satunya cara mengembalikannya.
+  document.getElementById("rowpager").hidden = false;
+  const jumlah = state.perHal ? Math.ceil(total / state.perHal) : 1;
+  state.hal = Math.min(state.hal, Math.max(1, jumlah));
+  const dari = state.perHal ? (state.hal - 1) * state.perHal + 1 : 1;
+  const sampai = state.perHal ? Math.min(state.hal * state.perHal, total) : total;
   document.getElementById("rp-info").textContent =
-    `${dari}–${Math.min(state.hal * state.perHal, total)} dari ${total} posisi`;
+    jumlah > 1 ? `${dari}–${sampai} dari ${total} posisi` : `${total} posisi`;
+  if (jumlah <= 1) { document.getElementById("halaman").innerHTML = ""; return; }
   const tombol = [];
   const tambah = (n, teks = n) => tombol.push(
     `<button ${n === state.hal ? 'class="aktif" disabled' : `data-hal="${n}"`}>${teks}</button>`);
