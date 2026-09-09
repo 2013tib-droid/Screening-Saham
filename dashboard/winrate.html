@@ -633,13 +633,17 @@ function gambar(wadah, opsi) {
   // memakai bidang potong milik kartu pertama.
   const id = wadah.id || "grafik";
   const { titik, nilai, jenis, min, maks, warnaTanda, format, satuan, acuan } = opsi;
+  // Label sumbu boleh berbeda presisi dari tooltip: tooltip menyesuaikan diri
+  // ke tiap nilai (0,07% butuh dua desimal), sementara sumbu harus seragam —
+  // deretan "0,00% / +10,0%" terbaca seperti salah cetak.
+  const formatSumbu = opsi.formatSumbu || format;
   const x = sumbuX(titik.length, lebar);
   const y = sumbuY(min, maks);
   const bagian = [];
 
   for (const t of tickY(min, maks)) {
     bagian.push(`<line class="garis-grid" x1="${TEPI.kiri}" y1="${y(t).toFixed(1)}" x2="${lebar - TEPI.kanan}" y2="${y(t).toFixed(1)}"/>`);
-    bagian.push(`<text class="sumbu" x="${TEPI.kiri - 6}" y="${(y(t) + 3).toFixed(1)}" text-anchor="end">${esc(format(t))}</text>`);
+    bagian.push(`<text class="sumbu" x="${TEPI.kiri - 6}" y="${(y(t) + 3).toFixed(1)}" text-anchor="end">${esc(formatSumbu(t))}</text>`);
   }
   if (acuan !== undefined && acuan > min && acuan < maks) {
     bagian.push(`<line class="garis-nol" x1="${TEPI.kiri}" y1="${y(acuan).toFixed(1)}" x2="${lebar - TEPI.kanan}" y2="${y(acuan).toFixed(1)}"/>`);
@@ -760,7 +764,9 @@ function gambarSemua(perHari) {
     judul: "Rata-rata laba per hari ke-N", titik: hari,
     nilai: perHari.map(p => p.rata),
     jenis: "garis", min: -lebarLaba, maks: lebarLaba, acuan: 0, warnaTanda: true,
-    format: v => persen(v, Math.abs(v) < 1 ? 2 : 1), satuan: "rata-rata sesudah biaya",
+    format: v => persen(v, Math.abs(v) < 1 ? 2 : 1),
+    formatSumbu: v => persen(v, lebarLaba < 2 ? 2 : 1),
+    satuan: "rata-rata sesudah biaya",
   });
 
   gambar(document.getElementById("c-posisi"), {
