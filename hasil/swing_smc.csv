@@ -1,11 +1,12 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-INTP,Indocement Tunggal Prakarsa ,83,BUY,5500,up,EQUILIBRIUM,62,BOS bull,up,up,FVG SESI,5200,5050,4530,6075,1.6,5.5,3.0,BSL raid @ 5675,PANTAU,RR baru 1.6 — di bawah 2
-BBNI,Bank Negara Indonesia  (Pers,67,BUY,3870,up,PREMIUM,65,BOS bull,up,up,FVG D1,3860,3780,3620,4080,1.3,0.3,2.1,SSL raid @ 3910,TUNGGU,harga di premium — tunggu pullback ke zona
-MDKA,Merdeka Copper Gold Tbk.,31,BUY,3120,up,EQUILIBRIUM,57,BOS bull,down,up,,,,,,,,3.4,SSL raid @ 3090,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-PSKT,Red Planet Indonesia Tbk.,30,BUY,254,up,EQUILIBRIUM,38,BOS bull,down,down,,,,,,,,8.2,BSL raid @ 268,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-SIMP,Salim Ivomas Pratama Tbk.,78,BUY,635,up,EQUILIBRIUM,43,BOS bull,up,up,FVG SESI,610,600,575,,,3.9,3.1,BSL raid @ 645,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
-FPNI,Lotte Chemical Titan Tbk.,72,BUY,570,up,DISCOUNT,22,BOS bull,down,down,OB SESI,560,540,408,,,1.8,11.2,BSL raid @ 670,TUNGGU,stop struktural terlalu lebar (25% dari harga)
-MARK,Mark Dynamics Indonesia Tbk.,80,BUY,1080,up,PREMIUM,91,CHoCH bull,down,down,,,,,,,,2.2,BSL raid @ 1085,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-ENRG,Energi Mega Persada Tbk,58,BUY,1470,up,EQUILIBRIUM,39,CHoCH bull,up,up,FVG SESI,1430,1380,1165,,,2.7,3.9,BSL raid @ 1355,TUNGGU,stop struktural terlalu lebar (16% dari harga)
-INDF,Indofood Sukses Makmur Tbk,74,BUY,7500,down,PREMIUM,115,CHoCH bear,down,up,FVG D1,7325,7275,7075,7850,2.44,2.3,1.9,BSL raid @ 7575,HINDARI,struktur D1 masih bearish
-MDIA,Intermedia Capital Tbk.,35,BUY,236,down,PREMIUM,76,CHoCH bear,down,up,,,,,,,,9.7,SSL raid @ 228,HINDARI,struktur D1 masih bearish
+BBNI,Bank Negara Indonesia  (Pers,67,BUY,3820,up,EQUILIBRIUM,61,BOS bull,up,up,FVG D1,3760,3720,3620,4080,2.83,1.6,2.2,SSL raid @ 3910,SIAP,"zona FVG D1 aktif, RR 2.83"
+BDMN,Bank Danamon Indonesia Tbk.,67,BUY,4540,up,PREMIUM,83,BOS bull,up,up,FVG SESI,4380,4340,4250,5000,5.82,3.5,2.4,BSL raid @ 4680,TUNGGU,harga di premium — tunggu pullback ke zona
+ADRO,Alamtri Resources Indonesia ,73,BUY,2690,up,PREMIUM,87,BOS bull,up,down,OB D1,2530,2460,2390,2860,3.48,5.9,3.3,BSL raid @ 2560,TUNGGU,harga di premium — tunggu pullback ke zona
+ISAT,Indosat Tbk,74,BUY,2400,up,PREMIUM,62,BOS bull,down,up,OB D1,2250,2100,1865,2850,2.18,6.2,4.8,BSL raid @ 2380,TUNGGU,harga di premium — tunggu pullback ke zona
+OASA,Maharaksa Biru Energi Tbk.,26,BUY,324,up,DISCOUNT,30,CHoCH bull,up,up,,,,,,,,5.0,BSL raid @ 372,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+GGRM,Gudang Garam Tbk,73,BOW,19750,up,PREMIUM,77,BOS bull,down,down,,,,,,,,2.7,BSL raid @ 20700,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+MARK,Mark Dynamics Indonesia Tbk.,80,BUY,1075,up,PREMIUM,90,CHoCH bull,down,down,,,,,,,,2.2,BSL raid @ 1085,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+MBSS,Mitrabahtera Segara Sejati T,60,BUY,2880,up,EQUILIBRIUM,58,BOS bull,up,up,FVG D1,2870,2860,2780,,,0.3,1.1,BSL raid @ 2870,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+MAPI,Mitra Adiperkasa Tbk,72,BOW,1360,down,EQUILIBRIUM,39,BOS bear,down,down,FVG SESI,1305,1280,1240,1495,3.86,4.0,3.3,BSL raid @ 1365,HINDARI,struktur D1 masih bearish
+INDF,Indofood Sukses Makmur Tbk,74,BUY,7500,down,PREMIUM,115,CHoCH bear,up,up,FVG D1,7450,7375,7075,7850,1.3,0.7,1.8,BSL raid @ 7575,HINDARI,struktur D1 masih bearish
+MDIA,Intermedia Capital Tbk.,35,BOW,220,down,PREMIUM,70,CHoCH bear,down,up,,,,,,,,11.3,SSL raid @ 228,HINDARI,struktur D1 masih bearish
