@@ -107,6 +107,13 @@ p = simulasi(riwayat_satu("DDDD", "2026-03-02T11:00:00Z"), harga,
 periksa("harga di atas modal satu lot -> dilewati", len(p), 0)
 
 
+# Harga nol lolos dari dropna: nilainya ada, cuma tidak masuk akal.
+harga = per_emiten(bar("EEE0", date(2026, 3, 2), [0, 0, 0]))
+p = simulasi(riwayat_satu("EEE0", "2026-03-02T11:00:00Z"), harga,
+             modal=10_000_000, hari=1, fee_beli=0, fee_jual=0)
+periksa("harga beli nol -> dilewati, tidak membagi nol", len(p), 0)
+
+
 print("\n== Laba dihitung dari pembukaan, sesudah dua biaya ==")
 # Beli di pembukaan 1.000, tutup hari beli 1.000, besoknya 1.100 (+10%).
 harga = per_emiten(bar("EEEE", date(2026, 3, 2), [1000, 1000, 1100],

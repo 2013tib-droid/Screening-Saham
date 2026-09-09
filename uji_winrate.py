@@ -303,6 +303,13 @@ def simulasi(riwayat: pd.DataFrame, bars: dict[str, pd.DataFrame],
             continue
 
         beli = float(bar["Open"].iloc[i0])
+        # Harga nol atau negatif tidak masuk akal, tapi bukan mustahil keluar
+        # dari Yahoo (lihat catatan soal bar cacat di atas). Tanpa penjagaan
+        # ini barisnya membagi dengan nol dan menghanguskan seluruh run.
+        if beli <= 0:
+            dilewati["harga beli tidak masuk akal"] = \
+                dilewati.get("harga beli tidak masuk akal", 0) + 1
+            continue
         lot = int(modal // (beli * LEMBAR_PER_LOT))
         if lot < 1:
             dilewati["harga di atas modal satu lot"] = \
