@@ -110,6 +110,10 @@
   .tile .value.pos { color: var(--pos-fg); }
   .tile .value.neg { color: var(--neg-fg); }
   .tile .sub { font-size: .76rem; color: var(--text-muted); line-height: 1.35; }
+  /* Sub kartu yang sampelnya terlalu tipis untuk dipercaya. Kuning, bukan
+     merah: ini soal seberapa jauh angkanya boleh dibaca, bukan kabar buruk
+     soal sahamnya. */
+  .tile .sub.waspada { color: var(--warn-fg); font-weight: 600; }
 
   /* ---- Grafik ---- */
   .grafik { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin: 16px 0; }
@@ -260,7 +264,7 @@
 
   <div class="tiles" id="tiles" hidden>
     <div class="tile" style="--pita:#2a78d6"><div class="label">Winrate seminggu</div><div class="value" id="t-wr5">–</div><div class="sub" id="s-wr5">hari bursa ke-5</div></div>
-    <div class="tile" style="--pita:#0f766e"><div class="label">Winrate sebulan</div><div class="value" id="t-wrn">–</div><div class="sub" id="s-wrn">hari bursa ke-21</div></div>
+    <div class="tile" style="--pita:#0f766e"><div class="label">Winrate terjauh</div><div class="value" id="t-wrn">–</div><div class="sub" id="s-wrn">hari bursa terjauh yang datanya sudah ada</div></div>
     <div class="tile" style="--pita:#c07a11"><div class="label">Laba/rugi sekarang</div><div class="value" id="t-laba">–</div><div class="sub" id="s-laba">seluruh posisi, sesudah biaya</div></div>
     <div class="tile" style="--pita:#7a6ce0"><div class="label">Rata-rata per posisi</div><div class="value" id="t-rata">–</div><div class="sub" id="s-rata">median –</div></div>
     <div class="tile" style="--pita:#17915a"><div class="label">Posisi diuji</div><div class="value" id="t-posisi">–</div><div class="sub" id="s-posisi">–</div></div>
@@ -348,6 +352,12 @@
       sampai ke situ. Pick minggu lalu belum punya hari ke-21, dan mengisinya dengan nilai terakhir
       akan membuatnya ikut terhitung seolah sudah selesai. Karena itu kolom Posisi di grafik ketiga
       mengecil ke kanan — bacalah winrate di ujung kanan dengan jumlah sampelnya, jangan sendirian.</dd>
+      <dt>Kartu &quot;Winrate terjauh&quot;</dt><dd>Menampilkan hari bursa <strong>terjauh yang
+      datanya sudah ada</strong>, bukan hari ke-21 yang tetap — jadi kartunya terisi sejak hari
+      pertama alih-alih kosong sampai posisi tertua genap sebulan. Konsekuensinya kartu ini selalu
+      yang sampelnya paling kecil, dan jumlah posisinya karena itu ikut ditulis; di bawah 10 posisi
+      keterangannya berubah kuning. Angka yang paling bisa dipegang justru <strong>Winrate
+      seminggu</strong> di sebelahnya, yang sampelnya jauh lebih tebal.</dd>
       <dt>Duplikat</dt><dd>Satu saham yang muncul di beberapa malam dihitung sebagai beberapa posisi
       terpisah, masing-masing dengan modalnya sendiri. Itu memang yang terjadi kalau daftarnya
       diikuti apa adanya, tapi artinya total rupiah di kartu bukan hasil satu portofolio Rp10 juta —
@@ -562,14 +572,27 @@ function isiKartu(rows, perHari) {
   const arah = v => v === null ? "" : v > 0 ? "pos" : v < 0 ? "neg" : "";
 
   const h5 = perHari[Math.min(5, state.hariMaks)];
-  const hn = perHari[state.hariMaks];
   set("t-wr5", h5.winrate === null ? "–" : angka(h5.winrate, 1) + "%");
   document.getElementById("s-wr5").textContent =
     `hari bursa ke-5 · ${h5.posisi} posisi sampai situ`;
+
+  // Hari TERJAUH yang benar-benar punya posisi, bukan hari ke-21 yang tetap.
+  // Jendelanya 21 hari, tapi posisi tertua baru berumur 19 — mematok kartunya
+  // di 21 membuatnya menampilkan "–" berhari-hari padahal datanya sudah ada.
+  const hn = [...perHari].reverse().find(h => h.posisi > 0) || perHari[0];
   set("t-wrn", hn.winrate === null ? "–" : angka(hn.winrate, 1) + "%");
-  document.getElementById("s-wrn").textContent = hn.posisi
-    ? `hari bursa ke-${state.hariMaks} · ${hn.posisi} posisi sampai situ`
-    : `hari bursa ke-${state.hariMaks} · belum ada posisi yang setua itu`;
+  const subN = document.getElementById("s-wrn");
+  // Hari terjauh SELALU punya sampel paling kecil — itu sifat susunannya,
+  // bukan kebetulan. Angka besar dari 4 posisi tidak boleh terbaca sekelas
+  // angka dari 90, jadi jumlahnya ikut disebut dan diberi warna peringatan
+  // begitu tipis. Ambang 10 dipilih sekadar sebagai batas "masih bisa
+  // diomongkan": di bawah itu satu posisi saja menggeser winrate belasan poin.
+  const tipis = hn.posisi > 0 && hn.posisi < 10;
+  subN.textContent = hn.posisi
+    ? `hari bursa ke-${hn.hari} · ${tipis ? `cuma ${hn.posisi} posisi, belum bisa dipercaya`
+                                          : `${hn.posisi} posisi sampai situ`}`
+    : "belum ada posisi yang sudah lewat hari belinya";
+  subN.classList.toggle("waspada", tipis);
 
   const labaRp = rows.reduce((a, r) => a + (r.LabaRp || 0), 0);
   const modal = rows.reduce((a, r) => a + (r.Modal || 0), 0);
@@ -607,11 +630,18 @@ function sumbuY(min, maks) {
   return v => TEPI.atas + h - (v - min) / rentang * h;
 }
 
-/** Tick sumbu Y yang jatuh di angka bulat, bukan hasil bagi rentang mentah. */
-function tickY(min, maks, cacah = 4) {
+/**
+ * Tick sumbu Y yang jatuh di angka bulat, bukan hasil bagi rentang mentah.
+ *
+ * `bulat` untuk sumbu yang satuannya cacahan: setengah posisi tidak ada, dan
+ * langkah pecahan membuat dua tick berbeda dibulatkan ke label yang sama —
+ * sumbu "1 / 1 / 0" ketika rentangnya cuma sampai 1,1.
+ */
+function tickY(min, maks, cacah = 4, bulat = false) {
   const kasar = (maks - min) / cacah || 1;
   const pangkat = Math.pow(10, Math.floor(Math.log10(Math.abs(kasar))));
-  const langkah = [1, 2, 2.5, 5, 10].map(m => m * pangkat).find(m => m >= kasar) || pangkat * 10;
+  let langkah = [1, 2, 2.5, 5, 10].map(m => m * pangkat).find(m => m >= kasar) || pangkat * 10;
+  if (bulat) langkah = Math.max(1, Math.round(langkah));
   const mulai = Math.ceil(min / langkah) * langkah;
   const out = [];
   for (let v = mulai; v <= maks + 1e-9; v += langkah) out.push(Math.round(v / langkah) * langkah);
@@ -641,7 +671,7 @@ function gambar(wadah, opsi) {
   const y = sumbuY(min, maks);
   const bagian = [];
 
-  for (const t of tickY(min, maks)) {
+  for (const t of tickY(min, maks, 4, opsi.bulat)) {
     bagian.push(`<line class="garis-grid" x1="${TEPI.kiri}" y1="${y(t).toFixed(1)}" x2="${lebar - TEPI.kanan}" y2="${y(t).toFixed(1)}"/>`);
     bagian.push(`<text class="sumbu" x="${TEPI.kiri - 6}" y="${(y(t) + 3).toFixed(1)}" text-anchor="end">${esc(formatSumbu(t))}</text>`);
   }
@@ -666,14 +696,22 @@ function gambar(wadah, opsi) {
     const dasar = y(Math.max(min, 0));
     for (const [i, v] of ada) {
       const atas = y(v);
-      const tinggi = Math.max(0.5, dasar - atas);
+      const tinggi = dasar - atas;
+      // Nilai nol tidak digambar. Tanpa ini, tinggi minimum 0,5px membuat
+      // deretan hari yang belum punya posisi tetap tampil sebagai garis rapat
+      // di sepanjang dasar — terbaca "ada sedikit", padahal tidak ada apa pun.
+      if (tinggi <= 0) continue;
       // Ujung data dibulatkan 4px, pangkalnya tetap siku menempel garis dasar.
       const r = Math.min(4, w / 2, tinggi);
       bagian.push(`<path fill="var(--accent)" fill-opacity=".55" d="M${(x(i) - w / 2).toFixed(1)} ${dasar.toFixed(1)}`
         + `V${(atas + r).toFixed(1)}a${r} ${r} 0 0 1 ${r} ${-r}h${(w - 2 * r).toFixed(1)}`
         + `a${r} ${r} 0 0 1 ${r} ${r}V${dasar.toFixed(1)}Z"/>`);
     }
-  } else {
+  } else if (ada.length) {
+    // Dijaga dengan ada.length: filter yang tidak menyisakan satu posisi pun
+    // membuat seluruh deret null, dan jalur area di bawah membaca ada[0][0].
+    // Yang tergambar lalu cuma sumbu dan gridnya — persis yang benar untuk
+    // "tidak ada apa-apa di sini".
     if (warnaTanda) {
       // Area di atas dan di bawah nol digambar dua kali dari jalur yang sama,
       // masing-masing dipotong ke separuh bidangnya. Dua kutub warna dengan
@@ -689,12 +727,10 @@ function gambar(wadah, opsi) {
     }
     const jalur = ada.map(([i, v], n) => `${n ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join("");
     bagian.push(`<path d="${jalur}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`);
-    if (ada.length) {
-      // Label langsung hanya di ujung kanan — satu angka yang paling sering
-      // dicari, bukan angka di tiap titik.
-      const [i, v] = ada[ada.length - 1];
-      bagian.push(`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="4" fill="var(--accent)" stroke="var(--surface-raised)" stroke-width="2"/>`);
-    }
+    // Penanda hanya di ujung kanan — titik yang paling sering dicari, bukan
+    // satu bulatan di tiap hari.
+    const [iAkhir, vAkhir] = ada[ada.length - 1];
+    bagian.push(`<circle cx="${x(iAkhir).toFixed(1)}" cy="${y(vAkhir).toFixed(1)}" r="4" fill="var(--accent)" stroke="var(--surface-raised)" stroke-width="2"/>`);
   }
 
   wadah.innerHTML = `<svg viewBox="0 0 ${lebar} ${TINGGI}" width="${lebar}" height="${TINGGI}" role="img" tabindex="0"
@@ -759,6 +795,9 @@ function gambarSemua(perHari) {
   // Rentang dipaksa memuat nol dan diberi sedikit napas: kalau seluruh kurva
   // ada di atas nol dan sumbunya dimulai dari nilai terkecil, kenaikan 0,2%
   // tergambar setinggi kartu dan terbaca seperti reli.
+  // Math.max(1, ...) menjaga dua hal sekaligus: deret kosong (spread dari array
+  // kosong menghasilkan Math.max(1) = 1, bukan -Infinity) dan kurva yang seluruhnya
+  // berimpit nol.
   const lebarLaba = Math.max(1, ...laba.map(v => Math.abs(v))) * 1.25;
   gambar(document.getElementById("c-laba"), {
     judul: "Rata-rata laba per hari ke-N", titik: hari,
@@ -773,7 +812,7 @@ function gambarSemua(perHari) {
     judul: "Jumlah posisi yang sudah mencapai hari ke-N", titik: hari,
     nilai: perHari.map(p => p.posisi),
     jenis: "batang", min: 0, maks: Math.max(1, ...perHari.map(p => p.posisi)) * 1.1,
-    format: v => angka(Math.round(v)), satuan: "posisi",
+    bulat: true, format: v => angka(Math.round(v)), satuan: "posisi",
   });
 }
 
@@ -831,7 +870,10 @@ function render() {
 
   if (!rows.length) {
     wadah.innerHTML = '<div class="kosong">Tidak ada posisi yang cocok dengan filternya.</div>';
-    document.getElementById("rowpager").hidden = true;
+    // Disetel ulang, bukan disembunyikan: kalau bilahnya cuma dilewati ia tetap
+    // memajang "1-25 dari 146 posisi" beserta nomor halamannya di bawah tabel
+    // yang jelas-jelas kosong.
+    perbaruiPager(0);
     return;
   }
 
