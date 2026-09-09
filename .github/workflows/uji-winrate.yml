@@ -1,0 +1,79 @@
+name: Uji Winrate Swing
+
+# Hitung ulang uji winrate SAJA, tanpa menjalankan screening 400 emiten yang
+# makan ~20 menit. Gunanya dua:
+#
+#   1. Membongkar riwayat pick dari commit lama (--dari-git). Arsip
+#      hasil/riwayat_swing.csv baru ada sejak fitur ini dibuat, sementara
+#      pick-nya sudah tercatat sejak Agustus 2026 di riwayat commit
+#      hasil/swing.csv. Sekali dibongkar, uji winrate langsung punya data
+#      sebulan penuh alih-alih menunggu sebulan dulu.
+#   2. Mencoba parameter lain — modal, panjang jendela, tarif biaya — tanpa
+#      mengubah run malam.
+#
+# Cara menjalankan: tab Actions -> "Uji Winrate Swing" -> Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      dari_git:
+        description: "Bongkar riwayat commit hasil/swing.csv ke arsip"
+        type: boolean
+        default: false
+      modal:
+        description: "Modal per posisi (rupiah)"
+        default: "10000000"
+      hari:
+        description: "Panjang jendela dalam hari bursa"
+        default: "21"
+
+permissions:
+  contents: write
+
+# Grup yang sama dengan screening-malam.yml: workflow ini juga commit dan push
+# ke repo yang sama, dan menabrakkannya dengan run malam berarti dua push
+# berlomba menulis folder hasil/ yang sama.
+concurrency:
+  group: tulis-repo
+  cancel-in-progress: false
+
+jobs:
+  uji:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # fetch-depth 0 = seluruh riwayat. Wajib untuk --dari-git: checkout
+          # dangkal cuma membawa satu commit, jadi tidak ada versi lama
+          # hasil/swing.csv yang bisa dibongkar. Untuk run biasa ini cuma
+          # memperlambat checkout beberapa detik.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependensi
+        run: pip install -r requirements.txt
+
+      # --tanpa-pick-baru: swing.csv di repo adalah hasil run malam terakhir dan
+      # sudah tercatat di arsip oleh run itu sendiri. Membacanya lagi di sini
+      # akan mencatatnya ulang dengan cap waktu meta.json yang sama — tidak
+      # merusak apa-apa (duplikatnya dibuang), tapi juga tidak ada gunanya.
+      - name: Hitung ulang uji winrate
+        run: >
+          python uji_winrate.py --tanpa-pick-baru
+          ${{ inputs.dari_git && '--dari-git' || '' }}
+          --modal ${{ inputs.modal }} --hari ${{ inputs.hari }}
+
+      - name: Commit hasil
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add hasil/riwayat_swing.csv hasil/winrate.csv hasil/winrate_ringkas.csv hasil/winrate_meta.json
+          if git diff --cached --quiet; then
+            echo "Hasilnya sama persis — tidak ada yang di-commit."
+            exit 0
+          fi
+          git commit -m "Uji winrate $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
+          git push

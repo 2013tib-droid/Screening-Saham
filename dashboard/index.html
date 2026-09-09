@@ -98,6 +98,8 @@
   }
   header h1 .ikon { margin-right: 6px; }
   header p { margin: 0; color: var(--text-secondary); font-size: .875rem; }
+  header .lain { margin-left: auto; font-size: .85rem; color: var(--accent); text-decoration: none; font-weight: 600; }
+  header .lain:hover { text-decoration: underline; }
   .titik {
     display: inline-block;
     width: 7px; height: 7px;
@@ -492,6 +494,7 @@
     #cari { max-width: none; }
     .hitung { margin-left: 0; }
     .tile .value { font-size: 1.6rem; }
+    header .lain { margin-left: 0; }
     details dl { grid-template-columns: 1fr; }
     details dt { margin-top: 8px; }
   }
@@ -502,6 +505,7 @@
   <header>
     <h1><span class="ikon">📈</span>Screening Saham IDX</h1>
     <p><span class="titik"></span><span id="pembaruan">Memuat data …</span></p>
+    <a class="lain" href="winrate.html">Uji winrate daftar swing →</a>
   </header>
 
   <div class="tiles" id="tiles" hidden>

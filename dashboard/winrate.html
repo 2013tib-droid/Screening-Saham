@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uji Winrate Swing · Screening Saham IDX</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+<style>
+  /* Token warna sengaja disalin utuh dari dashboard/index.html, bukan dipisah
+     ke berkas CSS bersama. Dua halaman ini dilayani sebagai berkas statis tanpa
+     build step, dan menambah satu permintaan jaringan hanya untuk berbagi 60
+     baris variabel membuat halaman berkedip tanpa gaya saat dimuat. Kalau
+     paletnya berubah, keduanya harus ikut diubah — itu ongkos yang disadari. */
+  :root {
+    color-scheme: light;
+    --surface: #f6f6f4;
+    --surface-raised: #ffffff;
+    --surface-sunken: #efeeeb;
+    --head-bg: #f8f8f6;
+    --zebra: #fafaf9;
+    --border: #e4e3df;
+    --border-soft: #eceae6;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #8a8984;
+    --accent: #2a78d6;
+    --accent-strong: #1c5fae;
+    --accent-soft: #e8f0fb;
+    --chip-bg: #efeeea;
+    --row-hover: #eef4fc;
+    --pos-bg: #e0f2e6; --pos-fg: #14663a;
+    --neg-bg: #fbe7e5; --neg-fg: #a3261d;
+    --warn-bg: #fbeed6; --warn-fg: #7a5200;
+    --info-bg: #e8f0fb; --info-fg: #1c5fae;
+    --grid: #e4e3df;
+    --shadow-sm: 0 1px 2px rgba(16,15,14,.05);
+    --shadow-md: 0 2px 4px rgba(16,15,14,.06), 0 8px 24px -12px rgba(16,15,14,.14);
+    --sticky-shadow: 10px 0 12px -10px rgba(16,15,14,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --surface: #131312;
+      --surface-raised: #1e1e1d;
+      --surface-sunken: #191918;
+      --head-bg: #262625;
+      --zebra: #212120;
+      --border: #3a3936;
+      --border-soft: #2e2d2b;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #8a8984;
+      --accent: #3987e5;
+      --accent-strong: #83b3f2;
+      --accent-soft: #1e3350;
+      --chip-bg: #32312f;
+      --row-hover: #26313f;
+      --pos-bg: #17361f; --pos-fg: #74d18e;
+      --neg-bg: #3b1e1b; --neg-fg: #f19b93;
+      --warn-bg: #372d15; --warn-fg: #e3bd6b;
+      --info-bg: #1e3350; --info-fg: #83b3f2;
+      --grid: #3a3936;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.35);
+      --shadow-md: 0 2px 4px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.7);
+      --sticky-shadow: 10px 0 12px -10px rgba(0,0,0,.75);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--text-primary);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: none; margin: 0 auto; padding: 22px clamp(10px, 1.4vw, 24px) 56px; }
+
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { font-size: clamp(1.3rem, 1.1rem + .7vw, 1.7rem); letter-spacing: -.02em; margin: 0; }
+  header h1 .ikon { margin-right: 6px; }
+  header p { margin: 0; color: var(--text-secondary); font-size: .875rem; }
+  header .balik { margin-left: auto; font-size: .85rem; color: var(--accent); text-decoration: none; font-weight: 600; }
+  header .balik:hover { text-decoration: underline; }
+  .titik { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--pos-fg); vertical-align: middle; }
+
+  /* ---- Kartu ringkasan ---- */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 20px 0; }
+  .tile {
+    position: relative;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 16px 14px 18px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .tile::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--pita, var(--accent)); }
+  .tile .label { font-size: .72rem; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+  /* Angka besar sengaja TANPA tabular-nums: di ukuran display, digit selebar
+     sama membuat angka seperti "121" terlihat renggang. Kolom tabel di bawah
+     tetap memakainya, karena di sana angkanya memang harus sejajar ke bawah. */
+  .tile .value { font-size: 1.9rem; font-weight: 680; line-height: 1.15; letter-spacing: -.02em; }
+  .tile .value.pos { color: var(--pos-fg); }
+  .tile .value.neg { color: var(--neg-fg); }
+  .tile .sub { font-size: .76rem; color: var(--text-muted); line-height: 1.35; }
+
+  /* ---- Grafik ---- */
+  .grafik { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin: 16px 0; }
+  .kartu-grafik {
+    position: relative;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .kartu-grafik h2 { margin: 0; font-size: .95rem; font-weight: 650; letter-spacing: -.01em; }
+  .kartu-grafik .ket { margin: 2px 0 10px; font-size: .76rem; color: var(--text-muted); line-height: 1.35; }
+  .kartu-grafik svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+  .kartu-grafik svg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  .sumbu { fill: var(--text-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+  .garis-grid { stroke: var(--grid); stroke-width: 1; }
+  .garis-nol { stroke: var(--text-muted); stroke-width: 1; }
+  .tip {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+    padding: 6px 9px;
+    border-radius: 8px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    font-size: .78rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    color: var(--text-secondary);
+  }
+  .tip b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .tip[hidden] { display: none; }
+
+  /* ---- Kendali ---- */
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    margin: 16px 0 12px; padding: 10px 12px;
+    background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: var(--shadow-sm);
+  }
+  select, input[type="search"] {
+    padding: 7px 11px; border: 1px solid var(--border); border-radius: 9px;
+    background: var(--surface-raised); color: var(--text-primary); font: inherit; font-size: .875rem;
+  }
+  select:hover, input[type="search"]:hover { border-color: var(--text-muted); }
+  select:focus-visible, input[type="search"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  #cari { flex: 1; min-width: 170px; max-width: 300px; }
+  .hitung { margin-left: auto; font-size: .8rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  /* ---- Tabel ---- */
+  .panel { border: 1px solid var(--border); border-radius: 12px; background: var(--surface-raised); box-shadow: var(--shadow-sm); overflow: hidden; }
+  .tablewrap { overflow-x: auto; overscroll-behavior-x: contain; }
+  .tablewrap::-webkit-scrollbar { height: 10px; }
+  .tablewrap::-webkit-scrollbar-track { background: var(--surface-sunken); }
+  .tablewrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; border: 2px solid var(--surface-sunken); }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1180px; font-size: .875rem; }
+  thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--head-bg); border-bottom: 1px solid var(--border);
+    padding: 10px; text-align: right; font-weight: 650; font-size: .76rem;
+    letter-spacing: .04em; text-transform: uppercase; color: var(--text-secondary);
+    white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  thead th:hover { color: var(--accent); background: var(--accent-soft); }
+  thead th.terurut { color: var(--accent); }
+  tbody tr { background: var(--surface-raised); }
+  tbody tr:nth-child(even) { background: var(--zebra); }
+  tbody tr:hover { background: var(--row-hover); }
+  tbody td { padding: 9px 10px; border-bottom: 1px solid var(--border-soft); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td { border-bottom: none; }
+  th.kiri, td.kiri { text-align: left; }
+  th.lengket, td.lengket { position: sticky; left: 0; background: inherit; }
+  thead th.lengket { z-index: 3; background: var(--head-bg); }
+  tbody td.lengket { z-index: 1; }
+  .tablewrap.tergulir th.lengket, .tablewrap.tergulir td.lengket { box-shadow: var(--sticky-shadow); }
+  td.ticker { font-weight: 680; }
+  td .nama { color: var(--text-secondary); }
+  .laba { display: inline-block; min-width: 56px; padding: 2px 7px; border-radius: 6px; font-weight: 650; }
+  .laba.naik { background: var(--pos-bg); color: var(--pos-fg); }
+  .laba.turun { background: var(--neg-bg); color: var(--neg-fg); }
+  .laba.rata { color: var(--text-muted); }
+  .skor { display: inline-block; min-width: 36px; text-align: center; padding: 3px 8px; border-radius: 6px; font-weight: 700; background: var(--chip-bg); color: var(--text-secondary); }
+  .skor.sk-kuat { background: var(--pos-bg); color: var(--pos-fg); }
+  .skor.sk-sedang { background: var(--warn-bg); color: var(--warn-fg); }
+  .skor.sk-lemah { background: var(--neg-bg); color: var(--neg-fg); }
+  .status { display: inline-block; min-width: 46px; text-align: center; padding: 3px 9px; border-radius: 6px; font-size: .72rem; font-weight: 700; letter-spacing: .04em; background: var(--chip-bg); color: var(--text-secondary); }
+  .status.s-buy { background: var(--pos-bg); color: var(--pos-fg); }
+  .status.s-bow { background: var(--info-bg); color: var(--info-fg); }
+  .status.s-hold { background: var(--chip-bg); color: var(--text-secondary); }
+  .status.s-wse { background: var(--warn-bg); color: var(--warn-fg); }
+  .jalan { font-size: .7rem; color: var(--text-muted); }
+  .kosong, .gagal { padding: 40px 16px; text-align: center; color: var(--text-secondary); font-size: .92rem; }
+
+  /* ---- Pagination baris ---- */
+  .rowpager { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 9px 12px; border-top: 1px solid var(--border); background: var(--surface-raised); }
+  .rowpager .info { font-size: .8rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .halaman { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+  .halaman button {
+    min-width: 30px; height: 30px; padding: 0 8px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface-raised); color: var(--text-secondary);
+    font: inherit; font-size: .82rem; font-variant-numeric: tabular-nums; cursor: pointer;
+  }
+  .halaman button:hover:not(:disabled):not(.aktif) { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+  .halaman button.aktif { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 650; cursor: default; }
+  .halaman button:disabled { opacity: .35; cursor: default; }
+  .perhal { font-size: .8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+  .perhal select { padding: 4px 8px; font-size: .8rem; }
+
+  details {
+    margin-top: 18px; font-size: .85rem; color: var(--text-secondary);
+    background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 16px;
+  }
+  details[open] { box-shadow: var(--shadow-sm); }
+  details summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  details dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 12px 0 0; }
+  details dt { font-weight: 650; color: var(--text-primary); }
+  details dd { margin: 0; }
+  footer { margin-top: 24px; font-size: .78rem; color: var(--text-muted); }
+  footer a { color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .controls { gap: 8px; padding: 9px; }
+    #cari { max-width: none; }
+    .hitung { margin-left: 0; }
+    .tile .value { font-size: 1.6rem; }
+    header .balik { margin-left: 0; }
+    details dl { grid-template-columns: 1fr; }
+    details dt { margin-top: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="ikon">🎯</span>Uji Winrate Swing</h1>
+    <p><span class="titik"></span><span id="pembaruan">Memuat data …</span></p>
+    <a class="balik" href="index.html">← Kembali ke screening</a>
+  </header>
+
+  <div class="tiles" id="tiles" hidden>
+    <div class="tile" style="--pita:#2a78d6"><div class="label">Winrate seminggu</div><div class="value" id="t-wr5">–</div><div class="sub" id="s-wr5">hari bursa ke-5</div></div>
+    <div class="tile" style="--pita:#0f766e"><div class="label">Winrate sebulan</div><div class="value" id="t-wrn">–</div><div class="sub" id="s-wrn">hari bursa ke-21</div></div>
+    <div class="tile" style="--pita:#c07a11"><div class="label">Laba/rugi sekarang</div><div class="value" id="t-laba">–</div><div class="sub" id="s-laba">seluruh posisi, sesudah biaya</div></div>
+    <div class="tile" style="--pita:#7a6ce0"><div class="label">Rata-rata per posisi</div><div class="value" id="t-rata">–</div><div class="sub" id="s-rata">median –</div></div>
+    <div class="tile" style="--pita:#17915a"><div class="label">Posisi diuji</div><div class="value" id="t-posisi">–</div><div class="sub" id="s-posisi">–</div></div>
+  </div>
+
+  <!-- Satu bilah kendali untuk seluruh halaman: grafik dan tabel membaca irisan
+       data yang sama persis. Filter per grafik akan membuat kartu ringkasan dan
+       kurva bercerita tentang dua kumpulan posisi yang berbeda. -->
+  <div class="controls">
+    <select id="periode" aria-label="Saring berdasarkan tanggal screening">
+      <option value="">Semua tanggal screening</option>
+    </select>
+    <select id="status" aria-label="Saring berdasarkan status screener">
+      <option value="">Semua status</option>
+    </select>
+    <select id="kolom" aria-label="Pilih kelompok kolom">
+      <option value="ringkas">Kolom ringkas</option>
+      <option value="harian">Hari per hari</option>
+      <option value="posisi">Rincian posisi</option>
+    </select>
+    <input id="cari" type="search" placeholder="Cari ticker / nama …" autocomplete="off">
+    <span class="hitung" id="hitung"></span>
+  </div>
+
+  <div class="grafik" id="grafik" hidden>
+    <div class="kartu-grafik">
+      <h2>Winrate per hari ke-N</h2>
+      <p class="ket">Berapa persen posisi yang masih untung kalau dijual di hari itu. Garis 50% = setara lempar koin.</p>
+      <div id="c-winrate"></div>
+    </div>
+    <div class="kartu-grafik">
+      <h2>Rata-rata laba per hari ke-N</h2>
+      <p class="ket">Rata-rata untung/rugi seluruh posisi, sesudah biaya beli dan jual. Ini yang menentukan hasil, bukan winrate.</p>
+      <div id="c-laba"></div>
+    </div>
+    <div class="kartu-grafik">
+      <h2>Posisi yang sudah sampai hari itu</h2>
+      <p class="ket">Sampel menyusut ke kanan — pick minggu lalu belum punya hari ke-21. Winrate dari sampel kecil belum bisa dipercaya.</p>
+      <div id="c-posisi"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="tablewrap" id="tabel"><div class="kosong">Memuat data …</div></div>
+    <div class="rowpager" id="rowpager" hidden>
+      <span class="info" id="rp-info"></span>
+      <label class="perhal">Baris per halaman
+        <select id="perhal" aria-label="Jumlah baris per halaman">
+          <option value="25" selected>25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="0">Semua</option>
+        </select>
+      </label>
+      <div class="halaman" id="halaman"></div>
+    </div>
+  </div>
+
+  <details id="ket-uji">
+    <summary>Bagaimana angkanya dihitung — dan apa yang belum dijawabnya</summary>
+    <p>Halaman ini menjawab satu pertanyaan saja: <strong>kalau seluruh isi daftar swing dibeli
+    apa adanya, hasilnya bagaimana?</strong> Tidak ada stop loss, tidak ada target, tidak ada
+    penilaian ulang di tengah jalan. Justru itu maksudnya — yang diukur adalah nilai daftarnya
+    sendiri. Kalau daftar mentah saja sudah tidak menghasilkan, aturan keluar apa pun cuma
+    menambal.</p>
+    <dl>
+      <dt>Modal</dt><dd id="k-modal">Rp10.000.000 per posisi, tetap. Bukan persentase portofolio:
+      modal yang berubah-ubah membuat hasil satu saham ikut bergantung pada berapa saham lain yang
+      kebetulan lolos malam itu. Dibulatkan <strong>ke bawah</strong> ke kelipatan satu lot (100
+      lembar) — sisanya menganggur, tidak dipaksakan naik.</dd>
+      <dt>Harga beli</dt><dd>Harga <strong>pembukaan sesi berikutnya</strong>, bukan penutupan hari
+      screening. Screening malam jalan jam 18-an WIB, jadi harga penutupan yang dipakainya sudah
+      lewat dan tidak bisa dibeli siapa pun. Membeli di harga itu sama dengan memberi simulasinya
+      kemampuan melihat masa depan sebesar satu hari — dan pada saham yang lolos justru karena
+      volumenya masuk hari itu, satu hari adalah bagian terbesar kenaikannya.</dd>
+      <dt>Biaya</dt><dd id="k-fee">0,15% saat beli dan 0,25% saat jual (selisihnya pajak penjualan
+      0,1%) — tarif broker daring yang lazim. Kecil, tapi di jendela sependek ini pengaruhnya paling
+      terasa: posisi yang bergerak +0,3% dalam seminggu terbaca untung kalau biayanya diabaikan,
+      padahal aslinya rugi.</dd>
+      <dt>Hari ke-0</dt><dd>Penutupan hari beli itu sendiri. Karena kedua biaya sudah dipotong,
+      angkanya hampir selalu negatif tipis — itu ongkos masuknya, bukan kerugian pasar.</dd>
+      <dt>Hari ke-N</dt><dd>Hari <strong>bursa</strong>, bukan hari kalender: akhir pekan dan libur
+      bursa tidak dihitung. Hari ke-21 kira-kira satu bulan kalender.</dd>
+      <dt>Sampel menyusut</dt><dd>Tiap hari ke-N hanya menghitung posisi yang benar-benar sudah
+      sampai ke situ. Pick minggu lalu belum punya hari ke-21, dan mengisinya dengan nilai terakhir
+      akan membuatnya ikut terhitung seolah sudah selesai. Karena itu kolom Posisi di grafik ketiga
+      mengecil ke kanan — bacalah winrate di ujung kanan dengan jumlah sampelnya, jangan sendirian.</dd>
+      <dt>Duplikat</dt><dd>Satu saham yang muncul di beberapa malam dihitung sebagai beberapa posisi
+      terpisah, masing-masing dengan modalnya sendiri. Itu memang yang terjadi kalau daftarnya
+      diikuti apa adanya, tapi artinya total rupiah di kartu bukan hasil satu portofolio Rp10 juta —
+      melainkan jumlah seluruh posisi yang pernah dibuka.</dd>
+      <dt>Yang belum dijawab</dt><dd>Tidak ada pembanding: winrate 55% tidak berarti apa-apa sampai
+      dibandingkan dengan membeli saham acak, atau dengan IHSG di periode yang sama. Slippage,
+      antrean order, dan auto reject juga diabaikan — semuanya diasumsikan terisi persis di harga
+      pembukaan.</dd>
+    </dl>
+  </details>
+
+  <footer>Bukan rekomendasi investasi — hasil masa lalu tidak menjanjikan apa pun.
+  Dibuat dengan <a href="https://github.com/2013tib-droid/Screening-Saham">Screening-Saham</a>.</footer>
+</div>
+
+<script>
+"use strict";
+
+// Kolom yang isinya angka. Dipakai parseCSV untuk memutuskan apa yang perlu
+// di-Number()-kan; kolom Hari0%..HariN% ditambahkan saat CSV-nya dibaca karena
+// jumlahnya baru ketahuan dari headernya.
+const ANGKA = new Set([
+  "Skor", "HargaBeli", "Lot", "Lembar", "Modal", "HargaAkhir", "HariKe",
+  "Nilai", "LabaRp", "Laba%", "Puncak%", "Jatuh%",
+]);
+
+const KOLOM = {
+  ringkas: [
+    { k: "Tanggal", label: "Screening", kiri: true },
+    { k: "Ticker", label: "Ticker", kiri: true, lengket: true },
+    { k: "Nama", label: "Nama", kiri: true },
+    { k: "Skor", label: "Skor" },
+    { k: "TanggalBeli", label: "Beli", kiri: true },
+    { k: "HargaBeli", label: "Harga beli", desimal: 2 },
+    { k: "Lot", label: "Lot" },
+    { k: "Modal", label: "Modal" },
+    { k: "Hari1%", label: "H+1", laba: true },
+    { k: "Hari5%", label: "H+5", laba: true },
+    { k: "Hari10%", label: "H+10", laba: true },
+    { k: "Hari21%", label: "H+21", laba: true },
+    { k: "Laba%", label: "Terakhir", laba: true },
+    { k: "LabaRp", label: "Laba/rugi Rp", rupiah: true },
+  ],
+  posisi: [
+    { k: "Tanggal", label: "Screening", kiri: true },
+    { k: "Ticker", label: "Ticker", kiri: true, lengket: true },
+    { k: "Nama", label: "Nama", kiri: true },
+    { k: "Status", label: "Status", kiri: true },
+    { k: "Skor", label: "Skor" },
+    { k: "TanggalBeli", label: "Beli", kiri: true },
+    { k: "HargaBeli", label: "Harga beli", desimal: 2 },
+    { k: "Lot", label: "Lot" },
+    { k: "Lembar", label: "Lembar" },
+    { k: "Modal", label: "Modal" },
+    { k: "TanggalAkhir", label: "Nilai per", kiri: true },
+    { k: "HargaAkhir", label: "Harga akhir", desimal: 2 },
+    { k: "HariKe", label: "Hari ke" },
+    { k: "Nilai", label: "Nilai sekarang" },
+    { k: "LabaRp", label: "Laba/rugi Rp", rupiah: true },
+    { k: "Laba%", label: "Laba/rugi %", laba: true },
+    { k: "Puncak%", label: "Puncak", laba: true },
+    { k: "Jatuh%", label: "Jatuh terdalam", laba: true },
+  ],
+};
+
+const fmt = new Map();
+function angka(n, desimal = 0) {
+  if (n === null || n === undefined || n === "" || Number.isNaN(n)) return "–";
+  if (!fmt.has(desimal)) fmt.set(desimal, new Intl.NumberFormat("id-ID",
+    { minimumFractionDigits: desimal, maximumFractionDigits: desimal }));
+  return fmt.get(desimal).format(n);
+}
+function persen(n, desimal = 2) {
+  if (n === null || n === undefined || n === "" || Number.isNaN(n)) return "–";
+  return (n > 0 ? "+" : "") + angka(n, desimal) + "%";
+}
+// Rupiah diringkas ke juta di atas 1 juta: kartu ringkasan bisa memuat angka
+// sembilan digit, dan "Rp62.123.928" memaksa kartunya melebar sampai memecah
+// tata letak di layar sempit.
+function rupiah(n) {
+  if (n === null || n === undefined || n === "" || Number.isNaN(n)) return "–";
+  const tanda = n < 0 ? "−" : "";
+  const abs = Math.abs(n);
+  if (abs >= 1e9) return `${tanda}Rp${angka(abs / 1e9, 2)} M`;
+  if (abs >= 1e6) return `${tanda}Rp${angka(abs / 1e6, 1)} jt`;
+  return `${tanda}Rp${angka(abs)}`;
+}
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+// Parser CSV kecil dengan dukungan tanda kutip (nama emiten bisa memuat koma).
+// Salinan dari dashboard/index.html — lihat catatan di blok <style> soal kenapa
+// dua halaman ini sengaja tidak berbagi berkas.
+function parseCSV(teks, angkaSet) {
+  const baris = [];
+  let sel = "", row = [], dalamKutip = false;
+  for (let i = 0; i < teks.length; i++) {
+    const c = teks[i];
+    if (dalamKutip) {
+      if (c === '"' && teks[i + 1] === '"') { sel += '"'; i++; }
+      else if (c === '"') dalamKutip = false;
+      else sel += c;
+    } else if (c === '"') dalamKutip = true;
+    else if (c === ",") { row.push(sel); sel = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && teks[i + 1] === "\n") i++;
+      row.push(sel); sel = "";
+      if (row.length > 1 || row[0] !== "") baris.push(row);
+      row = [];
+    } else sel += c;
+  }
+  if (sel !== "" || row.length) { row.push(sel); baris.push(row); }
+  if (!baris.length) return { baris: [], header: [] };
+  const header = baris[0];
+  const isi = baris.slice(1).map(r => {
+    const obj = {};
+    header.forEach((h, i) => {
+      const mentah = r[i] ?? "";
+      obj[h] = angkaSet(h) ? (mentah === "" ? null : Number(mentah)) : mentah;
+    });
+    return obj;
+  });
+  return { baris: isi, header };
+}
+
+const state = {
+  posisi: [],
+  hariMaks: 21,
+  meta: null,
+  periode: "",
+  status: "",
+  kolom: "ringkas",
+  cari: "",
+  perHal: 25,
+  hal: 1,
+  urut: { kolom: null, naik: true },
+  gagal: false,
+};
+
+function kolomHari() {
+  return Array.from({ length: state.hariMaks + 1 }, (_, n) => ({
+    k: `Hari${n}%`, label: n === 0 ? "H+0" : `H+${n}`, laba: true,
+  }));
+}
+function kolomTampil() {
+  if (state.kolom !== "harian") return KOLOM[state.kolom];
+  return [
+    { k: "Tanggal", label: "Screening", kiri: true },
+    { k: "Ticker", label: "Ticker", kiri: true, lengket: true },
+    ...kolomHari(),
+  ];
+}
+
+function barisTerlihat() {
+  let hasil = state.posisi;
+  if (state.periode) hasil = hasil.filter(r => r.Tanggal === state.periode);
+  if (state.status) hasil = hasil.filter(r => r.Status === state.status);
+  if (state.cari) {
+    const q = state.cari.toLowerCase();
+    hasil = hasil.filter(r => (r.Ticker + " " + r.Nama).toLowerCase().includes(q));
+  }
+  const { kolom, naik } = state.urut;
+  if (kolom) {
+    const numerik = kolomTampil().find(k => k.k === kolom) || {};
+    const angkaKol = !numerik.kiri;
+    hasil = hasil.slice().sort((a, b) => {
+      const x = a[kolom], y = b[kolom];
+      // Sel kosong selalu ke bawah, di arah urut mana pun: kolom H+21 penuh
+      // sel kosong untuk posisi yang belum sampai situ, dan menaruhnya di atas
+      // membuat pengurutan tampak rusak.
+      if (x === null || x === "" || x === undefined) return 1;
+      if (y === null || y === "" || y === undefined) return -1;
+      const d = angkaKol ? x - y : String(x).localeCompare(String(y), "id");
+      return naik ? d : -d;
+    });
+  }
+  return hasil;
+}
+
+// ------------------------------------------------------------------ ringkasan
+// Ringkasan dihitung ulang dari baris yang sedang terlihat, bukan dibaca dari
+// hasil/winrate_ringkas.csv. Berkas itu selalu meringkas SELURUH posisi, jadi
+// memakainya di sini membuat kartu dan grafik tidak ikut berubah saat difilter
+// — dan pembacanya tidak punya cara tahu bahwa angkanya bukan milik irisan
+// yang sedang dilihat.
+function ringkasPerHari(rows) {
+  const keluar = [];
+  for (let n = 0; n <= state.hariMaks; n++) {
+    const nilai = rows.map(r => r[`Hari${n}%`]).filter(v => v !== null && v !== undefined && v !== "");
+    if (!nilai.length) { keluar.push({ hari: n, posisi: 0, winrate: null, rata: null, median: null }); continue; }
+    const urut = nilai.slice().sort((a, b) => a - b);
+    const tengah = urut.length % 2 ? urut[(urut.length - 1) / 2]
+                                  : (urut[urut.length / 2 - 1] + urut[urut.length / 2]) / 2;
+    keluar.push({
+      hari: n,
+      posisi: nilai.length,
+      winrate: nilai.filter(v => v > 0).length / nilai.length * 100,
+      rata: nilai.reduce((a, b) => a + b, 0) / nilai.length,
+      median: tengah,
+    });
+  }
+  return keluar;
+}
+
+function isiKartu(rows, perHari) {
+  const set = (id, teks, kelas) => {
+    const el = document.getElementById(id);
+    el.textContent = teks;
+    el.className = "value" + (kelas ? " " + kelas : "");
+  };
+  const arah = v => v === null ? "" : v > 0 ? "pos" : v < 0 ? "neg" : "";
+
+  const h5 = perHari[Math.min(5, state.hariMaks)];
+  const hn = perHari[state.hariMaks];
+  set("t-wr5", h5.winrate === null ? "–" : angka(h5.winrate, 1) + "%");
+  document.getElementById("s-wr5").textContent =
+    `hari bursa ke-5 · ${h5.posisi} posisi sampai situ`;
+  set("t-wrn", hn.winrate === null ? "–" : angka(hn.winrate, 1) + "%");
+  document.getElementById("s-wrn").textContent = hn.posisi
+    ? `hari bursa ke-${state.hariMaks} · ${hn.posisi} posisi sampai situ`
+    : `hari bursa ke-${state.hariMaks} · belum ada posisi yang setua itu`;
+
+  const labaRp = rows.reduce((a, r) => a + (r.LabaRp || 0), 0);
+  const modal = rows.reduce((a, r) => a + (r.Modal || 0), 0);
+  set("t-laba", rupiah(labaRp), arah(labaRp));
+  document.getElementById("s-laba").textContent =
+    `dari modal ${rupiah(modal)} · sesudah biaya`;
+
+  const labaPst = rows.map(r => r["Laba%"]).filter(v => v !== null && v !== undefined);
+  const rata = labaPst.length ? labaPst.reduce((a, b) => a + b, 0) / labaPst.length : null;
+  const urut = labaPst.slice().sort((a, b) => a - b);
+  const med = urut.length ? (urut.length % 2 ? urut[(urut.length - 1) / 2]
+                            : (urut[urut.length / 2 - 1] + urut[urut.length / 2]) / 2) : null;
+  set("t-rata", persen(rata), arah(rata));
+  document.getElementById("s-rata").textContent =
+    `median ${persen(med)} · nilai terakhir tiap posisi`;
+
+  set("t-posisi", angka(rows.length));
+  const tanggal = new Set(rows.map(r => r.Tanggal));
+  const selesai = rows.filter(r => r.Selesai === "Ya").length;
+  document.getElementById("s-posisi").textContent =
+    `${tanggal.size} hari screening · ${selesai} sudah genap ${state.hariMaks} hari`;
+}
+
+// ------------------------------------------------------------------ grafik
+const TEPI = { atas: 10, kanan: 12, bawah: 22, kiri: 38 };
+const TINGGI = 170;
+
+function sumbuX(n, lebar) {
+  const w = lebar - TEPI.kiri - TEPI.kanan;
+  return i => TEPI.kiri + (n <= 1 ? w / 2 : i / (n - 1) * w);
+}
+function sumbuY(min, maks) {
+  const h = TINGGI - TEPI.atas - TEPI.bawah;
+  const rentang = (maks - min) || 1;
+  return v => TEPI.atas + h - (v - min) / rentang * h;
+}
+
+/** Tick sumbu Y yang jatuh di angka bulat, bukan hasil bagi rentang mentah. */
+function tickY(min, maks, cacah = 4) {
+  const kasar = (maks - min) / cacah || 1;
+  const pangkat = Math.pow(10, Math.floor(Math.log10(Math.abs(kasar))));
+  const langkah = [1, 2, 2.5, 5, 10].map(m => m * pangkat).find(m => m >= kasar) || pangkat * 10;
+  const mulai = Math.ceil(min / langkah) * langkah;
+  const out = [];
+  for (let v = mulai; v <= maks + 1e-9; v += langkah) out.push(Math.round(v / langkah) * langkah);
+  return out;
+}
+
+/**
+ * Satu grafik garis atau batang, digambar sebagai SVG inline.
+ *
+ * Lebar diukur dari wadahnya lalu digambar 1:1, bukan lewat viewBox yang
+ * diregangkan: viewBox membuat tebal garis dan ukuran huruf ikut terskala,
+ * sehingga tiga kartu bersebelahan yang lebarnya berbeda menghasilkan tiga
+ * tebal garis yang berbeda pula.
+ */
+function gambar(wadah, opsi) {
+  const lebar = Math.max(260, wadah.clientWidth || 320);
+  // id di dalam SVG harus unik satu dokumen, sementara fungsi ini menggambar
+  // tiga kartu sekaligus. Tanpa awalan per kartu, clipPath kartu ketiga
+  // memakai bidang potong milik kartu pertama.
+  const id = wadah.id || "grafik";
+  const { titik, nilai, jenis, min, maks, warnaTanda, format, satuan, acuan } = opsi;
+  const x = sumbuX(titik.length, lebar);
+  const y = sumbuY(min, maks);
+  const bagian = [];
+
+  for (const t of tickY(min, maks)) {
+    bagian.push(`<line class="garis-grid" x1="${TEPI.kiri}" y1="${y(t).toFixed(1)}" x2="${lebar - TEPI.kanan}" y2="${y(t).toFixed(1)}"/>`);
+    bagian.push(`<text class="sumbu" x="${TEPI.kiri - 6}" y="${(y(t) + 3).toFixed(1)}" text-anchor="end">${esc(format(t))}</text>`);
+  }
+  if (acuan !== undefined && acuan > min && acuan < maks) {
+    bagian.push(`<line class="garis-nol" x1="${TEPI.kiri}" y1="${y(acuan).toFixed(1)}" x2="${lebar - TEPI.kanan}" y2="${y(acuan).toFixed(1)}"/>`);
+  }
+
+  // Label sumbu X selektif: 22 angka berjejalan jadi bubur, dan yang benar-benar
+  // dicari pembaca cuma titik awal, akhir, dan beberapa penanda di antaranya.
+  // Titik terakhir selalu dilabeli; label berjarak dipangkas kalau terlalu
+  // dekat dengannya, karena "20" dan "21" bersebelahan tercetak jadi "2021".
+  const langkahX = titik.length > 12 ? 5 : titik.length > 6 ? 2 : 1;
+  const akhir = titik.length - 1;
+  titik.forEach((t, i) => {
+    if (i !== akhir && (i % langkahX || x(akhir) - x(i) < 18)) return;
+    bagian.push(`<text class="sumbu" x="${x(i).toFixed(1)}" y="${TINGGI - 6}" text-anchor="middle">${t}</text>`);
+  });
+
+  const ada = nilai.map((v, i) => [i, v]).filter(([, v]) => v !== null);
+  if (jenis === "batang") {
+    const w = Math.max(3, ((lebar - TEPI.kiri - TEPI.kanan) / Math.max(titik.length, 1)) - 3);
+    const dasar = y(Math.max(min, 0));
+    for (const [i, v] of ada) {
+      const atas = y(v);
+      const tinggi = Math.max(0.5, dasar - atas);
+      // Ujung data dibulatkan 4px, pangkalnya tetap siku menempel garis dasar.
+      const r = Math.min(4, w / 2, tinggi);
+      bagian.push(`<path fill="var(--accent)" fill-opacity=".55" d="M${(x(i) - w / 2).toFixed(1)} ${dasar.toFixed(1)}`
+        + `V${(atas + r).toFixed(1)}a${r} ${r} 0 0 1 ${r} ${-r}h${(w - 2 * r).toFixed(1)}`
+        + `a${r} ${r} 0 0 1 ${r} ${r}V${dasar.toFixed(1)}Z"/>`);
+    }
+  } else {
+    if (warnaTanda) {
+      // Area di atas dan di bawah nol digambar dua kali dari jalur yang sama,
+      // masing-masing dipotong ke separuh bidangnya. Dua kutub warna dengan
+      // titik netral di nol — bukan satu warna yang artinya bergantung posisi.
+      const dasar = y(0);
+      const area = `M${x(ada[0][0]).toFixed(1)} ${dasar.toFixed(1)}`
+        + ada.map(([i, v]) => `L${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join("")
+        + `L${x(ada[ada.length - 1][0]).toFixed(1)} ${dasar.toFixed(1)}Z`;
+      bagian.push(`<clipPath id="${id}-atas"><rect x="0" y="0" width="${lebar}" height="${dasar.toFixed(1)}"/></clipPath>`);
+      bagian.push(`<clipPath id="${id}-bawah"><rect x="0" y="${dasar.toFixed(1)}" width="${lebar}" height="${TINGGI}"/></clipPath>`);
+      bagian.push(`<path d="${area}" fill="var(--pos-fg)" fill-opacity=".16" clip-path="url(#${id}-atas)"/>`);
+      bagian.push(`<path d="${area}" fill="var(--neg-fg)" fill-opacity=".16" clip-path="url(#${id}-bawah)"/>`);
+    }
+    const jalur = ada.map(([i, v], n) => `${n ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join("");
+    bagian.push(`<path d="${jalur}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`);
+    if (ada.length) {
+      // Label langsung hanya di ujung kanan — satu angka yang paling sering
+      // dicari, bukan angka di tiap titik.
+      const [i, v] = ada[ada.length - 1];
+      bagian.push(`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="4" fill="var(--accent)" stroke="var(--surface-raised)" stroke-width="2"/>`);
+    }
+  }
+
+  wadah.innerHTML = `<svg viewBox="0 0 ${lebar} ${TINGGI}" width="${lebar}" height="${TINGGI}" role="img" tabindex="0"
+    aria-label="${esc(opsi.judul)}. Nilainya juga tersedia di tabel di bawah.">${bagian.join("")}
+    <line class="garis-nol lacak" x1="0" y1="${TEPI.atas}" x2="0" y2="${TINGGI - TEPI.bawah}" stroke-opacity="0" stroke-dasharray="0"/>
+    <rect x="${TEPI.kiri}" y="0" width="${lebar - TEPI.kiri - TEPI.kanan}" height="${TINGGI}" fill="transparent"/></svg>
+    <div class="tip" hidden></div>`;
+
+  // ---- Lapisan hover: crosshair + tooltip, plus jalur keyboard yang sama.
+  const svg = wadah.querySelector("svg");
+  const lacak = wadah.querySelector(".lacak");
+  const tip = wadah.querySelector(".tip");
+  let fokus = -1;
+
+  const tampilkan = i => {
+    fokus = i;
+    if (i < 0 || nilai[i] === null) { tip.hidden = true; lacak.setAttribute("stroke-opacity", "0"); return; }
+    lacak.setAttribute("x1", x(i)); lacak.setAttribute("x2", x(i));
+    lacak.setAttribute("stroke-opacity", ".45");
+    tip.hidden = false;
+    tip.innerHTML = `Hari ke-${titik[i]}<br><b>${esc(format(nilai[i]))}</b> ${esc(satuan)}`;
+    // Tooltip dijaga di dalam kartunya: di titik paling kanan, menempatkannya
+    // ke kanan kursor akan membuatnya terpotong tepi kartu.
+    const skala = svg.getBoundingClientRect().width / lebar;
+    const kiri = x(i) * skala;
+    tip.style.left = `${Math.max(4, Math.min(kiri + 10, svg.getBoundingClientRect().width - tip.offsetWidth - 4))}px`;
+    tip.style.top = `${y(nilai[i]) * skala - 6}px`;
+  };
+  const dekat = ev => {
+    const kotak = svg.getBoundingClientRect();
+    const px = (ev.clientX - kotak.left) / (kotak.width / lebar);
+    let terdekat = 0;
+    for (let i = 1; i < titik.length; i++) {
+      if (Math.abs(x(i) - px) < Math.abs(x(terdekat) - px)) terdekat = i;
+    }
+    tampilkan(terdekat);
+  };
+  svg.addEventListener("mousemove", dekat);
+  svg.addEventListener("mouseleave", () => tampilkan(-1));
+  svg.addEventListener("focus", () => tampilkan(fokus < 0 ? titik.length - 1 : fokus));
+  svg.addEventListener("blur", () => tampilkan(-1));
+  svg.addEventListener("keydown", ev => {
+    if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+    ev.preventDefault();
+    const langkah = ev.key === "ArrowRight" ? 1 : -1;
+    tampilkan(Math.max(0, Math.min(titik.length - 1, (fokus < 0 ? 0 : fokus) + langkah)));
+  });
+}
+
+function gambarSemua(perHari) {
+  const hari = perHari.map(p => p.hari);
+  document.getElementById("grafik").hidden = false;
+
+  gambar(document.getElementById("c-winrate"), {
+    judul: "Winrate per hari ke-N", titik: hari,
+    nilai: perHari.map(p => p.winrate),
+    jenis: "garis", min: 0, maks: 100, acuan: 50,
+    format: v => angka(v, v % 1 ? 1 : 0) + "%", satuan: "posisi masih untung",
+  });
+
+  const laba = perHari.map(p => p.rata).filter(v => v !== null);
+  // Rentang dipaksa memuat nol dan diberi sedikit napas: kalau seluruh kurva
+  // ada di atas nol dan sumbunya dimulai dari nilai terkecil, kenaikan 0,2%
+  // tergambar setinggi kartu dan terbaca seperti reli.
+  const lebarLaba = Math.max(1, ...laba.map(v => Math.abs(v))) * 1.25;
+  gambar(document.getElementById("c-laba"), {
+    judul: "Rata-rata laba per hari ke-N", titik: hari,
+    nilai: perHari.map(p => p.rata),
+    jenis: "garis", min: -lebarLaba, maks: lebarLaba, acuan: 0, warnaTanda: true,
+    format: v => persen(v, Math.abs(v) < 1 ? 2 : 1), satuan: "rata-rata sesudah biaya",
+  });
+
+  gambar(document.getElementById("c-posisi"), {
+    judul: "Jumlah posisi yang sudah mencapai hari ke-N", titik: hari,
+    nilai: perHari.map(p => p.posisi),
+    jenis: "batang", min: 0, maks: Math.max(1, ...perHari.map(p => p.posisi)) * 1.1,
+    format: v => angka(Math.round(v)), satuan: "posisi",
+  });
+}
+
+// ------------------------------------------------------------------ tabel
+function kelasLaba(v) {
+  if (v === null || v === undefined || v === "") return "";
+  return v > 0 ? "naik" : v < 0 ? "turun" : "rata";
+}
+function sel(r, kol) {
+  const v = r[kol.k];
+  if (kol.k === "Ticker") {
+    return `<td class="kiri ticker${kol.lengket ? " lengket" : ""}">${esc(v)}</td>`;
+  }
+  if (kol.k === "Nama") return `<td class="kiri"><span class="nama">${esc(v)}</span></td>`;
+  if (kol.k === "Status") {
+    return `<td class="kiri"><span class="status s-${esc(String(v).toLowerCase())}">${esc(v)}</span></td>`;
+  }
+  if (kol.k === "Skor") {
+    const kelas = v >= 70 ? "sk-kuat" : v >= 50 ? "sk-sedang" : "sk-lemah";
+    return `<td><span class="skor ${v === null ? "" : kelas}">${angka(v)}</span></td>`;
+  }
+  if (kol.k === "HariKe") {
+    // Posisi yang jendelanya belum genap ditandai di sini, bukan lewat kolom
+    // sendiri: yang perlu diketahui pembaca cuma "angka ini belum final".
+    return `<td>${angka(v)}${r.Selesai === "Ya" ? "" : ' <span class="jalan">jalan</span>'}</td>`;
+  }
+  if (kol.laba) {
+    return `<td><span class="laba ${kelasLaba(v)}">${persen(v)}</span></td>`;
+  }
+  if (kol.rupiah) {
+    return `<td><span class="laba ${kelasLaba(v)}">${v === null ? "–" : (v > 0 ? "+" : "") + angka(v)}</span></td>`;
+  }
+  if (kol.kiri) return `<td class="kiri">${esc(v === null ? "–" : v)}</td>`;
+  return `<td>${angka(v, kol.desimal || 0)}</td>`;
+}
+
+function render() {
+  const wadah = document.getElementById("tabel");
+  if (state.gagal) {
+    wadah.innerHTML = '<div class="gagal">Data uji winrate belum tersedia.<br>'
+      + 'Berkas <code>hasil/winrate.csv</code> dibuat oleh run malam — '
+      + 'kalau ini run pertama sesudah fitur ini ditambahkan, tunggu satu run.</div>';
+    document.getElementById("rowpager").hidden = true;
+    return;
+  }
+  if (!state.posisi.length) { wadah.innerHTML = '<div class="kosong">Memuat data …</div>'; return; }
+
+  const rows = barisTerlihat();
+  const perHari = ringkasPerHari(rows);
+  isiKartu(rows, perHari);
+  gambarSemua(perHari);
+  document.getElementById("tiles").hidden = false;
+  document.getElementById("hitung").textContent =
+    `${rows.length} dari ${state.posisi.length} posisi`;
+
+  if (!rows.length) {
+    wadah.innerHTML = '<div class="kosong">Tidak ada posisi yang cocok dengan filternya.</div>';
+    document.getElementById("rowpager").hidden = true;
+    return;
+  }
+
+  const kolom = kolomTampil();
+  const halaman = state.perHal ? rows.slice((state.hal - 1) * state.perHal, state.hal * state.perHal) : rows;
+  const kepala = kolom.map(k => {
+    const aktif = state.urut.kolom === k.k;
+    return `<th class="${k.kiri ? "kiri" : ""}${k.lengket ? " lengket" : ""}${aktif ? " terurut" : ""}"`
+      + ` data-kolom="${k.k}" title="Klik untuk mengurutkan">${esc(k.label)}`
+      + (aktif ? `<span class="arah"> ${state.urut.naik ? "▲" : "▼"}</span>` : "") + "</th>";
+  }).join("");
+  const isi = halaman.map(r => `<tr>${kolom.map(k => sel(r, k)).join("")}</tr>`).join("");
+  wadah.innerHTML = `<table><thead><tr>${kepala}</tr></thead><tbody>${isi}</tbody></table>`;
+  wadah.querySelectorAll("th[data-kolom]").forEach(th => {
+    th.addEventListener("click", () => {
+      const k = th.dataset.kolom;
+      state.urut = state.urut.kolom === k ? { kolom: k, naik: !state.urut.naik } : { kolom: k, naik: false };
+      state.hal = 1;
+      render();
+    });
+  });
+  perbaruiPager(rows.length);
+}
+
+function perbaruiPager(total) {
+  const bar = document.getElementById("rowpager");
+  if (!state.perHal || total <= state.perHal) {
+    bar.hidden = !state.perHal ? false : true;
+    if (!state.perHal) {
+      document.getElementById("rp-info").textContent = `${total} posisi`;
+      document.getElementById("halaman").innerHTML = "";
+    }
+    return;
+  }
+  bar.hidden = false;
+  const jumlah = Math.ceil(total / state.perHal);
+  state.hal = Math.min(state.hal, jumlah);
+  const dari = (state.hal - 1) * state.perHal + 1;
+  document.getElementById("rp-info").textContent =
+    `${dari}–${Math.min(state.hal * state.perHal, total)} dari ${total} posisi`;
+  const tombol = [];
+  const tambah = (n, teks = n) => tombol.push(
+    `<button ${n === state.hal ? 'class="aktif" disabled' : `data-hal="${n}"`}>${teks}</button>`);
+  tombol.push(`<button ${state.hal === 1 ? "disabled" : 'data-hal="' + (state.hal - 1) + '"'}>‹</button>`);
+  for (let n = 1; n <= jumlah; n++) {
+    if (n === 1 || n === jumlah || Math.abs(n - state.hal) <= 1) tambah(n);
+    else if (Math.abs(n - state.hal) === 2) tombol.push('<button class="jeda" disabled>…</button>');
+  }
+  tombol.push(`<button ${state.hal === jumlah ? "disabled" : 'data-hal="' + (state.hal + 1) + '"'}>›</button>`);
+  const wadah = document.getElementById("halaman");
+  wadah.innerHTML = tombol.join("");
+  wadah.querySelectorAll("button[data-hal]").forEach(b =>
+    b.addEventListener("click", () => { state.hal = Number(b.dataset.hal); render(); window.scrollTo({ top: document.querySelector(".panel").offsetTop - 20, behavior: "smooth" }); }));
+}
+
+// ------------------------------------------------------------------ kendali
+function isiPilihan(id, nilai, label) {
+  const el = document.getElementById(id);
+  for (const v of nilai) {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = label ? label(v) : v;
+    el.appendChild(o);
+  }
+}
+function pasangKendali() {
+  const ubah = (id, kunci, angkaSaja) => document.getElementById(id).addEventListener("change", e => {
+    state[kunci] = angkaSaja ? Number(e.target.value) : e.target.value;
+    state.hal = 1;
+    render();
+  });
+  ubah("periode", "periode");
+  ubah("status", "status");
+  ubah("kolom", "kolom");
+  ubah("perhal", "perHal", true);
+  document.getElementById("cari").addEventListener("input", e => {
+    state.cari = e.target.value.trim();
+    state.hal = 1;
+    render();
+  });
+  // Grafiknya digambar 1:1 terhadap lebar wadahnya, jadi harus digambar ulang
+  // ketika lebarnya berubah — kalau tidak, SVG-nya tetap selebar layar lama.
+  let tunda;
+  new ResizeObserver(() => {
+    clearTimeout(tunda);
+    tunda = setTimeout(() => { if (state.posisi.length) gambarSemua(ringkasPerHari(barisTerlihat())); }, 120);
+  }).observe(document.getElementById("grafik"));
+}
+
+async function muat() {
+  const t = Date.now();
+  try {
+    const [csv, meta] = await Promise.all([
+      fetch(`hasil/winrate.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
+      fetch(`hasil/winrate_meta.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    const hari = /^Hari\d+%$/;
+    const { baris, header } = parseCSV(csv, h => ANGKA.has(h) || hari.test(h));
+    if (!baris.length) throw 0;
+    state.posisi = baris;
+    // Panjang jendela dibaca dari headernya, bukan dari meta: kalau uji_winrate
+    // pernah dijalankan dengan --hari lain, kolomnya yang benar, bukan angka
+    // yang kebetulan tercatat di JSON.
+    state.hariMaks = Math.max(...header.filter(h => hari.test(h)).map(h => Number(h.match(/\d+/)[0])), 0);
+    state.meta = meta;
+
+    isiPilihan("periode", [...new Set(baris.map(r => r.Tanggal))].sort().reverse());
+    isiPilihan("status", [...new Set(baris.map(r => r.Status).filter(Boolean))].sort());
+
+    const p = document.getElementById("pembaruan");
+    if (meta && meta.diperbarui) {
+      const kapan = new Intl.DateTimeFormat("id-ID", {
+        day: "numeric", month: "long", year: "numeric",
+        hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta",
+      }).format(new Date(meta.diperbarui));
+      p.textContent = `${meta.posisi} posisi sejak ${meta.pickPertama} · dihitung ulang ${kapan} WIB`;
+    } else {
+      p.textContent = `${baris.length} posisi diuji`;
+    }
+    if (meta) {
+      document.getElementById("k-modal").textContent =
+        `${rupiah(meta.modal)} per posisi, tetap — dibulatkan ke bawah ke kelipatan satu lot `
+        + `(${meta.lembarPerLot} lembar). Sisanya menganggur, tidak dipaksakan naik.`;
+      document.getElementById("k-fee").textContent =
+        `${angka(meta.feeBeli, 2)}% saat beli dan ${angka(meta.feeJual, 2)}% saat jual — tarif `
+        + `broker daring yang lazim. Kecil, tapi di jendela sependek ini pengaruhnya paling terasa: `
+        + `posisi yang bergerak +0,3% dalam seminggu terbaca untung kalau biayanya diabaikan, `
+        + `padahal aslinya rugi.`;
+    }
+  } catch {
+    state.gagal = true;
+    document.getElementById("pembaruan").textContent = "Data belum tersedia";
+  }
+  pasangKendali();
+  render();
+  const tw = document.getElementById("tabel");
+  tw.addEventListener("scroll", () => tw.classList.toggle("tergulir", tw.scrollLeft > 0));
+}
+muat();
+</script>
+</body>
+</html>

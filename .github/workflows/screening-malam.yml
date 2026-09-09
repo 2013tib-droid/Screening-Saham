@@ -118,6 +118,29 @@ jobs:
         run: |
           printf '{"diperbarui": "%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > hasil/meta.json
 
+      # Sengaja SESUDAH meta.json ditulis: uji winrate memakai cap waktu di situ
+      # untuk menentukan sesi bursa mana yang paling cepat bisa dipakai membeli
+      # pick malam ini. Kalau dijalankan sebelumnya, ia membaca cap run kemarin
+      # dan mencatat pembelian sehari terlalu awal.
+      #
+      # Langkah ini menambahkan pick malam ini ke hasil/riwayat_swing.csv lalu
+      # menghitung ulang SELURUH arsip — bukan cuma yang baru. Posisi yang
+      # dibuka tiga minggu lalu baru hari ini punya hari ke-21, jadi tabelnya
+      # memang harus disusun ulang tiap malam.
+      #
+      # continue-on-error: sama alasannya dengan langkah SMC. Ini menarik harga
+      # historis dari Yahoo untuk puluhan emiten; kalau jalur itu rewel, seluruh
+      # hasil screening yang sudah jadi tidak boleh ikut hangus. Dashboard
+      # menangani hasil/winrate.csv yang hilang dengan halaman kosong beserta
+      # keterangannya, bukan dengan gagal memuat.
+      #
+      # Tanpa --dari-git: checkout di sini dangkal (fetch-depth 1), jadi riwayat
+      # commit swing.csv memang tidak ada untuk dibongkar. Arsipnya sudah
+      # di-commit ke repo dan cukup ditambahi.
+      - name: Uji winrate daftar swing
+        continue-on-error: true
+        run: python uji_winrate.py
+
       - name: Commit hasil
         run: |
           git config user.name "github-actions[bot]"
@@ -187,7 +210,7 @@ jobs:
       - name: Susun situs dashboard
         run: |
           mkdir -p _site
-          cp dashboard/index.html _site/
+          cp dashboard/index.html dashboard/winrate.html _site/
           cp -r hasil _site/
 
       - name: Aktifkan & konfigurasi GitHub Pages

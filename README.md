@@ -68,6 +68,9 @@ python analisa.py BBCA
 
 # Mode demo offline (data contoh, BUKAN data pasar riil)
 python screener.py --demo --max-per 15 --min-roe 15
+
+# Uji winrate: kalau daftar swing dibeli apa adanya, hasilnya bagaimana?
+python uji_winrate.py
 ```
 
 Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
@@ -165,6 +168,53 @@ Baris yang ditolak **tetap muncul** di tabel lengkap dengan alasannya di kolom `
 ### Level dibulatkan ke fraksi harga IDX
 
 Angka mentah keluar seperti 7.183,4 dan tidak bisa dipasang jadi order. Semua level dibulatkan ke fraksi yang sah (Rp 1 di bawah 200, Rp 2 sampai 500, Rp 5 sampai 2.000, Rp 10 sampai 5.000, Rp 25 di atasnya). Arah pembulatannya selalu yang membuat risk/reward **lebih konservatif**, tidak pernah lebih optimis.
+
+## Uji Winrate Daftar Swing (`uji_winrate.py`)
+
+Screening menjawab "saham apa yang lolos filter". Berkas ini menjawab pertanyaan yang tidak pernah dijawab siapa pun sesudahnya: **kalau daftar itu benar-benar dibeli, hasilnya bagaimana sebulan kemudian?**
+
+```bash
+python uji_winrate.py                          # perbarui arsip + hitung ulang
+python uji_winrate.py --dari-git               # ikut bongkar riwayat commit swing.csv
+python uji_winrate.py --modal 5000000 --hari 40
+python uji_winrate.py --harga-csv contoh.csv   # dari berkas harga, tanpa Yahoo
+```
+
+Keluarannya empat berkas di `hasil/`: `riwayat_swing.csv` (arsip pick harian), `winrate.csv` (satu baris per posisi plus kolom `Hari0%`–`Hari21%`), `winrate_ringkas.csv` (winrate dan rata-rata laba per hari ke-N), dan `winrate_meta.json` (parameter simulasinya). Tampilannya ada di halaman **[Uji Winrate](dashboard/winrate.html)** di dashboard.
+
+### Aturan simulasinya
+
+Sepolos mungkin, dan itu disengaja — tidak ada stop loss, tidak ada target, tidak ada penilaian ulang di tengah jalan. Yang mau diukur adalah nilai **daftarnya sendiri**, bukan nilai manajemen posisi sesudahnya. Kalau daftar mentah saja sudah tidak menghasilkan, aturan keluar apa pun cuma menambal.
+
+| Hal | Aturan | Kenapa begitu |
+|---|---|---|
+| Modal | Rp 10.000.000 per posisi, tetap | Modal yang berubah-ubah membuat hasil satu saham ikut bergantung pada berapa saham lain yang kebetulan lolos malam itu |
+| Jumlah lot | `floor(modal / (harga × 100))` | Satu lot = 100 lembar; di bawah itu cuma bisa lewat pasar negosiasi. Sisa modal menganggur, tidak dipaksakan naik |
+| Harga beli | **Pembukaan sesi berikutnya** | Screening malam jalan jam 18-an WIB — penutupan yang dipakainya sudah lewat dan tidak bisa dibeli siapa pun |
+| Biaya | 0,15% beli, 0,25% jual | Tarif broker daring yang lazim (selisihnya pajak penjualan 0,1%). Diperhitungkan di tiap hari ke-N, bukan cuma di akhir |
+| Jendela | 21 hari **bursa** (≈ 1 bulan kalender) | Akhir pekan dan libur bursa tidak dihitung |
+| Hari ke-0 | Penutupan hari beli itu sendiri | Hampir selalu negatif tipis: itu ongkos masuknya, bukan kerugian pasar |
+
+Bagian yang paling gampang salah adalah harga beli. Memakai penutupan hari screening berarti memberi simulasinya kemampuan melihat masa depan sebesar satu hari — dan pada saham yang lolos justru karena volumenya masuk hari itu, satu hari adalah bagian terbesar kenaikannya. Winrate-nya akan terlihat jauh lebih bagus daripada yang bisa dicapai siapa pun.
+
+### Arsip pick, dan dari mana datanya
+
+Uji ini butuh catatan pick harian, sementara `hasil/swing.csv` ditimpa tiap malam. Karena itu ada `hasil/riwayat_swing.csv` yang hanya **bertambah**: sekali sebuah pick tercatat, ia tidak pernah dihapus meski daftar hari ini sudah tidak memuatnya. Justru itu intinya — yang diuji adalah keputusan yang diambil malam itu, bukan daftar yang berlaku sekarang.
+
+Isi awalnya tidak menunggu sebulan: tiap run malam sejak Agustus 2026 sudah meng-commit `hasil/swing.csv`, jadi riwayat commit-nya adalah catatan pick yang lengkap. `--dari-git` membongkarnya sekali ke arsip. Di GitHub Actions checkout-nya dangkal (`fetch-depth: 1`) sehingga flag itu tidak menemukan apa-apa di sana — makanya arsipnya di-commit ke repo, dan run malam cukup menambahinya.
+
+### Yang belum dijawabnya
+
+- **Tidak ada pembanding.** Winrate 55% tidak berarti apa-apa sampai dibandingkan dengan membeli saham acak, atau dengan IHSG di periode yang sama.
+- **Sampelnya menyusut ke kanan.** Tiap hari ke-N hanya menghitung posisi yang benar-benar sudah sampai ke situ, jadi winrate hari ke-21 selalu punya sampel jauh lebih sedikit daripada hari ke-1. Bacalah bersama kolom `Posisi`, jangan sendirian.
+- **Satu saham bisa jadi beberapa posisi.** Yang muncul di beberapa malam dihitung terpisah, masing-masing dengan modalnya sendiri. Itu memang yang terjadi kalau daftarnya diikuti apa adanya, tapi artinya total rupiahnya bukan hasil satu portofolio Rp 10 juta.
+- **Slippage, antrean order, dan auto reject diabaikan.** Semua order diasumsikan terisi persis di harga pembukaan.
+
+Matematikanya diuji terhadap harga buatan yang jawabannya sudah diketahui: `python scripts/uji_winrate.py`. Uji itu sengaja tidak menyentuh jaringan — uji yang hasilnya berubah tiap hari tidak bisa memvonis apa-apa.
+
+### Hitung ulang tanpa run malam
+
+Workflow **Uji Winrate Swing** (`.github/workflows/uji-winrate.yml`) menghitung ulang uji ini saja, tanpa screening 400 emiten yang makan ~20 menit: tab **Actions → Uji Winrate Swing → Run workflow**. Ada tiga input — bongkar riwayat git, modal per posisi, dan panjang jendela — jadi parameter lain bisa dicoba tanpa mengubah run malam.
 
 ## Kolom Status
 
@@ -433,9 +483,10 @@ Fitur dashboard:
 - Kolom **Status** berwarna (BUY / BOW / HOLD / WSE / JUAL / TIPIS) plus dropdown filter status; klik judul kolomnya untuk mengurutkan dari paling positif ke paling negatif.
 - Kolom **Skor** berwarna (hijau ≥ 70, kuning 40–69, merah < 40) — kesimpulan fundamental 1–100; klik judulnya untuk mengurutkan dari fundamental terkuat.
 - Klik judul kolom untuk mengurutkan (misalnya urutkan per RSI atau dividen), kotak pencarian untuk mencari ticker/nama.
+- Halaman **Uji Winrate** (tautan di kanan atas): hasil daftar swing kalau benar-benar dibeli — winrate dan rata-rata laba per hari ke-N sesudah masuk, ditambah tabel tiap posisi dengan modal, lot, dan laba/rugi rupiahnya. Aturan simulasinya di bagian [Uji Winrate Daftar Swing](#uji-winrate-daftar-swing-uji_winratepy).
 - Nyaman dibuka di HP, mendukung mode gelap, dan menampilkan waktu pembaruan terakhir (WIB).
 
-Dashboard di-deploy otomatis di akhir setiap run workflow — sumbernya file statis [`dashboard/index.html`](dashboard/index.html), datanya dibaca langsung dari folder `hasil/`. GitHub Pages diaktifkan otomatis pada run pertama; kalau gagal di langkah "Aktifkan & konfigurasi GitHub Pages", aktifkan manual sekali lewat **Settings → Pages → Source: GitHub Actions**, lalu jalankan ulang workflow-nya.
+Dashboard di-deploy otomatis di akhir setiap run workflow — sumbernya dua file statis, [`dashboard/index.html`](dashboard/index.html) dan [`dashboard/winrate.html`](dashboard/winrate.html), datanya dibaca langsung dari folder `hasil/`. GitHub Pages diaktifkan otomatis pada run pertama; kalau gagal di langkah "Aktifkan & konfigurasi GitHub Pages", aktifkan manual sekali lewat **Settings → Pages → Source: GitHub Actions**, lalu jalankan ulang workflow-nya.
 
 Catatan penting:
 

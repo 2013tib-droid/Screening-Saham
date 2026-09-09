@@ -40,10 +40,13 @@ CSV yang sekarang terbawa tapi tidak ditampilkan.
 | Berkas | Isi |
 |---|---|
 | `dashboard/index.html` | **Seluruh dashboard** — HTML, CSS, dan JS dalam satu berkas. Tidak ada build step, tidak ada dependensi eksternal. |
+| `dashboard/winrate.html` | Halaman uji winrate, berdiri sendiri dengan pola yang sama. Token warnanya **disalin utuh** dari `index.html`, tidak dipisah ke CSS bersama — dua berkas statis tanpa build step, dan satu permintaan jaringan tambahan cuma untuk 60 baris variabel membuat halaman berkedip tanpa gaya saat dimuat. Konsekuensinya: kalau paletnya berubah, keduanya harus ikut diubah. |
 | `hasil/semua.csv` | 402 emiten, 65 kolom. Sumber data utama. |
 | `hasil/swing.csv`, `value.csv`, `tumbuh.csv` | Hasil tersaring, kolomnya sama. |
+| `hasil/winrate.csv` | Satu baris per posisi uji winrate, plus kolom `Hari0%`–`Hari21%`. |
+| `hasil/winrate_meta.json` | Parameter simulasi winrate (modal, biaya, panjang jendela). |
 | `hasil/meta.json` | Stempel waktu pembaruan. |
-| `scripts/uji_dashboard.js` | Uji dashboard tanpa browser (lihat di bawah). |
+| `scripts/uji_dashboard.js` | Uji dashboard tanpa browser (lihat di bawah). Hanya `index.html`. |
 | `_site/` | Folder staging pratinjau lokal. **Masuk `.gitignore`** — jangan di-commit; workflow menyusunnya sendiri di runner. |
 
 Dashboard mengambil data lewat `fetch` dengan path relatif (`hasil/semua.csv`),
@@ -55,13 +58,19 @@ jadi **tidak bisa dibuka dengan `file://`** — harus lewat server.
 
 ```bash
 # 1. Sajikan secara lokal (dashboard butuh HTTP, bukan file://)
-mkdir -p _site && cp dashboard/index.html _site/ && cp -r hasil _site/
+mkdir -p _site && cp dashboard/index.html dashboard/winrate.html _site/ && cp -r hasil _site/
 cd _site && python -m http.server 8899
-# lalu buka http://localhost:8899/
+# lalu buka http://localhost:8899/ dan http://localhost:8899/winrate.html
 
 # 2. Uji tanpa browser — menjalankan JS dashboard yang sebenarnya di Node
 node scripts/uji_dashboard.js
 ```
+
+`uji_dashboard.js` **belum** menjangkau `winrate.html`: harnessnya dibangun di
+sekitar variabel global `index.html` (KOLOM, state, render) dan halaman winrate
+punya kumpulan sendiri. Yang sudah diuji dari halaman itu cuma sisi datanya,
+lewat `python scripts/uji_winrate.py`. Grafik dan tata letaknya sampai sekarang
+diperiksa dengan mata, di browser.
 
 **Periksa dulu port 8899 tidak dipegang server sisa sesi sebelumnya.** Ini sudah
 memakan waktu sekali: `python -m http.server` yang masih hidup dari sesi lama
