@@ -1,12 +1,14 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-BBNI,Bank Negara Indonesia  (Pers,67,BUY,3820,up,EQUILIBRIUM,61,BOS bull,up,up,FVG D1,3760,3720,3620,4080,2.83,1.6,2.2,SSL raid @ 3910,SIAP,"zona FVG D1 aktif, RR 2.83"
-BDMN,Bank Danamon Indonesia Tbk.,67,BUY,4540,up,PREMIUM,83,BOS bull,up,up,FVG SESI,4380,4340,4250,5000,5.82,3.5,2.4,BSL raid @ 4680,TUNGGU,harga di premium — tunggu pullback ke zona
-ADRO,Alamtri Resources Indonesia ,73,BUY,2690,up,PREMIUM,87,BOS bull,up,down,OB D1,2530,2460,2390,2860,3.48,5.9,3.3,BSL raid @ 2560,TUNGGU,harga di premium — tunggu pullback ke zona
-ISAT,Indosat Tbk,74,BUY,2400,up,PREMIUM,62,BOS bull,down,up,OB D1,2250,2100,1865,2850,2.18,6.2,4.8,BSL raid @ 2380,TUNGGU,harga di premium — tunggu pullback ke zona
-OASA,Maharaksa Biru Energi Tbk.,26,BUY,324,up,DISCOUNT,30,CHoCH bull,up,up,,,,,,,,5.0,BSL raid @ 372,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-GGRM,Gudang Garam Tbk,73,BOW,19750,up,PREMIUM,77,BOS bull,down,down,,,,,,,,2.7,BSL raid @ 20700,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-MARK,Mark Dynamics Indonesia Tbk.,80,BUY,1075,up,PREMIUM,90,CHoCH bull,up,up,,,,,,,,2.2,BSL raid @ 1085,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-MBSS,Mitrabahtera Segara Sejati T,60,BUY,2880,up,EQUILIBRIUM,58,BOS bull,up,up,FVG D1,2870,2860,2780,,,0.3,1.1,BSL raid @ 2870,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
-MAPI,Mitra Adiperkasa Tbk,72,BOW,1360,down,EQUILIBRIUM,39,BOS bear,down,down,FVG SESI,1305,1280,1240,1495,3.86,4.0,3.3,BSL raid @ 1365,HINDARI,struktur D1 masih bearish
-INDF,Indofood Sukses Makmur Tbk,74,BUY,7500,down,PREMIUM,115,CHoCH bear,up,up,FVG D1,7450,7375,7075,7850,1.3,0.7,1.8,BSL raid @ 7575,HINDARI,struktur D1 masih bearish
-MDIA,Intermedia Capital Tbk.,35,BOW,220,down,PREMIUM,70,CHoCH bear,down,up,,,,,,,,11.3,SSL raid @ 228,HINDARI,struktur D1 masih bearish
+BDMN,Bank Danamon Indonesia Tbk.,67,BUY,4430,up,PREMIUM,79,BOS bull,up,up,FVG SESI,4380,4340,4240,5000,5.33,1.1,2.6,BSL raid @ 4680,TUNGGU,harga di premium — tunggu pullback ke zona
+ISAT,Indosat Tbk,74,BUY,2400,up,PREMIUM,62,BOS bull,down,up,OB D1,2250,2100,1865,2850,2.18,6.2,4.7,BSL raid @ 2380,TUNGGU,harga di premium — tunggu pullback ke zona
+FAST,Fast Food Indonesia Tbk,19,BUY,446,up,EQUILIBRIUM,48,BOS bull,up,up,,,,,,,,5.9,SSL raid @ 444,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+JPFA,Japfa Comfeed Indonesia Tbk.,84,BUY,2320,up,EQUILIBRIUM,54,BOS bull,down,down,,,,,,,,3.6,SSL raid @ 2330,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+ELSA,Elnusa Tbk,84,BUY,730,up,EQUILIBRIUM,53,BOS bull,up,up,,,,,,,,3.8,BSL raid @ 740,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+ANTM,ANTAM (Persero) Tbk.,74,BUY,3270,up,EQUILIBRIUM,42,BOS bull,up,up,FVG SESI,3230,3160,3020,,,1.2,2.5,BSL raid @ 3290,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+AKRA,AKR Corporindo Tbk,77,BUY,1520,up,PREMIUM,105,CHoCH bull,up,up,FVG SESI,1510,1455,1350,,,0.7,3.3,SSL raid @ 1385,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+MARK,Mark Dynamics Indonesia Tbk.,79,BUY,1105,up,PREMIUM,97,CHoCH bull,up,up,OB SESI,1085,1070,1050,,,1.8,2.2,BSL raid @ 1085,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+MBSS,Mitrabahtera Segara Sejati T,59,BUY,2880,up,EQUILIBRIUM,58,BOS bull,up,up,FVG D1,2870,2860,2780,,,0.3,1.1,BSL raid @ 2870,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+ENRG,Energi Mega Persada Tbk,58,BUY,1460,up,EQUILIBRIUM,39,CHoCH bull,up,up,FVG D1,1450,1390,1165,,,0.7,4.2,BSL raid @ 1355,TUNGGU,stop struktural terlalu lebar (17% dari harga)
+INDY,Indika Energy Tbk,42,BUY,2880,up,EQUILIBRIUM,43,BOS bull,up,up,OB SESI,2820,2750,2630,,,2.1,5.3,SSL raid @ 2940,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+VKTR,VKTR Teknologi Mobilitas Tbk,30,BOW,805,down,EQUILIBRIUM,40,CHoCH bear,down,down,FVG SESI,765,740,695,935,3.17,5.0,6.9,BSL raid @ 960,HINDARI,struktur D1 masih bearish
+MDIA,Intermedia Capital Tbk.,35,BOW,206,down,PREMIUM,64,BOS bear,down,up,,,,,,,,13.0,SSL raid @ 228,HINDARI,struktur D1 masih bearish
