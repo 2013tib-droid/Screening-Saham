@@ -488,6 +488,30 @@
   footer { margin-top: 24px; font-size: .78rem; color: var(--text-muted); }
   footer a { color: var(--accent); }
 
+  /* ---- Kondisi pasar ----
+     Satu bilah, bukan kartu keenam: kartu di bawahnya adalah tombol tab, dan
+     yang ini bukan sesuatu yang bisa diklik. Warna status selalu ditemani
+     ikon (▲/▼/?) dan kalimat, jadi artinya tidak bergantung pada warna. */
+  .pasar {
+    display: flex; gap: 12px; align-items: flex-start;
+    margin: 16px 0 0; padding: 11px 16px;
+    background: var(--surface-raised); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: var(--shadow-sm);
+  }
+  .pasar .lampu {
+    flex: none; width: 24px; height: 24px; margin-top: 1px;
+    display: grid; place-items: center; border-radius: 50%;
+    font-size: .72rem; font-weight: 800;
+    background: var(--chip-bg); color: var(--text-muted);
+  }
+  .pasar[data-keadaan="naik"] { border-color: var(--pos-fg); }
+  .pasar[data-keadaan="naik"] .lampu { background: var(--pos-bg); color: var(--pos-fg); }
+  .pasar[data-keadaan="turun"] { border-color: var(--warn-fg); }
+  .pasar[data-keadaan="turun"] .lampu { background: var(--warn-bg); color: var(--warn-fg); }
+  .pasar > div { min-width: 0; }
+  .pasar .judul { font-weight: 650; font-size: .92rem; line-height: 1.35; }
+  .pasar .ket { font-size: .8rem; color: var(--text-secondary); line-height: 1.45; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
   @media (max-width: 640px) {
     .controls { gap: 8px; padding: 9px; }
     .pisah { display: none; }
@@ -507,6 +531,14 @@
     <p><span class="titik"></span><span id="pembaruan">Memuat data …</span></p>
     <a class="lain" href="winrate.html">Uji winrate daftar swing →</a>
   </header>
+
+  <div class="pasar" id="pasar" role="status" hidden>
+    <span class="lampu" id="pasar-lampu" aria-hidden="true">?</span>
+    <div>
+      <div class="judul" id="pasar-judul"></div>
+      <div class="ket" id="pasar-ket"></div>
+    </div>
+  </div>
 
   <div class="tiles" id="tiles" hidden>
     <button type="button" class="tile aktif" data-tab="swing"><div class="label">Lolos filter swing</div><div class="value" id="t-swing">–</div><div class="sub">RSI ≤ 65, di atas MA200, vol spike ≥ 1,2×</div></button>
@@ -572,6 +604,16 @@
   <details>
     <summary>Arti kolom &amp; cara pakai</summary>
     <dl>
+      <dt>Kondisi pasar</dt><dd>Bilah di bawah judul: IHSG di atas atau di bawah rata-rata
+      50 harinya (MA50), per penutupan terakhir. Aturannya mekanis: <strong>posisi swing baru
+      hanya dibuka saat IHSG di atas MA50</strong>; posisi yang sudah dipegang tidak ikut
+      disuruh keluar. Aturan ini dipilih dari uji ulang April 2024 – September 2026: pemilihan
+      saham daftar swing sendiri tidak lebih baik daripada saham likuid acak, tapi menahan
+      pembelian selama IHSG di bawah MA50 memangkas kerugian terdalam simulasi portofolio
+      10 posisi dari sekitar −58% menjadi −18% — terutama dengan melewatkan kejatuhan
+      Januari–Juni 2026 (IHSG 9.135 → 5.342). MA200 ditampilkan sebagai konteks saja:
+      di atas MA50 tapi di bawah MA200 berarti pemulihan, belum tren naik jangka panjang.
+      Hasil masa lalu, <strong>bukan rekomendasi</strong>.</dd>
       <dt>Grup</dt><dd>Daftar asal saham: LQ45, grup konglomerasi (Prajogo/Barito, Bakrie,
       Salim, Hapsoro), atau tema (Logam). Satu saham bisa masuk dua daftar, mis. "LQ45/Salim".
       <strong>Kosong</strong> berarti saham itu masuk dari universe pasar — seluruh emiten IDX
@@ -1344,10 +1386,54 @@ function isiPilihanGrup() {
   setTampil(sel, set.size >= 2);
 }
 
+// Bilah kondisi pasar dari hasil/pasar.json (ditulis screener.py
+// --output-pasar). Berkasnya boleh tidak ada — bilahnya lalu tetap
+// tersembunyi, tanpa mengganggu tabel.
+function tampilkanPasar(pasar, meta) {
+  const wadah = document.getElementById("pasar");
+  if (!pasar || typeof pasar.diAtasMA50 !== "boolean") { wadah.hidden = true; return; }
+  const bilangan = v => new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(v);
+  // Tanggal di JSON berupa tanggal polos. Dibaca sebagai tengah malam UTC dan
+  // diformat di UTC juga, supaya zona waktu peramban tidak menggesernya sehari.
+  const tgl = s => new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", timeZone: "UTC" })
+    .format(new Date(`${s}T00:00:00Z`));
+  const ma = pasar.maPasar || 50;
+
+  // Basi = run malam ini jalan, tapi IHSG-nya tidak ikut diperbarui (request
+  // IHSG gagal dan berkas lama dibiarkan). Lebih dari 4 hari kalender berarti
+  // setidaknya satu hari bursa terlewat, bahkan dengan akhir pekan panjang.
+  let basi = false;
+  if (meta && meta.diperbarui) {
+    const run = new Date(meta.diperbarui);
+    const selisih = (run - new Date(`${pasar.tanggal}T00:00:00Z`)) / 864e5;
+    basi = selisih > 4;
+  }
+
+  wadah.dataset.keadaan = basi ? "basi" : pasar.diAtasMA50 ? "naik" : "turun";
+  document.getElementById("pasar-lampu").textContent = basi ? "?" : pasar.diAtasMA50 ? "▲" : "▼";
+  document.getElementById("pasar-judul").textContent = basi
+    ? `Kondisi pasar belum diperbarui — angka terakhir per ${tgl(pasar.tanggal)}`
+    : pasar.diAtasMA50
+      ? `IHSG di atas MA${ma} — aturan mengizinkan posisi swing baru`
+      : `IHSG di bawah MA${ma} — aturan menahan posisi swing baru`;
+
+  const bagian = [`IHSG ${bilangan(pasar.ihsg)}`, `MA${ma} ${bilangan(pasar.ma50)}`];
+  if (pasar.ma200 !== null && pasar.ma200 !== undefined) {
+    bagian.push(`MA200 ${bilangan(pasar.ma200)}`
+      + (pasar.diAtasMA200 ? "" : pasar.diAtasMA50 ? " (masih di bawah: pemulihan, belum tren naik)" : ""));
+  }
+  bagian.push(`${pasar.diAtasMA50 ? "di atas" : "di bawah"} MA${ma} ${pasar.sejakPasti ? "sejak" : "setidaknya sejak"} `
+    + `${tgl(pasar.sejak)} (${pasar.hariBursa} hari bursa)`);
+  if (!basi) bagian.push(`per penutupan ${tgl(pasar.tanggal)}`);
+  document.getElementById("pasar-ket").textContent =
+    bagian.join(" · ") + ". Aturan mekanis dari uji ulang 2024–2026, bukan rekomendasi — lihat \"Arti kolom\".";
+  wadah.hidden = false;
+}
+
 async function muat() {
   const t = Date.now();
   try {
-    const [semua, swing, value, tumbuh, smc, meta] = await Promise.all([
+    const [semua, swing, value, tumbuh, smc, meta, pasar] = await Promise.all([
       fetch(`hasil/semua.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       fetch(`hasil/swing.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       fetch(`hasil/value.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
@@ -1356,7 +1442,9 @@ async function muat() {
       fetch(`hasil/tumbuh.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
       fetch(`hasil/swing_smc.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
       fetch(`hasil/meta.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`hasil/pasar.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
+    tampilkanPasar(pasar, meta);
     state.data.semua = parseCSV(semua);
     state.data.swing = parseCSV(swing);
     state.data.value = parseCSV(value);

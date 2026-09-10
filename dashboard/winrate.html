@@ -33,6 +33,14 @@
     --warn-bg: #fbeed6; --warn-fg: #7a5200;
     --info-bg: #e8f0fb; --info-fg: #1c5fae;
     --grid: #e4e3df;
+    /* Seri grafik, urutan kategorikal tetap: 1 = daftar swing (sama dengan
+       --accent), 2 = IHSG, 3 = saham acak. Divalidasi untuk buta warna
+       (ΔE CVD ≥ 9 antar-pasangan di kedua mode). Aqua di mode terang di
+       bawah 3:1 terhadap latar, jadi ketiganya juga dibedakan pola garis,
+       legenda, dan tabel — tidak cuma warna. */
+    --seri-daftar: #2a78d6;
+    --seri-ihsg: #eb6834;
+    --seri-acak: #1baf7a;
     --shadow-sm: 0 1px 2px rgba(16,15,14,.05);
     --shadow-md: 0 2px 4px rgba(16,15,14,.06), 0 8px 24px -12px rgba(16,15,14,.14);
     --sticky-shadow: 10px 0 12px -10px rgba(16,15,14,.35);
@@ -60,6 +68,9 @@
       --warn-bg: #372d15; --warn-fg: #e3bd6b;
       --info-bg: #1e3350; --info-fg: #83b3f2;
       --grid: #3a3936;
+      --seri-daftar: #3987e5;
+      --seri-ihsg: #d95926;
+      --seri-acak: #199e70;
       --shadow-sm: 0 1px 2px rgba(0,0,0,.35);
       --shadow-md: 0 2px 4px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.7);
       --sticky-shadow: 10px 0 12px -10px rgba(0,0,0,.75);
@@ -148,6 +159,13 @@
   }
   .tip b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
   .tip[hidden] { display: none; }
+  .tip .baris-tip { display: flex; align-items: center; gap: 6px; }
+  /* Legenda: tanda berupa potongan garis dengan pola yang sama seperti di
+     grafik (utuh / putus-putus / titik-titik), jadi seri tetap terbedakan
+     tanpa warna. Teksnya memakai warna teks, bukan warna seri. */
+  .legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 2px; font-size: .74rem; color: var(--text-secondary); }
+  .legenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .legenda svg, .tip svg { width: 18px; height: 6px; flex: none; }
 
   /* ---- Kendali ---- */
   .controls {
@@ -212,6 +230,7 @@
   .status.s-jual { background: var(--neg-bg); color: var(--neg-fg); }
   .status.s-tipis { background: var(--chip-bg); color: var(--text-muted); }
   .jalan { font-size: .7rem; color: var(--text-muted); }
+  .ulang { margin-left: 6px; padding: 1px 6px; border-radius: 5px; font-size: .66rem; font-weight: 650; letter-spacing: .03em; background: var(--chip-bg); color: var(--text-muted); }
   .kosong, .gagal { padding: 40px 16px; text-align: center; color: var(--text-secondary); font-size: .92rem; }
 
   /* ---- Pagination baris ---- */
@@ -264,6 +283,10 @@
 
   <div class="tiles" id="tiles" hidden>
     <div class="tile" style="--pita:#2a78d6"><div class="label">Winrate seminggu</div><div class="value" id="t-wr5">–</div><div class="sub" id="s-wr5">hari bursa ke-5</div></div>
+    <!-- Kartu yang paling menentukan, sengaja di sebelah winrate: winrate 68%
+         saat IHSG sedang naik 6% tidak berarti daftarnya pintar. Yang
+         menjawab itu cuma selisih terhadap saham yang dibeli asal-asalan. -->
+    <div class="tile" style="--pita:#c2410c"><div class="label">Selisih vs saham acak</div><div class="value" id="t-alpha">–</div><div class="sub" id="s-alpha">hari bursa ke-5</div></div>
     <div class="tile" style="--pita:#0f766e"><div class="label">Winrate terjauh</div><div class="value" id="t-wrn">–</div><div class="sub" id="s-wrn">hari bursa terjauh yang datanya sudah ada</div></div>
     <div class="tile" style="--pita:#c07a11"><div class="label">Laba/rugi sekarang</div><div class="value" id="t-laba">–</div><div class="sub" id="s-laba">seluruh posisi, sesudah biaya</div></div>
     <div class="tile" style="--pita:#7a6ce0"><div class="label">Rata-rata per posisi</div><div class="value" id="t-rata">–</div><div class="sub" id="s-rata">median –</div></div>
@@ -280,6 +303,15 @@
     <select id="status" aria-label="Saring berdasarkan status screener">
       <option value="">Semua status</option>
     </select>
+    <select id="pasar" aria-label="Saring berdasarkan kondisi IHSG saat pick lahir">
+      <option value="">Semua kondisi pasar</option>
+      <option value="Ya">Dipilih saat IHSG &gt; MA50</option>
+      <option value="Tidak">Dipilih saat IHSG &lt; MA50</option>
+    </select>
+    <select id="ulang" aria-label="Pick ulang atas saham yang masih dipegang">
+      <option value="">Tanpa pick ulang</option>
+      <option value="1">Termasuk pick ulang</option>
+    </select>
     <select id="kolom" aria-label="Pilih kelompok kolom">
       <option value="ringkas">Kolom ringkas</option>
       <option value="harian">Hari per hari</option>
@@ -292,12 +324,14 @@
   <div class="grafik" id="grafik" hidden>
     <div class="kartu-grafik">
       <h2>Winrate per hari ke-N</h2>
-      <p class="ket">Berapa persen posisi yang masih untung kalau dijual di hari itu. Garis 50% = setara lempar koin.</p>
+      <p class="ket">Berapa persen posisi yang masih untung kalau dijual di hari itu, dan berapa persen yang
+      mengalahkan saham acak yang dibeli di sesi yang sama. Garis 50% = setara lempar koin.</p>
       <div id="c-winrate"></div>
     </div>
     <div class="kartu-grafik">
       <h2>Rata-rata laba per hari ke-N</h2>
-      <p class="ket">Rata-rata untung/rugi seluruh posisi, sesudah biaya beli dan jual. Ini yang menentukan hasil, bukan winrate.</p>
+      <p class="ket">Rata-rata untung/rugi seluruh posisi, sesudah biaya — dibandingkan IHSG dan saham acak yang
+      dibeli di sesi yang sama dengan biaya yang sama. Kalau garis daftar tidak di atas saham acak, labanya cuma ikut pasar.</p>
       <div id="c-laba"></div>
     </div>
     <div class="kartu-grafik">
@@ -325,8 +359,8 @@
 
   <details id="ket-uji">
     <summary>Bagaimana angkanya dihitung — dan apa yang belum dijawabnya</summary>
-    <p>Halaman ini menjawab satu pertanyaan saja: <strong>kalau seluruh isi daftar swing dibeli
-    apa adanya, hasilnya bagaimana?</strong> Tidak ada stop loss, tidak ada target, tidak ada
+    <p>Halaman ini menjawab dua pertanyaan: <strong>kalau seluruh isi daftar swing dibeli
+    apa adanya, hasilnya bagaimana — dan apakah itu lebih baik daripada membeli saham acak?</strong> Tidak ada stop loss, tidak ada target, tidak ada
     penilaian ulang di tengah jalan. Justru itu maksudnya — yang diukur adalah nilai daftarnya
     sendiri. Kalau daftar mentah saja sudah tidak menghasilkan, aturan keluar apa pun cuma
     menambal.</p>
@@ -347,7 +381,10 @@
       <dt>Hari ke-0</dt><dd>Penutupan hari beli itu sendiri. Karena kedua biaya sudah dipotong,
       angkanya hampir selalu negatif tipis — itu ongkos masuknya, bukan kerugian pasar.</dd>
       <dt>Hari ke-N</dt><dd>Hari <strong>bursa</strong>, bukan hari kalender: akhir pekan dan libur
-      bursa tidak dihitung. Hari ke-21 kira-kira satu bulan kalender.</dd>
+      bursa tidak dihitung. Hari ke-21 kira-kira satu bulan kalender. Kalendernya mengikuti IHSG —
+      Yahoo sesekali mengirim bar "hari libur" (volume nol, harga datar) untuk sebagian emiten, dan
+      bar seperti itu dibuang supaya hari ke-N semua posisi yang dibeli di sesi yang sama tetap
+      jatuh di tanggal yang sama.</dd>
       <dt>Sampel menyusut</dt><dd>Tiap hari ke-N hanya menghitung posisi yang benar-benar sudah
       sampai ke situ. Pick minggu lalu belum punya hari ke-21, dan mengisinya dengan nilai terakhir
       akan membuatnya ikut terhitung seolah sudah selesai. Karena itu kolom Posisi di grafik ketiga
@@ -358,14 +395,30 @@
       yang sampelnya paling kecil, dan jumlah posisinya karena itu ikut ditulis; di bawah 10 posisi
       keterangannya berubah kuning. Angka yang paling bisa dipegang justru <strong>Winrate
       seminggu</strong> di sebelahnya, yang sampelnya jauh lebih tebal.</dd>
-      <dt>Duplikat</dt><dd>Satu saham yang muncul di beberapa malam dihitung sebagai beberapa posisi
-      terpisah, masing-masing dengan modalnya sendiri. Itu memang yang terjadi kalau daftarnya
-      diikuti apa adanya, tapi artinya total rupiah di kartu bukan hasil satu portofolio Rp10 juta —
-      melainkan jumlah seluruh posisi yang pernah dibuka.</dd>
-      <dt>Yang belum dijawab</dt><dd>Tidak ada pembanding: winrate 55% tidak berarti apa-apa sampai
-      dibandingkan dengan membeli saham acak, atau dengan IHSG di periode yang sama. Slippage,
-      antrean order, dan auto reject juga diabaikan — semuanya diasumsikan terisi persis di harga
-      pembukaan.</dd>
+      <dt>Pembanding</dt><dd>Tiap posisi dibandingkan dengan dua hal yang dibeli di pembukaan sesi
+      yang sama, dengan biaya beli dan jual yang sama: <strong>IHSG</strong>, dan <strong>saham
+      acak</strong> — rata-rata seluruh emiten universe yang malam itu cukup likuid untuk lolos syarat
+      likuiditas daftar swing sendiri (nilai transaksi 20 hari ≥ Rp5 miliar, biasanya 170-an emiten).
+      Saham acak adalah pembanding yang jujur: winrate 68% saat hampir semua saham naik tidak
+      membuktikan kemampuan memilih. Daftar yang benar-benar pintar punya <strong>selisih</strong>
+      positif dan mengalahkan saham acak di lebih dari separuh posisinya. Kalau selisihnya di sekitar
+      nol, labanya cuma ikut pasar.</dd>
+      <dt>Pick ulang</dt><dd>Saham yang muncul lagi di daftar selagi posisi sebelumnya masih dipegang
+      (dibeli belum lewat 21 hari bursa) tidak dihitung sebagai posisi baru — orang yang mengikuti
+      daftarnya membeli sekali lalu memegangnya, bukan membeli tiap malam. Tanpa aturan ini satu saham
+      yang nongkrong di daftar dua minggu ikut terhitung sepuluh kali, dan sampelnya tampak jauh lebih
+      tebal daripada aslinya. Baris-baris itu bisa ditampilkan lewat pilihan "Termasuk pick ulang"
+      dan ditandai <span class="ulang">ulang</span>.</dd>
+      <dt>Kondisi pasar</dt><dd>Filter "Dipilih saat IHSG &gt; / &lt; MA50" memisahkan pick menurut
+      posisi IHSG terhadap rata-rata 50 harinya pada malam screening. Ini aturan yang ditampilkan di
+      bilah atas dashboard utama (posisi swing baru hanya dibuka saat IHSG di atas MA50); filter ini
+      gunanya memeriksa, dengan data yang benar-benar terjadi, apakah aturan itu memang menolong.</dd>
+      <dt>Duplikat</dt><dd>Karena pick ulang tidak dihitung, total rupiah di kartu adalah jumlah
+      seluruh posisi yang pernah dibuka, masing-masing dengan modalnya sendiri — bukan hasil satu
+      portofolio Rp10 juta.</dd>
+      <dt>Yang belum dijawab</dt><dd>Slippage, antrean order, dan auto reject diabaikan — semuanya
+      diasumsikan terisi persis di harga pembukaan. Universe saham acak adalah daftar emiten hari ini,
+      jadi emiten yang sudah delisting tidak ikut; untuk jendela sebulan pengaruhnya kecil.</dd>
     </dl>
   </details>
 
@@ -381,7 +434,7 @@
 // jumlahnya baru ketahuan dari headernya.
 const ANGKA = new Set([
   "Skor", "HargaBeli", "Lot", "Lembar", "Modal", "HargaAkhir", "HariKe",
-  "Nilai", "LabaRp", "Laba%", "Puncak%", "Jatuh%",
+  "Nilai", "LabaRp", "Laba%", "Puncak%", "Jatuh%", "IHSG%", "Acak%", "Selisih%",
 ]);
 
 const KOLOM = {
@@ -399,6 +452,7 @@ const KOLOM = {
     { k: "Hari10%", label: "H+10", laba: true },
     { k: "Hari21%", label: "H+21", laba: true },
     { k: "Laba%", label: "Terakhir", laba: true },
+    { k: "Selisih%", label: "vs acak", laba: true },
     { k: "LabaRp", label: "Laba/rugi Rp", rupiah: true },
   ],
   posisi: [
@@ -418,6 +472,9 @@ const KOLOM = {
     { k: "Nilai", label: "Nilai sekarang" },
     { k: "LabaRp", label: "Laba/rugi Rp", rupiah: true },
     { k: "Laba%", label: "Laba/rugi %", laba: true },
+    { k: "IHSG%", label: "IHSG", laba: true },
+    { k: "Acak%", label: "Saham acak", laba: true },
+    { k: "Selisih%", label: "Selisih vs acak", laba: true },
     { k: "Puncak%", label: "Puncak", laba: true },
     { k: "Jatuh%", label: "Jatuh terdalam", laba: true },
   ],
@@ -490,6 +547,10 @@ const state = {
   meta: null,
   periode: "",
   status: "",
+  pasar: "",
+  // Pick ulang disembunyikan secara bawaan — lihat "Pick ulang" di keterangan.
+  ulang: false,
+  adaPembanding: false,
   kolom: "ringkas",
   cari: "",
   perHal: 25,
@@ -514,8 +575,10 @@ function kolomTampil() {
 
 function barisTerlihat() {
   let hasil = state.posisi;
+  if (!state.ulang) hasil = hasil.filter(r => r.Ulang !== "Ya");
   if (state.periode) hasil = hasil.filter(r => r.Tanggal === state.periode);
   if (state.status) hasil = hasil.filter(r => r.Status === state.status);
+  if (state.pasar) hasil = hasil.filter(r => r.IHSGdiAtasMA50 === state.pasar);
   if (state.cari) {
     const q = state.cari.toLowerCase();
     hasil = hasil.filter(r => (r.Ticker + " " + r.Nama).toLowerCase().includes(q));
@@ -544,20 +607,40 @@ function barisTerlihat() {
 // memakainya di sini membuat kartu dan grafik tidak ikut berubah saat difilter
 // — dan pembacanya tidak punya cara tahu bahwa angkanya bukan milik irisan
 // yang sedang dilihat.
+const adaAngka = v => v !== null && v !== undefined && v !== "" && !Number.isNaN(v);
+const rerata = xs => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+
 function ringkasPerHari(rows) {
   const keluar = [];
   for (let n = 0; n <= state.hariMaks; n++) {
-    const nilai = rows.map(r => r[`Hari${n}%`]).filter(v => v !== null && v !== undefined && v !== "");
-    if (!nilai.length) { keluar.push({ hari: n, posisi: 0, winrate: null, rata: null, median: null }); continue; }
+    const kol = `Hari${n}%`;
+    const punya = rows.filter(r => adaAngka(r[kol]));
+    const nilai = punya.map(r => r[kol]);
+    if (!nilai.length) {
+      keluar.push({ hari: n, posisi: 0, winrate: null, rata: null, median: null,
+                    ihsg: null, acak: null, selisih: null, menangAcak: null });
+      continue;
+    }
     const urut = nilai.slice().sort((a, b) => a - b);
     const tengah = urut.length % 2 ? urut[(urut.length - 1) / 2]
                                   : (urut[urut.length / 2 - 1] + urut[urut.length / 2]) / 2;
+    // Pembanding dihitung atas posisi yang SAMA, dipasangkan per baris: rata-
+    // rata saham acak dari seluruh tanggal beli akan membobot tanggal secara
+    // berbeda dari daftarnya, dan selisihnya jadi soal kapan, bukan soal apa.
+    const pasangan = punya.filter(r => adaAngka(r[`Acak${n}%`]));
+    const ihsg = punya.map(r => r[`IHSG${n}%`]).filter(adaAngka);
     keluar.push({
       hari: n,
       posisi: nilai.length,
       winrate: nilai.filter(v => v > 0).length / nilai.length * 100,
-      rata: nilai.reduce((a, b) => a + b, 0) / nilai.length,
+      rata: rerata(nilai),
       median: tengah,
+      ihsg: rerata(ihsg),
+      acak: rerata(pasangan.map(r => r[`Acak${n}%`])),
+      selisih: rerata(pasangan.map(r => r[kol] - r[`Acak${n}%`])),
+      menangAcak: pasangan.length
+        ? pasangan.filter(r => r[kol] > r[`Acak${n}%`]).length / pasangan.length * 100 : null,
+      pasangan: pasangan.length,
     });
   }
   return keluar;
@@ -575,6 +658,21 @@ function isiKartu(rows, perHari) {
   set("t-wr5", h5.winrate === null ? "–" : angka(h5.winrate, 1) + "%");
   document.getElementById("s-wr5").textContent =
     `hari bursa ke-5 · ${h5.posisi} posisi sampai situ`;
+
+  // Hari ke-5, sama dengan kartu winrate di sebelahnya: dua kartu yang
+  // bersebelahan harus bercerita tentang posisi yang sama.
+  const subA = document.getElementById("s-alpha");
+  if (!state.adaPembanding) {
+    set("t-alpha", "–");
+    subA.textContent = "pembanding belum tersedia — terisi sesudah run malam berikutnya";
+  } else if (h5.selisih === null) {
+    set("t-alpha", "–");
+    subA.textContent = "hari bursa ke-5 · belum ada posisi yang punya pembanding";
+  } else {
+    set("t-alpha", persen(h5.selisih), arah(h5.selisih));
+    subA.textContent = `hari ke-5 · daftar ${persen(h5.rata)} · acak ${persen(h5.acak)} · IHSG ${persen(h5.ihsg)}`
+      + ` · ${angka(h5.menangAcak, 0)}% posisi mengalahkan acak`;
+  }
 
   // Hari TERJAUH yang benar-benar punya posisi, bukan hari ke-21 yang tetap.
   // Jendelanya 21 hari, tapi posisi tertua baru berumur 19 — mematok kartunya
@@ -663,6 +761,12 @@ function gambar(wadah, opsi) {
   // memakai bidang potong milik kartu pertama.
   const id = wadah.id || "grafik";
   const { titik, nilai, jenis, min, maks, warnaTanda, format, satuan, acuan } = opsi;
+  // Seri pembanding (garis saja). Tiap entri: { label, nilai, warna, pola }.
+  // Seri utama tetap `nilai`; namanya di legenda `opsi.labelUtama`.
+  const seri = (opsi.seri || []).filter(s => s.nilai.some(adaAngka));
+  const semuaSeri = [{ label: opsi.labelUtama, nilai, warna: "var(--seri-daftar)", pola: "" }, ...seri];
+  const tanda = s => `<svg viewBox="0 0 18 6" aria-hidden="true"><line x1="1" y1="3" x2="17" y2="3"`
+    + ` stroke="${s.warna}" stroke-width="2" stroke-linecap="round"${s.pola ? ` stroke-dasharray="${s.pola}"` : ""}/></svg>`;
   // Label sumbu boleh berbeda presisi dari tooltip: tooltip menyesuaikan diri
   // ke tiap nilai (0,07% butuh dua desimal), sementara sumbu harus seragam —
   // deretan "0,00% / +10,0%" terbaca seperti salah cetak.
@@ -725,18 +829,26 @@ function gambar(wadah, opsi) {
       bagian.push(`<path d="${area}" fill="var(--pos-fg)" fill-opacity=".16" clip-path="url(#${id}-atas)"/>`);
       bagian.push(`<path d="${area}" fill="var(--neg-fg)" fill-opacity=".16" clip-path="url(#${id}-bawah)"/>`);
     }
+    // Pembanding digambar di bawah garis utama: yang dibaca pertama tetap
+    // daftarnya sendiri, pembanding cuma latar untuk menilainya.
+    for (const s of seri) {
+      const t = s.nilai.map((v, i) => [i, v]).filter(([, v]) => adaAngka(v));
+      const j = t.map(([i, v], n) => `${n ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join("");
+      bagian.push(`<path d="${j}" fill="none" stroke="${s.warna}" stroke-width="2" stroke-dasharray="${s.pola}" stroke-linejoin="round" stroke-linecap="round"/>`);
+    }
     const jalur = ada.map(([i, v], n) => `${n ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join("");
-    bagian.push(`<path d="${jalur}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`);
+    bagian.push(`<path d="${jalur}" fill="none" stroke="var(--seri-daftar)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`);
     // Penanda hanya di ujung kanan — titik yang paling sering dicari, bukan
     // satu bulatan di tiap hari.
     const [iAkhir, vAkhir] = ada[ada.length - 1];
-    bagian.push(`<circle cx="${x(iAkhir).toFixed(1)}" cy="${y(vAkhir).toFixed(1)}" r="4" fill="var(--accent)" stroke="var(--surface-raised)" stroke-width="2"/>`);
+    bagian.push(`<circle cx="${x(iAkhir).toFixed(1)}" cy="${y(vAkhir).toFixed(1)}" r="4" fill="var(--seri-daftar)" stroke="var(--surface-raised)" stroke-width="2"/>`);
   }
 
   wadah.innerHTML = `<svg viewBox="0 0 ${lebar} ${TINGGI}" width="${lebar}" height="${TINGGI}" role="img" tabindex="0"
     aria-label="${esc(opsi.judul)}. Nilainya juga tersedia di tabel di bawah.">${bagian.join("")}
     <line class="garis-nol lacak" x1="0" y1="${TEPI.atas}" x2="0" y2="${TINGGI - TEPI.bawah}" stroke-opacity="0" stroke-dasharray="0"/>
     <rect x="${TEPI.kiri}" y="0" width="${lebar - TEPI.kiri - TEPI.kanan}" height="${TINGGI}" fill="transparent"/></svg>
+    ${seri.length ? `<div class="legenda">${semuaSeri.map(s => `<span>${tanda(s)}${esc(s.label)}</span>`).join("")}</div>` : ""}
     <div class="tip" hidden></div>`;
 
   // ---- Lapisan hover: crosshair + tooltip, plus jalur keyboard yang sama.
@@ -747,17 +859,21 @@ function gambar(wadah, opsi) {
 
   const tampilkan = i => {
     fokus = i;
-    if (i < 0 || nilai[i] === null) { tip.hidden = true; lacak.setAttribute("stroke-opacity", "0"); return; }
+    const terisi = i < 0 ? [] : semuaSeri.filter(s => adaAngka(s.nilai[i]));
+    if (!terisi.length) { tip.hidden = true; lacak.setAttribute("stroke-opacity", "0"); return; }
     lacak.setAttribute("x1", x(i)); lacak.setAttribute("x2", x(i));
     lacak.setAttribute("stroke-opacity", ".45");
     tip.hidden = false;
-    tip.innerHTML = `Hari ke-${titik[i]}<br><b>${esc(format(nilai[i]))}</b> ${esc(satuan)}`;
+    tip.innerHTML = seri.length
+      ? `Hari ke-${titik[i]}` + terisi.map(s =>
+          `<div class="baris-tip">${tanda(s)}${esc(s.label)} <b>${esc(format(s.nilai[i]))}</b></div>`).join("")
+      : `Hari ke-${titik[i]}<br><b>${esc(format(nilai[i]))}</b> ${esc(satuan)}`;
     // Tooltip dijaga di dalam kartunya: di titik paling kanan, menempatkannya
     // ke kanan kursor akan membuatnya terpotong tepi kartu.
     const skala = svg.getBoundingClientRect().width / lebar;
     const kiri = x(i) * skala;
     tip.style.left = `${Math.max(4, Math.min(kiri + 10, svg.getBoundingClientRect().width - tip.offsetWidth - 4))}px`;
-    tip.style.top = `${y(nilai[i]) * skala - 6}px`;
+    tip.style.top = `${y(terisi[0].nilai[i]) * skala - 6}px`;
   };
   const dekat = ev => {
     const kotak = svg.getBoundingClientRect();
@@ -784,14 +900,23 @@ function gambarSemua(perHari) {
   const hari = perHari.map(p => p.hari);
   document.getElementById("grafik").hidden = false;
 
+  // Pola garis ikut membedakan seri (utuh / putus-putus / titik-titik),
+  // jadi grafiknya tetap terbaca tanpa warna dan saat dicetak hitam-putih.
+  const POLA_IHSG = "6 4", POLA_ACAK = "0.1 4.5";
+
   gambar(document.getElementById("c-winrate"), {
     judul: "Winrate per hari ke-N", titik: hari,
     nilai: perHari.map(p => p.winrate),
+    labelUtama: "Masih untung",
+    seri: [{ label: "Mengalahkan saham acak", nilai: perHari.map(p => p.menangAcak),
+             warna: "var(--seri-acak)", pola: POLA_ACAK }],
     jenis: "garis", min: 0, maks: 100, acuan: 50,
     format: v => angka(v, v % 1 ? 1 : 0) + "%", satuan: "posisi masih untung",
   });
 
-  const laba = perHari.map(p => p.rata).filter(v => v !== null);
+  // Rentang sumbu ikut memuat pembanding: kalau saham acak naik lebih tinggi
+  // daripada daftarnya, garisnya justru yang paling perlu terlihat utuh.
+  const laba = perHari.flatMap(p => [p.rata, p.ihsg, p.acak]).filter(adaAngka);
   // Rentang dipaksa memuat nol dan diberi sedikit napas: kalau seluruh kurva
   // ada di atas nol dan sumbunya dimulai dari nilai terkecil, kenaikan 0,2%
   // tergambar setinggi kartu dan terbaca seperti reli.
@@ -800,8 +925,13 @@ function gambarSemua(perHari) {
   // berimpit nol.
   const lebarLaba = Math.max(1, ...laba.map(v => Math.abs(v))) * 1.25;
   gambar(document.getElementById("c-laba"), {
-    judul: "Rata-rata laba per hari ke-N", titik: hari,
+    judul: "Rata-rata laba per hari ke-N, dibandingkan IHSG dan saham acak", titik: hari,
     nilai: perHari.map(p => p.rata),
+    labelUtama: "Daftar swing",
+    seri: [
+      { label: "IHSG", nilai: perHari.map(p => p.ihsg), warna: "var(--seri-ihsg)", pola: POLA_IHSG },
+      { label: "Saham acak", nilai: perHari.map(p => p.acak), warna: "var(--seri-acak)", pola: POLA_ACAK },
+    ],
     jenis: "garis", min: -lebarLaba, maks: lebarLaba, acuan: 0, warnaTanda: true,
     format: v => persen(v, Math.abs(v) < 1 ? 2 : 1),
     formatSumbu: v => persen(v, lebarLaba < 2 ? 2 : 1),
@@ -824,7 +954,9 @@ function kelasLaba(v) {
 function sel(r, kol) {
   const v = r[kol.k];
   if (kol.k === "Ticker") {
-    return `<td class="kiri ticker${kol.lengket ? " lengket" : ""}">${esc(v)}</td>`;
+    const ulang = r.Ulang === "Ya"
+      ? '<span class="ulang" title="Saham ini masih dipegang dari pick sebelumnya — tidak dihitung sebagai posisi baru">ulang</span>' : "";
+    return `<td class="kiri ticker${kol.lengket ? " lengket" : ""}">${esc(v)}${ulang}</td>`;
   }
   if (kol.k === "Nama") return `<td class="kiri"><span class="nama">${esc(v)}</span></td>`;
   if (kol.k === "Status") {
@@ -865,8 +997,11 @@ function render() {
   isiKartu(rows, perHari);
   gambarSemua(perHari);
   document.getElementById("tiles").hidden = false;
-  document.getElementById("hitung").textContent =
-    `${rows.length} dari ${state.posisi.length} posisi`;
+  // Penyebutnya mengikuti pilihan pick ulang: "59 dari 146" saat 87 baris
+  // ulang memang sedang disembunyikan terbaca seperti ada filter lain aktif.
+  const total = state.ulang ? state.posisi.length
+                            : state.posisi.filter(r => r.Ulang !== "Ya").length;
+  document.getElementById("hitung").textContent = `${rows.length} dari ${total} posisi`;
 
   if (!rows.length) {
     wadah.innerHTML = '<div class="kosong">Tidak ada posisi yang cocok dengan filternya.</div>';
@@ -943,6 +1078,12 @@ function pasangKendali() {
   });
   ubah("periode", "periode");
   ubah("status", "status");
+  ubah("pasar", "pasar");
+  document.getElementById("ulang").addEventListener("change", e => {
+    state.ulang = e.target.value === "1";
+    state.hal = 1;
+    render();
+  });
   ubah("kolom", "kolom");
   ubah("perhal", "perHal", true);
   document.getElementById("cari").addEventListener("input", e => {
@@ -962,13 +1103,32 @@ function pasangKendali() {
 async function muat() {
   const t = Date.now();
   try {
-    const [csv, meta] = await Promise.all([
+    const [csv, meta, csvBanding] = await Promise.all([
       fetch(`hasil/winrate.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       fetch(`hasil/winrate_meta.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
+      // Opsional: data lama (sebelum pembanding ada) tetap tampil apa adanya.
+      fetch(`hasil/winrate_pembanding.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
     ]);
     const hari = /^Hari\d+%$/;
     const { baris, header } = parseCSV(csv, h => ANGKA.has(h) || hari.test(h));
     if (!baris.length) throw 0;
+
+    // Pembanding disimpan per tanggal beli, bukan per posisi — semua pick yang
+    // dibeli di sesi yang sama berbagi IHSG dan saham acak yang sama persis.
+    // Di sini disalin ke tiap baris supaya penyaringan, ringkasan, dan
+    // pengurutan cukup membaca satu objek.
+    if (csvBanding) {
+      const kolBanding = /^(IHSG|Acak)\d+%$/;
+      const banding = new Map(parseCSV(csvBanding, h => kolBanding.test(h) || h === "AcakJumlah")
+        .baris.map(b => [b.TanggalBeli, b]));
+      for (const r of baris) {
+        const b = banding.get(r.TanggalBeli);
+        if (!b) continue;
+        for (const [k, v] of Object.entries(b)) if (kolBanding.test(k)) r[k] = v;
+        r.IHSGdiAtasMA50 = b.IHSGdiAtasMA50;
+      }
+      state.adaPembanding = banding.size > 0;
+    }
     state.posisi = baris;
     // Panjang jendela dibaca dari headernya, bukan dari meta: kalau uji_winrate
     // pernah dijalankan dengan --hari lain, kolomnya yang benar, bukan angka
@@ -985,7 +1145,10 @@ async function muat() {
         day: "numeric", month: "long", year: "numeric",
         hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta",
       }).format(new Date(meta.diperbarui));
-      p.textContent = `${meta.posisi} posisi sejak ${meta.pickPertama} · dihitung ulang ${kapan} WIB`;
+      const ulang = meta.posisiUlang || 0;
+      p.textContent = `${meta.posisi - ulang} posisi`
+        + (ulang ? ` (+${ulang} pick ulang tidak dihitung)` : "")
+        + ` sejak ${meta.pickPertama} · dihitung ulang ${kapan} WIB`;
     } else {
       p.textContent = `${baris.length} posisi diuji`;
     }

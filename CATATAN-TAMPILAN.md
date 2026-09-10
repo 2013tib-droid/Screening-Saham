@@ -45,6 +45,8 @@ CSV yang sekarang terbawa tapi tidak ditampilkan.
 | `hasil/swing.csv`, `value.csv`, `tumbuh.csv` | Hasil tersaring, kolomnya sama. |
 | `hasil/winrate.csv` | Satu baris per posisi uji winrate, plus kolom `Hari0%`–`Hari21%`. |
 | `hasil/winrate_meta.json` | Parameter simulasi winrate (modal, biaya, panjang jendela). |
+| `hasil/winrate_pembanding.csv` | IHSG dan saham acak per **tanggal beli** (`IHSG0%`–`IHSG21%`, `Acak0%`–`Acak21%`, `IHSGdiAtasMA50`). `winrate.html` menyambungkannya ke tiap posisi lewat `TanggalBeli` saat memuat; berkasnya opsional — tanpa itu kartu selisih menulis "pembanding belum tersedia" dan grafik cuma bergaris satu. |
+| `hasil/pasar.json` | IHSG vs MA50/MA200 untuk bilah kondisi pasar di `index.html`. Opsional: tidak ada = bilah tersembunyi. Tanggalnya dibandingkan dengan `meta.json`; tertinggal > 4 hari = bilah netral "belum diperbarui". |
 | `hasil/meta.json` | Stempel waktu pembaruan. |
 | `scripts/uji_dashboard.js` | Uji dashboard tanpa browser (lihat di bawah). Hanya `index.html`. |
 | `_site/` | Folder staging pratinjau lokal. **Masuk `.gitignore`** — jangan di-commit; workflow menyusunnya sendiri di runner. |

@@ -60,8 +60,12 @@ jobs:
 
       # Tanpa --tickers, screener memakai DAFTAR_DEFAULT: daftar kurasi (LQ45,
       # Prajogo, Bakrie, Salim, Hapsoro, Logam) + universe tickers/idx.txt.
+      #
+      # --output-pasar: IHSG vs MA50/MA200 untuk bilah "kondisi pasar" di
+      # dashboard. Gagal menarik IHSG tidak menggagalkan langkah ini — berkas
+      # lama dibiarkan dan dashboard menandainya basi dari tanggalnya.
       - name: Ambil data & simpan tabel lengkap
-        run: python screener.py --output hasil/semua.csv
+        run: python screener.py --output hasil/semua.csv --output-pasar hasil/pasar.json
 
       # RSI dibatasi 65, bukan 50. Alasannya: --max-rsi dan --min-volspike
       # saling menggerus. Volume yang masuk hari ini justru yang mengangkat
