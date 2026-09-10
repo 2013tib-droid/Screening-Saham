@@ -178,9 +178,10 @@ python uji_winrate.py                          # perbarui arsip + hitung ulang
 python uji_winrate.py --dari-git               # ikut bongkar riwayat commit swing.csv
 python uji_winrate.py --modal 5000000 --hari 40
 python uji_winrate.py --harga-csv contoh.csv   # dari berkas harga, tanpa Yahoo
+python uji_winrate.py --tanpa-pembanding       # cepat: tanpa IHSG & saham acak
 ```
 
-Keluarannya empat berkas di `hasil/`: `riwayat_swing.csv` (arsip pick harian), `winrate.csv` (satu baris per posisi plus kolom `Hari0%`–`Hari21%`), `winrate_ringkas.csv` (winrate dan rata-rata laba per hari ke-N), dan `winrate_meta.json` (parameter simulasinya). Tampilannya ada di halaman **[Uji Winrate](dashboard/winrate.html)** di dashboard.
+Keluarannya lima berkas di `hasil/`: `riwayat_swing.csv` (arsip pick harian), `winrate.csv` (satu baris per posisi plus kolom `Hari0%`–`Hari21%`), `winrate_ringkas.csv` (winrate, rata-rata laba, dan selisih terhadap pembanding per hari ke-N), `winrate_pembanding.csv` (IHSG dan saham acak per tanggal beli), dan `winrate_meta.json` (parameter simulasinya). Tampilannya ada di halaman **[Uji Winrate](dashboard/winrate.html)** di dashboard.
 
 ### Aturan simulasinya
 
@@ -193,7 +194,23 @@ Sepolos mungkin, dan itu disengaja — tidak ada stop loss, tidak ada target, ti
 | Harga beli | **Pembukaan sesi berikutnya** | Screening malam jalan jam 18-an WIB — penutupan yang dipakainya sudah lewat dan tidak bisa dibeli siapa pun |
 | Biaya | 0,15% beli, 0,25% jual | Tarif broker daring yang lazim (selisihnya pajak penjualan 0,1%). Diperhitungkan di tiap hari ke-N, bukan cuma di akhir |
 | Jendela | 21 hari **bursa** (≈ 1 bulan kalender) | Akhir pekan dan libur bursa tidak dihitung |
+| Kalender | Hari bursa IHSG | Yahoo mengirim bar "libur" (volume 0, harga datar) untuk sebagian emiten — 1.741 bar pada Mei–Sep 2026. Dibiarkan, pick malam 24 Agu tercatat dibeli di "pembukaan" 25 Agu yang tidak pernah ada, dan hari ke-N emiten itu maju satu dari emiten lain yang dibeli di sesi yang sama |
+| Bar hari ini | Dibuang sebelum 16:15 WIB | Sama dengan screener: penutupan sementara di tengah sesi bukan penutupan |
 | Hari ke-0 | Penutupan hari beli itu sendiri | Hampir selalu negatif tipis: itu ongkos masuknya, bukan kerugian pasar |
+| Pick ulang | Tidak dihitung sebagai posisi baru | Saham yang muncul lagi selagi posisi sebelumnya masih dipegang (dibeli ≤ 21 hari bursa lalu). Orang yang mengikuti daftarnya membeli sekali, bukan tiap malam. Barisnya tetap ada di `winrate.csv` dengan `Ulang = Ya` |
+
+### Pembanding: IHSG dan saham acak
+
+Winrate sendirian tidak menjawab apa-apa. Pada 11 Agu – 8 Sep 2026 winrate hari ke-5 daftar swing 67% — tapi IHSG naik 6,5% di periode yang sama, dan hampir semua saham ikut naik. Karena itu tiap posisi dibandingkan dengan dua hal yang dibeli di **pembukaan sesi yang sama, dengan biaya yang sama**:
+
+- **IHSG** — pasar secara umum, tertimbang kapitalisasi (didominasi bank dan saham raksasa).
+- **Saham acak** — rata-rata sederhana seluruh emiten di `hasil/semua.csv` yang pada malam screening punya nilai transaksi 20 hari ≥ Rp5 miliar, yaitu syarat likuiditas daftar swing itu sendiri. Biasanya 170-an emiten. Ini pembanding yang jujur: kalau daftar swing tidak mengalahkannya, labanya cuma ikut pasar dan pemilihan sahamnya tidak menambah apa-apa.
+
+Biaya sengaja ikut dikenakan ke pembanding, supaya daftar yang sama sekali tidak lebih pintar dari pasar keluar dengan selisih ≈ 0, bukan −0,4% hanya karena pembandingnya dibeli gratis. Kalau emiten likuid yang dapat harga malam itu kurang dari 30, kolom saham acak dikosongkan alih-alih diisi rata-rata segelintir emiten.
+
+Yang dibaca: kolom `Selisih%` (laba posisi dikurangi saham acak) dan `MenangVsAcak%` (porsi posisi yang mengalahkan saham acak). Daftar tanpa kemampuan memilih keluar di sekitar 0% dan 50%, berapa pun winrate-nya. Per 10 Sep 2026: selisih hari ke-5 −0,19%, hari ke-10 +0,64%, hari ke-15 −0,02% — belum ada keunggulan. Uji ulang aturan yang sama ke April 2024 – September 2026 (7.500-an sinyal) memberi kesimpulan yang sama.
+
+`winrate_pembanding.csv` berisi satu baris per tanggal beli, bukan per posisi — semua pick yang dibeli di sesi yang sama berbagi pembanding yang sama persis. Kolom `IHSGdiAtasMA50` mencatat kondisi pasar pada malam screening; di halaman winrate itu jadi filter untuk memeriksa aturan [kondisi pasar](#kondisi-pasar-ihsg-vs-ma50) dengan data yang benar-benar terjadi.
 
 Bagian yang paling gampang salah adalah harga beli. Memakai penutupan hari screening berarti memberi simulasinya kemampuan melihat masa depan sebesar satu hari — dan pada saham yang lolos justru karena volumenya masuk hari itu, satu hari adalah bagian terbesar kenaikannya. Winrate-nya akan terlihat jauh lebih bagus daripada yang bisa dicapai siapa pun.
 
@@ -205,9 +222,9 @@ Isi awalnya tidak menunggu sebulan: tiap run malam sejak Agustus 2026 sudah meng
 
 ### Yang belum dijawabnya
 
-- **Tidak ada pembanding.** Winrate 55% tidak berarti apa-apa sampai dibandingkan dengan membeli saham acak, atau dengan IHSG di periode yang sama.
 - **Sampelnya menyusut ke kanan.** Tiap hari ke-N hanya menghitung posisi yang benar-benar sudah sampai ke situ, jadi winrate hari ke-21 selalu punya sampel jauh lebih sedikit daripada hari ke-1. Bacalah bersama kolom `Posisi`, jangan sendirian.
-- **Satu saham bisa jadi beberapa posisi.** Yang muncul di beberapa malam dihitung terpisah, masing-masing dengan modalnya sendiri. Itu memang yang terjadi kalau daftarnya diikuti apa adanya, tapi artinya total rupiahnya bukan hasil satu portofolio Rp 10 juta.
+- **Total rupiah bukan satu portofolio.** Tiap posisi punya modalnya sendiri, jadi total rupiahnya adalah jumlah seluruh posisi yang pernah dibuka, bukan hasil satu portofolio Rp 10 juta.
+- **Universe saham acak adalah daftar hari ini.** Emiten yang sudah delisting tidak ikut. Untuk jendela sebulan pengaruhnya kecil.
 - **Slippage, antrean order, dan auto reject diabaikan.** Semua order diasumsikan terisi persis di harga pembukaan.
 
 Matematikanya diuji terhadap harga buatan yang jawabannya sudah diketahui: `python scripts/uji_winrate.py`. Uji itu sengaja tidak menyentuh jaringan — uji yang hasilnya berubah tiap hari tidak bisa memvonis apa-apa.
@@ -215,6 +232,23 @@ Matematikanya diuji terhadap harga buatan yang jawabannya sudah diketahui: `pyth
 ### Hitung ulang tanpa run malam
 
 Workflow **Uji Winrate Swing** (`.github/workflows/uji-winrate.yml`) menghitung ulang uji ini saja, tanpa screening 400 emiten yang makan ~20 menit: tab **Actions → Uji Winrate Swing → Run workflow**. Ada tiga input — bongkar riwayat git, modal per posisi, dan panjang jendela — jadi parameter lain bisa dicoba tanpa mengubah run malam.
+
+## Kondisi Pasar (IHSG vs MA50)
+
+Dashboard utama punya satu bilah di bawah judul: **IHSG di atas atau di bawah MA50-nya**, per penutupan terakhir. Aturannya mekanis — posisi swing baru hanya dibuka saat IHSG di atas MA50; posisi yang sudah dipegang tidak ikut disuruh keluar.
+
+Ini satu-satunya aturan yang dalam uji ulang April 2024 – September 2026 konsisten memperbaiki hasil daftar swing. Uji ulangnya menerapkan aturan `swing.csv` (RSI ≤ 65, di atas MA200, VolSpike ≥ 1,2, nilai transaksi ≥ Rp5 miliar) ke histori harga universe hari ini:
+
+| | Tanpa filter pasar | Hanya beli saat IHSG > MA50 |
+|---|---|---|
+| Simulasi portofolio 10 posisi, tahan 21 hari: kerugian terdalam | −58% | −18% |
+| Keunggulan per sinyal vs saham likuid acak | ≈ 0% | ≈ 0% |
+
+Baris kedua penting: filter ini **tidak membuat pemilihan sahamnya lebih pintar**. Yang ia lakukan adalah menahan pembelian selama pasar sedang jatuh — terutama Januari–Juni 2026, ketika IHSG turun dari 9.135 ke 5.342 dan rata-rata posisi swing yang dibuka di semester itu rugi 9% dalam sebulan. MA200 ikut ditampilkan sebagai konteks: di atas MA50 tapi di bawah MA200 berarti pemulihan, belum tren naik jangka panjang.
+
+Angkanya ditulis `screener.py --output-pasar hasil/pasar.json` di langkah pertama run malam. Kalau request IHSG gagal, screening tetap jalan dan berkas lamanya dibiarkan; dashboard membandingkan tanggalnya dengan waktu run dan menandai bilahnya "belum diperbarui" bila tertinggal lebih dari 4 hari.
+
+Uji ulang itu punya batas yang perlu diingat: universe-nya daftar emiten **hari ini**, jadi emiten yang dulu kecil lalu naik kencang ikut terhitung (bias survivorship) — angka absolutnya terlalu bagus, perbandingan antar-aturannya lebih bisa dipegang. Aturan ini juga baru diuji di satu siklus pasar. Halaman winrate punya filter "Dipilih saat IHSG > / < MA50" untuk memeriksanya terus dengan pick yang benar-benar terjadi.
 
 ## Kolom Status
 
@@ -445,7 +479,7 @@ Workflow [`.github/workflows/screening-malam.yml`](.github/workflows/screening-m
 Setiap malam workflow:
 
 1. Menyusun ulang universe pasar (`tickers/idx.txt`) lewat `scripts/perbarui_universe.py`, supaya emiten baru atau yang naik kelas ikut ter-screening tanpa disebut manual. Kalau langkah ini gagal, universe versi commit terakhir dipakai dan run tetap lanjut.
-2. Mengambil data seluruh daftar default (universe IDX + daftar kurasi) dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter).
+2. Mengambil data seluruh daftar default (universe IDX + daftar kurasi) dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter), sekaligus kondisi IHSG terhadap MA50/MA200 ke `hasil/pasar.json`.
 3. Memfilter ulang dari CSV itu (tanpa fetch ulang, pakai `--dari-csv`) menjadi tiga daftar siap pakai:
    - `hasil/swing.csv` — masih uptrend dan belum overbought, **dengan konfirmasi volume** (RSI ≤ 65, harga di atas MA200, volume terakhir ≥ 1,2× rata-rata 20 hari, nilai transaksi ≥ 5 miliar Rp). Ambang RSI sengaja tidak dipatok 50: `--max-rsi` dan `--min-volspike` saling menggerus, karena volume yang masuk hari ini justru yang mengangkat RSI. Menuntut "harga lagi lemah" sekaligus "volume lagi ramai" menghasilkan tabel kosong hampir tiap malam — bukan sinyal yang lebih tajam, cuma daftar yang tidak pernah terisi.
    - `hasil/value.csv` — value stock profil **medium risk** (PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%). PBV dipatok 3,5 (bukan 2) supaya blue chip berkualitas yang memang selalu dihargai premium — BBCA, SIDO — tidak otomatis tersaring keluar.
@@ -483,7 +517,8 @@ Fitur dashboard:
 - Kolom **Status** berwarna (BUY / BOW / HOLD / WSE / JUAL / TIPIS) plus dropdown filter status; klik judul kolomnya untuk mengurutkan dari paling positif ke paling negatif.
 - Kolom **Skor** berwarna (hijau ≥ 70, kuning 40–69, merah < 40) — kesimpulan fundamental 1–100; klik judulnya untuk mengurutkan dari fundamental terkuat.
 - Klik judul kolom untuk mengurutkan (misalnya urutkan per RSI atau dividen), kotak pencarian untuk mencari ticker/nama.
-- Halaman **Uji Winrate** (tautan di kanan atas): hasil daftar swing kalau benar-benar dibeli — winrate dan rata-rata laba per hari ke-N sesudah masuk, ditambah tabel tiap posisi dengan modal, lot, dan laba/rugi rupiahnya. Aturan simulasinya di bagian [Uji Winrate Daftar Swing](#uji-winrate-daftar-swing-uji_winratepy).
+- Bilah **kondisi pasar** di bawah judul: IHSG di atas / di bawah MA50, sejak kapan, dan MA200 sebagai konteks — lihat [Kondisi Pasar](#kondisi-pasar-ihsg-vs-ma50).
+- Halaman **Uji Winrate** (tautan di kanan atas): hasil daftar swing kalau benar-benar dibeli — winrate dan rata-rata laba per hari ke-N sesudah masuk, **dibandingkan IHSG dan saham acak** yang dibeli di sesi yang sama, ditambah tabel tiap posisi dengan modal, lot, laba/rugi rupiahnya, dan selisihnya terhadap saham acak. Aturan simulasinya di bagian [Uji Winrate Daftar Swing](#uji-winrate-daftar-swing-uji_winratepy).
 - Nyaman dibuka di HP, mendukung mode gelap, dan menampilkan waktu pembaruan terakhir (WIB).
 
 Dashboard di-deploy otomatis di akhir setiap run workflow — sumbernya dua file statis, [`dashboard/index.html`](dashboard/index.html) dan [`dashboard/winrate.html`](dashboard/winrate.html), datanya dibaca langsung dari folder `hasil/`. GitHub Pages diaktifkan otomatis pada run pertama; kalau gagal di langkah "Aktifkan & konfigurasi GitHub Pages", aktifkan manual sekali lewat **Settings → Pages → Source: GitHub Actions**, lalu jalankan ulang workflow-nya.

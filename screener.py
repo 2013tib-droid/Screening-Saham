@@ -632,6 +632,81 @@ def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None) -> pd.
     return pd.DataFrame(baris_data)
 
 
+# Kondisi pasar = IHSG di atas atau di bawah MA50-nya. Satu-satunya aturan
+# dalam uji ulang Apr 2024-Sep 2026 yang konsisten memperbaiki hasil daftar
+# swing: membuka posisi baru hanya saat IHSG di atas MA50 memangkas drawdown
+# terburuk simulasi portofolio 10 posisi dari -58% ke -18%, tanpa mengorbankan
+# labanya. Pemilihan sahamnya sendiri tidak lebih baik daripada saham acak —
+# yang menyelamatkan adalah TIDAK membeli selama Jan-Jun 2026, ketika IHSG
+# jatuh dari 9.135 ke 5.342. Lihat README bagian "Kondisi pasar".
+KODE_IHSG = "^JKSE"
+MA_PASAR = 50
+
+
+def kondisi_pasar(close: pd.Series) -> dict | None:
+    """Ringkas posisi IHSG terhadap MA50 dan MA200 dari deret penutupannya.
+
+    `sejak` adalah bar pertama keadaan sekarang (di atas / di bawah MA50) yang
+    tidak terputus sampai hari ini. Kalau keadaannya tidak pernah berganti
+    sepanjang histori yang ada, `sejakPasti` False: tanggalnya cuma batas
+    datanya, bukan awal keadaannya.
+    """
+    close = close.dropna()
+    if len(close) < MA_PASAR + 1:
+        return None
+    ma50 = close.rolling(MA_PASAR).mean()
+    ma200 = close.rolling(200).mean()
+    di_atas = (close > ma50)[ma50.notna()]
+    kini = bool(di_atas.iloc[-1])
+    lain = di_atas.index[di_atas != kini]
+    runtun = di_atas.index[di_atas.index > lain[-1]] if len(lain) else di_atas.index
+    tgl = lambda t: pd.Timestamp(t).date().isoformat()  # noqa: E731
+    return {
+        "tanggal": tgl(close.index[-1]),
+        "ihsg": round(float(close.iloc[-1]), 2),
+        "ma50": round(float(ma50.iloc[-1]), 2),
+        "ma200": round(float(ma200.iloc[-1]), 2) if pd.notna(ma200.iloc[-1]) else None,
+        "diAtasMA50": kini,
+        "diAtasMA200": bool(close.iloc[-1] > ma200.iloc[-1]) if pd.notna(ma200.iloc[-1]) else None,
+        "sejak": tgl(runtun[0]),
+        "sejakPasti": bool(len(lain)),
+        "hariBursa": len(runtun),
+        "maPasar": MA_PASAR,
+    }
+
+
+def tulis_kondisi_pasar(path: str) -> None:
+    """Tarik histori IHSG, lalu tulis kondisi_pasar() sebagai JSON.
+
+    Kegagalan tidak menggagalkan screening: berkas lama dibiarkan, dan
+    dashboard membandingkan tanggalnya dengan waktu run untuk menandainya
+    basi. Lebih baik tabel screening tetap terbit tanpa penanda pasar
+    daripada tidak terbit sama sekali karena satu request IHSG.
+    """
+    import json
+    import yfinance as yf
+
+    try:
+        hist = yf.Ticker(KODE_IHSG).history(period="2y")
+        # Alasan yang sama dengan ambil_histori: selama sesi berjalan, bar
+        # hari ini bukan penutupan.
+        if bar_terakhir_belum_final(hist):
+            hist = hist.iloc[:-1]
+        kondisi = kondisi_pasar(hist["Close"]) if not hist.empty else None
+    except Exception as e:
+        print(f"Kondisi pasar gagal diambil ({e}) — {path} tidak diperbarui.",
+              file=sys.stderr)
+        return
+    if kondisi is None:
+        print(f"Histori IHSG terlalu pendek — {path} tidak diperbarui.", file=sys.stderr)
+        return
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_text(json.dumps(kondisi, indent=2) + "\n")
+    print(f"Kondisi pasar: IHSG {kondisi['ihsg']:.0f} "
+          f"{'di atas' if kondisi['diAtasMA50'] else 'di bawah'} MA{MA_PASAR} "
+          f"({kondisi['ma50']:.0f}) sejak {kondisi['sejak']} -> {path}", file=sys.stderr)
+
+
 def baca_daftar_syariah(path: str) -> tuple[set[str] | None, str]:
     """Baca daftar saham syariah (DES) beserta keterangan asalnya.
 
@@ -899,6 +974,9 @@ def main():
                    help="baca data dari CSV hasil screening sebelumnya, "
                         "tanpa mengambil ulang dari internet")
     p.add_argument("--output", default="hasil_screening.csv", help="file CSV hasil")
+    p.add_argument("--output-pasar", metavar="FILE",
+                   help="tulis kondisi IHSG (vs MA50/MA200) ke JSON ini; "
+                        "hanya saat menarik data baru, bukan dengan --dari-csv/--demo")
     p.add_argument("--urut", default="PER",
                    # argparse memformat help dengan %-formatting, jadi '%' pada
                    # nama kolom (ROE%, Dividen%) harus di-escape jadi '%%'
@@ -1001,6 +1079,10 @@ def main():
                      f"Hasil tidak ditulis — kemungkinan sumber data sedang bermasalah.")
         print(f"{berharga} dari {len(tickers)} emiten dapat harga ({panen:.0%}).",
               file=sys.stderr)
+        # Sesudah pemeriksaan panen: run yang digagalkan di atas tidak boleh
+        # sempat memperbarui penanda pasar sementara tabelnya tetap yang lama.
+        if args.output_pasar:
+            tulis_kondisi_pasar(args.output_pasar)
         if not df.empty:
             df = gabung_fundamental(df, fund)
 

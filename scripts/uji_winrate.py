@@ -26,7 +26,9 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from uji_winrate import (  # noqa: E402
-    LEMBAR_PER_LOT, WIB, per_emiten, ringkas, simulasi, tanggal_beli,
+    KODE_IHSG, LEMBAR_PER_LOT, MIN_EMITEN_PEMBANDING, WIB, pembanding,
+    per_emiten, ringkas, selaraskan_kalender, simulasi, tambah_pembanding,
+    tanggal_beli,
 )
 
 gagal = 0
@@ -182,6 +184,113 @@ p = simulasi(riwayat_satu("ZZZZ", "2026-03-02T11:00:00Z"),
              per_emiten(bar("AAAA", date(2026, 3, 2), [100, 100])),
              modal=10_000_000, hari=1, fee_beli=0, fee_jual=0)
 periksa("dilewati, tidak meledak", len(p), 0)
+
+
+print("\n== Pick ulang: saham yang masih dipegang tidak dibeli lagi ==")
+# Satu saham, dipilih di bar 0, 2, 5, dan 6 dengan jendela 5 hari. Posisi
+# pertama dibeli bar 1 dan dijual di penutupan bar 6. Pick bar 2 (beli bar 3)
+# dan bar 5 (beli bar 6 — hari terakhir masa pegang) masih jatuh di dalamnya;
+# pick bar 6 (beli bar 7) sudah di luarnya dan membuka posisi baru.
+harga = per_emiten(bar("KKKK", date(2026, 3, 2), [100] * 14))
+riwayat = pd.concat([riwayat_satu("KKKK", f"2026-03-0{d}T11:00:00Z")
+                     for d in (2, 4, 7, 8)], ignore_index=True)
+p = simulasi(riwayat, harga, modal=10_000_000, hari=5, fee_beli=0, fee_jual=0)
+periksa("pick pertama posisi baru", p["Ulang"].tolist()[0], "Tidak")
+periksa("pick di tengah masa pegang = ulang", p["Ulang"].tolist()[1], "Ya")
+periksa("beli tepat di hari jual posisi lama = masih ulang", p["Ulang"].tolist()[2], "Ya")
+periksa("sesudah masa pegang lewat = posisi baru", p["Ulang"].tolist()[3], "Tidak")
+r = ringkas(p, hari=5).set_index("Hari")
+periksa("ringkas tidak menghitung pick ulang", int(r.loc[0, "Posisi"]), 2)
+
+
+print("\n== Kalender bursa: bar libur dan bar yang belum final ==")
+# Deret rapat 25 hari untuk IHSG dan 20 emiten. Hari ke-5 dibolongkan dari
+# IHSG; di hari itu emiten A00 dan A01 punya bar libur (volume 0), sisanya
+# tidak punya bar sama sekali -> harus dibuang.
+tgl = [(date(2026, 3, 2) + timedelta(days=i)).isoformat() for i in range(25)]
+
+
+def deret(kode, closes, volume=1e7, opens=None, tanggal=None):
+    tanggal = tanggal or tgl[:len(closes)]
+    opens = opens or closes
+    vol = volume if isinstance(volume, list) else [volume] * len(closes)
+    return pd.DataFrame({"Ticker": kode, "Tanggal": tanggal, "Open": opens, "High": closes,
+                         "Low": closes, "Close": closes, "Volume": vol})
+
+
+libur = tgl[5]
+bars = {KODE_IHSG: deret(KODE_IHSG, [100] * 24, tanggal=[t for t in tgl if t != libur])}
+for i in range(20):
+    b = deret(f"A{i:02d}", [100] * 25)
+    if i >= 2:
+        b = b[b["Tanggal"] != libur]
+    else:
+        b.loc[b["Tanggal"] == libur, "Volume"] = 0
+    bars[f"A{i:02d}"] = b.reset_index(drop=True)
+s = selaraskan_kalender(bars, sekarang=datetime(2026, 4, 1, 18, 0, tzinfo=WIB))
+periksa("bar libur ber-volume 0 dibuang", libur in set(s["A00"]["Tanggal"]), False)
+periksa("bar hari bursa biasa tetap", len(s["A00"]), 24)
+# Kebalikannya: yang bolong bar IHSG, tapi seluruh emiten bertransaksi.
+bars_ok = {k: (v if k == KODE_IHSG else deret(k, [100] * 25)) for k, v in bars.items()}
+s = selaraskan_kalender(bars_ok, sekarang=datetime(2026, 4, 1, 18, 0, tzinfo=WIB))
+periksa("bar IHSG bolong tapi emiten ramai -> hari bursa tetap diakui",
+        libur in set(s["A00"]["Tanggal"]), True)
+# Run jam 11:00 di tanggal bar terakhir: bar itu masih berjalan.
+s = selaraskan_kalender(bars_ok, sekarang=datetime.fromisoformat(tgl[24] + "T11:00:00+07:00"))
+periksa("bar hari ini dibuang selama sesi belum final", tgl[24] in set(s["A00"]["Tanggal"]), False)
+s = selaraskan_kalender(bars_ok, sekarang=datetime.fromisoformat(tgl[24] + "T18:00:00+07:00"))
+periksa("sesudah 16:15 bar hari ini dipakai", tgl[24] in set(s["A00"]["Tanggal"]), True)
+
+
+print("\n== Pembanding: IHSG dan saham acak ==")
+# 60 hari: IHSG naik 1 poin sehari (jadi di atas MA50), lalu beli di bar 58
+# pada harga 158 dan tahan satu hari sampai 159. Tiga puluh emiten likuid
+# datar di 1000 lalu bergerak L_i = i% di bar 59 (rata-rata 14,5%). Satu
+# emiten tidur (+400%) dan satu yang disuspensi di hari beli tidak boleh ikut.
+tgl = [(date(2026, 1, 1) + timedelta(days=i)).isoformat() for i in range(60)]
+k = 58
+bars = {KODE_IHSG: deret(KODE_IHSG, [100.0 + i for i in range(60)])}
+for i in range(MIN_EMITEN_PEMBANDING):
+    bars[f"L{i:02d}"] = deret(f"L{i:02d}", [1000.0] * 59 + [1000.0 * (1 + i / 100)])
+bars["TIDUR"] = deret("TIDUR", [1000.0] * 59 + [5000.0], volume=1e3)
+suspen = deret("SUSP", [1000.0] * 59 + [9000.0])
+bars["SUSP"] = suspen[suspen["Tanggal"] != tgl[k]].reset_index(drop=True)
+universe = set(bars) - {KODE_IHSG}
+
+b = pembanding([tgl[k]], bars, universe, hari=1, fee_beli=0, fee_jual=0).iloc[0]
+periksa("IHSG hari ke-1: 159/158 - 1", b["IHSG1%"], round((159 / 158 - 1) * 100, 2))
+periksa("IHSG di atas MA50 pada malam screening", b["IHSGdiAtasMA50"], "Ya")
+periksa("emiten tidur & yang disuspensi tidak ikut", int(b["AcakJumlah"]), MIN_EMITEN_PEMBANDING)
+periksa("saham acak = rata-rata emiten likuid", b["Acak1%"], 14.5)
+periksa("hari ke-0 saham acak rata", b["Acak0%"], 0.0)
+
+b = pembanding([tgl[k]], bars, universe, hari=1, fee_beli=0.15, fee_jual=0.25).iloc[0]
+periksa("biaya ikut dikenakan ke pembanding",
+        b["Acak0%"], round(((1 - 0.0025) / 1.0015 - 1) * 100, 2))
+
+sedikit = {f"L{i:02d}" for i in range(MIN_EMITEN_PEMBANDING - 1)}
+b = pembanding([tgl[k]], bars, sedikit, hari=1, fee_beli=0, fee_jual=0).iloc[0]
+periksa("emiten likuid terlalu sedikit -> saham acak dikosongkan", pd.isna(b["Acak1%"]), True)
+periksa("... tapi IHSG tetap terisi", pd.isna(b["IHSG1%"]), False)
+
+b = pembanding(["2026-12-31"], bars, universe, hari=1, fee_beli=0, fee_jual=0).iloc[0]
+periksa("tanggal beli di luar kalender -> kosong, tidak meledak", pd.isna(b["IHSG0%"]), True)
+
+print("\n== Selisih terhadap saham acak ==")
+banding = pembanding([tgl[k]], bars, universe, hari=1, fee_beli=0, fee_jual=0)
+posisi = pd.DataFrame({
+    "Ticker": ["X", "Y"], "TanggalBeli": [tgl[k]] * 2, "HariKe": [1, 1],
+    "Laba%": [20.0, 10.0], "Hari0%": [0.0, 0.0], "Hari1%": [20.0, 10.0],
+    "Modal": [10_000_000] * 2, "Ulang": ["Tidak", "Tidak"],
+})
+p = tambah_pembanding(posisi, banding)
+periksa("Selisih% posisi = Laba% - Acak%", float(p["Selisih%"].iloc[0]), 5.5)
+r = ringkas(p, hari=1, banding=banding).set_index("Hari")
+periksa("ringkas: rata-rata saham acak", float(r.loc[1, "RataAcak%"]), 14.5)
+periksa("ringkas: selisih rata-rata (5,5 - 4,5)/2", float(r.loc[1, "Selisih%"]), 0.5)
+periksa("ringkas: satu dari dua mengalahkan saham acak", float(r.loc[1, "MenangVsAcak%"]), 50.0)
+periksa("tanpa pembanding kolomnya kosong, bukan error",
+        pd.isna(ringkas(p, hari=1).set_index("Hari").loc[1, "Selisih%"]), True)
 
 
 print()
