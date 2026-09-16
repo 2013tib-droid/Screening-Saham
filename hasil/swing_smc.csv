@@ -1,6 +1,7 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-ANTM,ANTAM (Persero) Tbk.,74,BUY,3270,up,EQUILIBRIUM,42,BOS bull,up,down,FVG SESI,3070,3040,2950,,,6.1,2.9,SSL raid @ 3210,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
-TOTL,Total Bangun Persada Tbk,77,BUY,1555,up,PREMIUM,126,BOS bull,up,up,,,,,,,,4.1,BSL raid @ 1145,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-MAPI,Mitra Adiperkasa Tbk,72,BOW,1385,down,EQUILIBRIUM,41,BOS bear,down,up,FVG SESI,1305,1280,1240,1495,3.86,5.8,3.6,SSL raid @ 1360,HINDARI,struktur D1 masih bearish
-GGRM,Gudang Garam Tbk,73,BOW,17875,down,EQUILIBRIUM,56,CHoCH bear,down,down,OB SESI,17050,16750,15050,21825,2.66,4.6,3.4,BSL raid @ 17950,HINDARI,struktur D1 masih bearish
-PGEO,Pertamina Geothermal Energy ,76,BUY,1055,down,EQUILIBRIUM,57,CHoCH bear,up,up,,,,,,,,2.4,BSL raid @ 1060,HINDARI,struktur D1 masih bearish
+TKIM,Pabrik Kertas Tjiwi Kimia Tb,63.0,BOW,7625,up,EQUILIBRIUM,47,BOS bull,down,down,,,,,,,,3.9,BSL raid @ 7650,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+DSNG,Dharma Satya Nusantara Tbk.,78.0,BUY,1595,up,PREMIUM,74,BOS bull,up,down,FVG SESI,1525,1495,1255,,,4.4,4.4,BSL raid @ 1685,TUNGGU,stop struktural terlalu lebar (16% dari harga)
+ITMG,Indo Tambangraya Megah Tbk,74.0,BUY,26225,up,PREMIUM,65,BOS bull,up,down,,,,,,,,2.0,BSL raid @ 26775,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+TOTL,Total Bangun Persada Tbk,77.0,BUY,1535,up,PREMIUM,111,BOS bull,up,up,,,,,,,,4.2,BSL raid @ 1145,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+HATM,Habco Trans Maritima Tbk.,46.0,BOW,565,up,PREMIUM,72,BOS bull,down,down,,,,,,,,5.8,SSL raid @ 555,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+FORU,,,BUY,4020,up,PREMIUM,94,BOS bull,up,up,OB D1,3890,3340,3020,,,3.2,14.7,BSL raid @ 4200,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
