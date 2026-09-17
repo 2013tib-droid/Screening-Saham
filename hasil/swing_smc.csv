@@ -1,7 +1,5 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-TKIM,Pabrik Kertas Tjiwi Kimia Tb,63.0,BOW,7625,up,EQUILIBRIUM,47,BOS bull,down,down,,,,,,,,3.9,BSL raid @ 7650,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-DSNG,Dharma Satya Nusantara Tbk.,78.0,BUY,1595,up,PREMIUM,74,BOS bull,up,down,FVG SESI,1525,1495,1255,,,4.4,4.4,BSL raid @ 1685,TUNGGU,stop struktural terlalu lebar (16% dari harga)
-ITMG,Indo Tambangraya Megah Tbk,74.0,BUY,26225,up,PREMIUM,65,BOS bull,up,down,,,,,,,,2.0,BSL raid @ 26775,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-TOTL,Total Bangun Persada Tbk,77.0,BUY,1535,up,PREMIUM,111,BOS bull,up,up,,,,,,,,4.2,BSL raid @ 1145,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-HATM,Habco Trans Maritima Tbk.,46.0,BOW,565,up,PREMIUM,72,BOS bull,down,down,,,,,,,,5.8,SSL raid @ 555,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-FORU,,,BUY,4020,up,PREMIUM,94,BOS bull,up,up,OB D1,3890,3340,3020,,,3.2,14.7,BSL raid @ 4200,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+JPFA,Japfa Comfeed Indonesia Tbk.,85.0,BUY,2320,up,EQUILIBRIUM,54,BOS bull,down,up,,,,,,,,3.8,SSL raid @ 2330,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+FORU,,,BUY,3540,up,PREMIUM,79,BOS bull,up,down,,,,,,,,17.6,BSL raid @ 4200,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+FAST,Fast Food Indonesia Tbk,19.0,BUY,452,down,EQUILIBRIUM,49,CHoCH bear,down,up,,,,,,,,6.2,SSL raid @ 444,HINDARI,struktur D1 masih bearish
+MAPI,Mitra Adiperkasa Tbk,71.0,BOW,1455,down,EQUILIBRIUM,49,BOS bear,up,up,OB SESI,1400,1380,1310,,,3.8,4.0,SSL raid @ 1360,HINDARI,struktur D1 masih bearish
