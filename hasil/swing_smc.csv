@@ -2,17 +2,18 @@ Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,T
 MEDC,Medco Energi Internasional T,60.0,BUY,1460,up,EQUILIBRIUM,48,BOS bull,down,down,OB SESI,1420,1390,1320,1565,1.88,2.7,4.5,BSL raid @ 1570,PANTAU,RR baru 1.88 — di bawah 2
 ADRO,Alamtri Resources Indonesia ,73.0,BUY,2640,up,PREMIUM,83,BOS bull,down,up,OB D1,2530,2460,2390,2860,3.48,4.2,3.0,BSL raid @ 2600,TUNGGU,harga di premium — tunggu pullback ke zona
 BBRI,Bank Rakyat Indonesia (Perse,64.0,BUY,3310,up,PREMIUM,64,BOS bull,down,down,FVG D1,3250,3200,3100,3570,2.76,1.8,2.4,BSL raid @ 3300,TUNGGU,harga di premium — tunggu pullback ke zona
-BFIN,BFI Finance  Indonesia Tbk,66.0,BUY,965,up,PREMIUM,84,BOS bull,up,down,FVG SESI,905,890,835,1040,2.28,6.2,5.1,SSL raid @ 925,TUNGGU,harga di premium — tunggu pullback ke zona
+BFIN,BFI Finance  Indonesia Tbk,67.0,BUY,965,up,PREMIUM,84,BOS bull,up,down,FVG SESI,905,890,835,1040,2.28,6.2,5.1,SSL raid @ 925,TUNGGU,harga di premium — tunggu pullback ke zona
+SQMI,Wilton Makmur Indonesia Tbk.,27.0,BUY,99,up,PREMIUM,84,BOS bull,up,up,,,,,,,,14.6,SSL raid @ 62,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
 ASLI,Asri Karya Lestari Tbk.,30.0,BUY,362,up,DISCOUNT,36,BOS bull,up,up,,,,,,,,14.2,BSL raid @ 430,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-LSIP,PP London Sumatra Indonesia ,88.0,BUY,1695,up,PREMIUM,92,BOS bull,up,up,FVG D1,1655,1615,1400,,,2.4,3.9,BSL raid @ 1760,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
-FPNI,Lotte Chemical Titan Tbk.,71.0,BUY,600,up,DISCOUNT,23,BOS bull,up,up,FVG SESI,555,525,408,,,7.5,8.9,BSL raid @ 670,TUNGGU,stop struktural terlalu lebar (22% dari harga)
+LSIP,PP London Sumatra Indonesia ,88.0,BUY,1695,up,PREMIUM,92,BOS bull,down,down,FVG D1,1655,1615,1400,,,2.4,3.9,BSL raid @ 1760,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+FPNI,Lotte Chemical Titan Tbk.,71.0,BUY,600,up,DISCOUNT,23,BOS bull,up,up,,,,,,,,8.9,BSL raid @ 670,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
 JARR,Jhonlin Agro Raya Tbk.,54.0,BUY,3600,up,PREMIUM,93,BOS bull,up,down,OB D1,3500,3360,3010,,,2.8,8.9,BSL raid @ 3660,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
-DOOH,,,BUY,408,up,PREMIUM,119,BOS bull,up,up,FVG SESI,388,374,230,,,4.9,5.3,BSL raid @ 342,TUNGGU,stop struktural terlalu lebar (37% dari harga)
+DOOH,,,BUY,408,up,PREMIUM,119,BOS bull,up,up,,,,,,,,5.3,BSL raid @ 342,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
 INDF,Indofood Sukses Makmur Tbk,75.0,BOW,7025,down,PREMIUM,71,BOS bear,up,down,FVG D1,6525,6375,6275,7250,4.57,6.9,2.4,BSL raid @ 7575,HINDARI,struktur D1 masih bearish
 GGRM,Gudang Garam Tbk,73.0,BOW,17900,down,EQUILIBRIUM,57,CHoCH bear,down,down,OB SESI,17050,16750,15050,21825,2.66,4.7,3.2,BSL raid @ 17950,HINDARI,struktur D1 masih bearish
 EMAS,Merdeka Gold Resources Tbk.,26.0,BOW,7650,down,EQUILIBRIUM,51,CHoCH bear,down,down,FVG D1,7375,6950,5600,,,3.6,5.6,BSL raid @ 8900,HINDARI,struktur D1 masih bearish
-FAST,Fast Food Indonesia Tbk,19.0,BOW,426,down,EQUILIBRIUM,45,CHoCH bear,down,up,FVG D1,410,370,312,,,3.8,7.3,SSL raid @ 444,HINDARI,struktur D1 masih bearish
+FAST,Fast Food Indonesia Tbk,19.0,BOW,426,down,EQUILIBRIUM,45,CHoCH bear,down,down,FVG D1,410,370,312,,,3.8,7.3,SSL raid @ 444,HINDARI,struktur D1 masih bearish
 TKIM,Pabrik Kertas Tjiwi Kimia Tb,63.0,BOW,7525,down,EQUILIBRIUM,46,CHoCH bear,down,down,,,,,,,,3.7,BSL raid @ 7575,HINDARI,struktur D1 masih bearish
-MAPI,Mitra Adiperkasa Tbk,71.0,BOW,1500,down,EQUILIBRIUM,54,BOS bear,up,up,FVG SESI,1465,1395,1310,,,2.3,3.6,SSL raid @ 1360,HINDARI,struktur D1 masih bearish
+MAPI,Mitra Adiperkasa Tbk,72.0,BOW,1500,down,EQUILIBRIUM,54,BOS bear,up,up,FVG SESI,1465,1395,1310,,,2.3,3.6,SSL raid @ 1360,HINDARI,struktur D1 masih bearish
 PGEO,Pertamina Geothermal Energy ,75.0,BUY,1060,down,EQUILIBRIUM,58,CHoCH bear,up,up,,,,,,,,2.4,BSL raid @ 1060,HINDARI,struktur D1 masih bearish
 BYAN,Bayan Resources Tbk,62.0,BUY,13825,down,EQUILIBRIUM,51,BOS bear,down,down,FVG D1,13100,12225,10075,,,5.2,6.5,SSL raid @ 11100,HINDARI,struktur D1 masih bearish
