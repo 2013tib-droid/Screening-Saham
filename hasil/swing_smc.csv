@@ -1,14 +1,15 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-MEDC,Medco Energi Internasional T,60.0,BUY,1465,up,EQUILIBRIUM,49,BOS bull,down,down,OB SESI,1420,1390,1320,1565,1.88,3.1,4.9,BSL raid @ 1570,PANTAU,RR baru 1.88 — di bawah 2
-SOCI,Soechi Lines Tbk.,48.0,BUY,645,up,PREMIUM,75,BOS bull,up,up,FVG SESI,600,580,520,730,2.0,7.0,7.9,BSL raid @ 685,TUNGGU,harga di premium — tunggu pullback ke zona
-DSNG,Dharma Satya Nusantara Tbk.,79.0,BOW,1540,up,PREMIUM,67,BOS bull,up,down,FVG D1,1430,1375,1255,1680,1.88,7.1,4.8,BSL raid @ 1685,TUNGGU,harga di premium — tunggu pullback ke zona
-AKRA,AKR Corporindo Tbk,76.0,BUY,1450,up,PREMIUM,76,CHoCH bull,down,up,FVG D1,1445,1415,1350,1560,1.62,0.3,3.2,BSL raid @ 1455,TUNGGU,harga di premium — tunggu pullback ke zona
-LSIP,PP London Sumatra Indonesia ,88.0,BOW,1580,up,PREMIUM,77,BOS bull,down,down,FVG D1,1575,1515,1400,1760,1.48,0.3,4.4,BSL raid @ 1760,TUNGGU,harga di premium — tunggu pullback ke zona
-TINS,TIMAH (Persero) Tbk.,80.0,BUY,4610,up,PREMIUM,87,BOS bull,down,up,OB SESI,4440,4380,3940,4910,1.06,3.7,4.9,BSL raid @ 4910,TUNGGU,harga di premium — tunggu pullback ke zona
-SIMP,Salim Ivomas Pratama Tbk.,78.0,BOW,600,up,DISCOUNT,35,BOS bull,up,down,,,,,,,,3.5,BSL raid @ 615,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-AALI,Astra Agro Lestari Tbk.,80.0,BOW,7850,up,PREMIUM,70,BOS bull,up,down,FVG D1,7375,7225,5850,,,6.1,3.5,BSL raid @ 8150,TUNGGU,stop struktural terlalu lebar (18% dari harga)
-ISAT,Indosat Tbk,74.0,BUY,2410,up,PREMIUM,63,BOS bull,down,up,,,,,,,,4.1,SSL raid @ 2300,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+STAA,Sumber Tani Agung Resources ,81.0,BUY,1185,up,PREMIUM,62,BOS bull,down,up,OB SESI,1150,1135,1100,1380,5.59,3.0,3.3,BSL raid @ 1220,TUNGGU,harga di premium — tunggu pullback ke zona
+PGEO,Pertamina Geothermal Energy ,75.0,BUY,1090,up,PREMIUM,65,CHoCH bull,up,up,OB SESI,1080,1050,1000,1240,2.69,0.9,2.8,BSL raid @ 1070,TUNGGU,harga di premium — tunggu pullback ke zona
+BFIN,BFI Finance  Indonesia Tbk,67.0,BUY,955,up,PREMIUM,82,BOS bull,up,down,FVG SESI,905,890,835,1040,2.28,5.2,4.7,SSL raid @ 925,TUNGGU,harga di premium — tunggu pullback ke zona
+SMIL,Sarana Mitra Luas Tbk.,52.0,BUY,446,up,PREMIUM,77,BOS bull,up,up,FVG SESI,444,436,394,515,1.63,0.4,4.7,BSL raid @ 432,TUNGGU,harga di premium — tunggu pullback ke zona
+JAWA,Jaya Agra Wattie Tbk.,34.0,BUY,171,up,EQUILIBRIUM,56,BOS bull,up,up,OB D1,163,153,125,,,4.7,12.7,BSL raid @ 206,TUNGGU,stop struktural terlalu lebar (19% dari harga)
+AALI,Astra Agro Lestari Tbk.,80.0,BOW,7850,up,PREMIUM,69,BOS bull,up,down,FVG D1,7375,7225,5850,,,6.1,3.3,BSL raid @ 8150,TUNGGU,stop struktural terlalu lebar (18% dari harga)
 MARK,Mark Dynamics Indonesia Tbk.,79.0,BUY,1140,up,PREMIUM,79,BOS bull,up,down,,,,,,,,4.3,BSL raid @ 1115,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-DOOH,,,BUY,378,up,PREMIUM,74,BOS bull,up,up,FVG D1,358,326,230,,,5.3,7.3,BSL raid @ 342,TUNGGU,stop struktural terlalu lebar (30% dari harga)
-TAPG,Triputra Agro Persada Tbk.,80.0,BOW,2040,down,PREMIUM,65,CHoCH bear,down,down,OB SESI,1970,1950,1705,2480,2.04,3.4,5.6,BSL raid @ 2080,HINDARI,struktur D1 masih bearish
-PGEO,Pertamina Geothermal Energy ,75.0,BUY,1065,down,EQUILIBRIUM,59,CHoCH bear,up,up,,,,,,,,2.6,BSL raid @ 1070,HINDARI,struktur D1 masih bearish
+DOOH,,,BUY,420,up,PREMIUM,84,BOS bull,up,up,,,,,,,,7.6,BSL raid @ 342,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+MDKA,Merdeka Copper Gold Tbk.,31.0,BUY,3080,down,EQUILIBRIUM,55,CHoCH bear,down,up,FVG SESI,3000,2860,2780,,,2.6,4.0,SSL raid @ 2850,HINDARI,struktur D1 masih bearish
+HRTA,Hartadinata Abadi Tbk.,69.0,BUY,2300,down,EQUILIBRIUM,40,CHoCH bear,up,up,FVG SESI,2240,2180,2070,,,2.6,3.4,SSL raid @ 2170,HINDARI,struktur D1 masih bearish
+TAPG,Triputra Agro Persada Tbk.,80.0,BOW,1980,down,EQUILIBRIUM,61,CHoCH bear,down,down,FVG D1,1910,1855,1705,,,3.5,5.7,BSL raid @ 2080,HINDARI,struktur D1 masih bearish
+MAPI,Mitra Adiperkasa Tbk,71.0,BUY,1510,down,EQUILIBRIUM,55,BOS bear,up,down,FVG SESI,1465,1395,1310,,,3.0,3.6,SSL raid @ 1360,HINDARI,struktur D1 masih bearish
+SSIA,Surya Semesta Internusa Tbk,52.0,BOW,1715,down,PREMIUM,71,CHoCH bear,down,down,,,,,,,,3.9,SSL raid @ 1650,HINDARI,struktur D1 masih bearish
+INDY,Indika Energy Tbk,42.0,BUY,2850,down,EQUILIBRIUM,42,CHoCH bear,up,up,FVG SESI,2790,2650,2560,,,2.1,5.5,SSL raid @ 2690,HINDARI,struktur D1 masih bearish
