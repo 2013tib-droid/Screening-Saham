@@ -1,6 +1,6 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-STAA,Sumber Tani Agung Resources ,81.0,BUY,1195,up,PREMIUM,64,BOS bull,down,down,OB SESI,1150,1135,1100,1380,5.59,3.8,3.3,BSL raid @ 1220,TUNGGU,harga di premium — tunggu pullback ke zona
-BFIN,BFI Finance  Indonesia Tbk,67.0,BUY,950,up,PREMIUM,81,BOS bull,up,down,FVG SESI,905,890,835,1040,2.28,4.7,4.7,SSL raid @ 925,TUNGGU,harga di premium — tunggu pullback ke zona
-AALI,Astra Agro Lestari Tbk.,80.0,BOW,7775,up,PREMIUM,66,BOS bull,up,down,FVG D1,7375,7225,5850,,,5.1,3.3,BSL raid @ 7825,TUNGGU,stop struktural terlalu lebar (19% dari harga)
-PTSN,Sat Nusapersada Tbk,74.0,BUY,398,up,PREMIUM,66,BOS bull,up,down,,,,,,,,12.4,BSL raid @ 376,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-DOOH,,,BUY,392,up,PREMIUM,77,BOS bull,up,up,,,,,,,,8.7,BSL raid @ 342,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+KETR,Ketrosden Triasmitra Tbk.,80.0,BUY,975,up,PREMIUM,88,BOS bull,up,up,,,,,,,,9.0,BSL raid @ 1030,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+SMIL,Sarana Mitra Luas Tbk.,52.0,BUY,424,up,PREMIUM,83,BOS bull,up,down,,,,,,,,5.4,SSL raid @ 420,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+AYAM,Janu Putra Sejahtera Tbk.,30.0,BUY,500,up,PREMIUM,80,BOS bull,up,down,,,,,,,,4.1,BSL raid @ 505,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+DOOH,,,BUY,364,up,PREMIUM,70,BOS bull,up,up,OB SESI,338,312,230,,,7.1,10.5,BSL raid @ 342,TUNGGU,stop struktural terlalu lebar (26% dari harga)
+HRTA,Hartadinata Abadi Tbk.,69.0,BUY,2290,down,EQUILIBRIUM,39,CHoCH bear,up,up,FVG D1,2260,2180,2070,,,1.3,3.4,BSL raid @ 2350,HINDARI,struktur D1 masih bearish
