@@ -45,7 +45,7 @@ def endpoint(kode: str) -> list:
         ("Pencarian Saham", f"/api/search?q={q(kode)}"),
         ("Laporan Keuangan", f"/api/financial-statements/{q(kode)}"),
         ("Transaksi Insider", f"/api/insiders/{q(kode)}"),
-        ("Done Details (Order Flow)", "/api/done-details"),
+        ("Done Details (Order Flow)", f"/api/done-details?code={q(kode)}"),
         ("Harga Realtime", f"/api/price/{q(kode)}"),
     ]
 
