@@ -10,12 +10,12 @@
 #   maksimal 400 nama.
 # Diperbarui: 2026-09-28 — 400 emiten.
 
-BBCA  # Bank Central Asia Tbk — 767.8 T
-BBRI  # Bank Rakyat Indonesia (Persero) — 474.7 T
+BBCA  # Bank Central Asia Tbk — 768.0 T
+BBRI  # Bank Rakyat Indonesia (Persero) — 474.3 T
 DCII  # DCI Indonesia Tbk. — 472.0 T
 BREN  # Barito Renewables Energy Tbk. — 408.0 T
 BYAN  # Bayan Resources Tbk — 403.3 T
-BMRI  # Bank Mandiri (Persero) Tbk — 379.3 T
+BMRI  # Bank Mandiri (Persero) Tbk — 380.8 T
 AMMN  # Amman Mineral Internasional Tbk — 341.8 T
 TLKM  # Telkom Indonesia (Persero) Tbk. — 237.6 T
 MORA  # Ekamas Mora Republik Tbk. — 228.8 T
@@ -25,7 +25,7 @@ SRAJ  # Sejahteraraya Anugrahjaya Tbk. — 159.1 T
 TPIA  # Chandra Asri Pacific Tbk. — 155.6 T
 BRPT  # Barito Pacific Tbk. — 141.5 T
 DNET  # Indoritel Makmur Internasional — 137.9 T
-BBNI  # Bank Negara Indonesia  (Persero — 130.4 T
+BBNI  # Bank Negara Indonesia  (Persero — 130.3 T
 SMMA  # Sinarmas Multiartha Tbk. — 127.5 T
 MPRO  # Maha Properti Indonesia Tbk. — 120.3 T
 EMAS  # Merdeka Gold Resources Tbk. — 112.3 T
@@ -67,12 +67,12 @@ PGEO  # Pertamina Geothermal Energy Tbk — 42.8 T
 GEMS  # Golden Energy Mines Tbk. — 42.5 T
 EXCL  # XLSMART Telecom Sejahtera Tbk. — 42.4 T
 TAPG  # Triputra Agro Persada Tbk. — 40.3 T
-BNBR  # Bakrie & Brothers Tbk — 39.5 T
 MTEL  # Dayamitra Telekomunikasi Tbk. — 37.7 T
 BELI  # Global Digital Niaga Tbk. — 37.0 T
 MEDC  # Medco Energi Internasional Tbk. — 35.9 T
 PTBA  # Bukit Asam (Persero) Tbk. — 35.6 T
 TINS  # TIMAH (Persero) Tbk. — 35.2 T
+BNBR  # Bakrie & Brothers Tbk — 34.9 T
 CMRY  # Cisarua Mountain Dairy Tbk. — 34.7 T
 PGAS  # Perusahaan Gas Negara (Persero) — 34.7 T
 VKTR  # VKTR Teknologi Mobilitas Tbk. — 34.1 T
@@ -85,13 +85,13 @@ MYOR  # Mayora Indah Tbk — 31.6 T
 AKRA  # AKR Corporindo Tbk — 29.0 T
 NISP  # Bank OCBC NISP Tbk — 28.8 T
 MGLV  # NexAI Digital Infrastruktur Tbk — 28.5 T
-ITMG  # Indo Tambangraya Megah Tbk — 28.4 T
+ITMG  # Indo Tambangraya Megah Tbk — 28.1 T
 FAPA  # FAP Agri Tbk. — 25.9 T
 EMTK  # Elang Mahkota Teknologi Tbk — 25.7 T
 SILO  # Siloam International Hospitals — 25.3 T
 MAPI  # Mitra Adiperkasa Tbk — 25.1 T
-JPFA  # Japfa Comfeed Indonesia Tbk. — 24.9 T
 BTPN  # Bank SMBC Indonesia Tbk. — 24.9 T
+JPFA  # Japfa Comfeed Indonesia Tbk. — 24.8 T
 BINA  # Bank Ina Perdana Tbk. — 24.7 T
 MDIY  # Daya Intiguna Yasa Tbk. — 24.1 T
 MIKA  # Mitra Keluarga Karyasehat Tbk. — 23.9 T
@@ -106,8 +106,8 @@ LIFE  # MSIG Life Insurance Indonesia T — 21.3 T
 PNBN  # Bank Pan Indonesia Tbk — 20.5 T
 MKPI  # Metropolitan Kentjana Tbk — 20.4 T
 AVIA  # Avia Avian Tbk. — 20.3 T
+CBDK  # Bangun Kosambi Sukses Tbk. — 20.1 T
 ADES  # Akasha Wira International Tbk. — 20.1 T
-CBDK  # Bangun Kosambi Sukses Tbk. — 20.0 T
 JSMR  # Jasa Marga (Persero) Tbk — 19.7 T
 BSIM  # Bank Sinarmas Tbk. — 18.5 T
 MAPA  # Map Aktif Adiperkasa Tbk. — 18.5 T
@@ -182,7 +182,6 @@ DUTI  # Duta Pertiwi Tbk — 8.9 T
 BIPI  # Astrindo Nusantara Infrastruktu — 8.7 T
 MIDI  # Midi Utama Indonesia Tbk. — 8.7 T
 NATO  # Olympus Strategic Indonesia Tbk — 8.4 T
-RMKE  # RMK Energy Tbk. — 8.3 T
 SGRO  # Prime Agri Resources Tbk. — 8.0 T
 BBMD  # Bank Mestika Dharma Tbk. — 8.0 T
 BJBR  # Bank Pembangunan Daerah Jawa Ba — 7.9 T
@@ -254,8 +253,8 @@ MMIX  # Multi Medika Internasional Tbk. — 4.3 T
 LINK  # Link Net Tbk. — 4.3 T
 MSTI  # Mastersystem Infotama Tbk. — 4.2 T
 SMRA  # Summarecon Agung Tbk — 4.2 T
-TOBA  # TBS Energi Utama Tbk. — 4.1 T
 AMAR  # Bank Amar Indonesia Tbk. — 4.1 T
+TOBA  # TBS Energi Utama Tbk. — 4.1 T
 GGRP  # Gunung Raja Paksi Tbk. — 4.1 T
 ARGO  # Argo Pantes Tbk — 4.0 T
 JTPE  # Jasuindo Tiga Perkasa Tbk — 4.0 T
@@ -395,6 +394,7 @@ BHIT  # MNC Asia Holding Tbk. — 1.8 T
 ACST  # Acset Indonusa Tbk. — 1.7 T
 BMHS  # Bundamedik Tbk. — 1.7 T
 MERK  # Merck Tbk — 1.7 T
+RMKE  # RMK Energy Tbk. — 1.7 T
 BLES  # Superior Prima Sukses Tbk. — 1.7 T
 BVIC  # Bank Victoria International Tbk — 1.7 T
 OASA  # Maharaksa Biru Energi Tbk. — 1.7 T
