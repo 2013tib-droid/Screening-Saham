@@ -379,7 +379,7 @@ Pemisahan di atas gampang disalahpahami jadi "kolom teknikal harian, kolom funda
 
 | Kelompok | Kolom | Berubah |
 |---|---|---|
-| **Murni harga** | `Harga`, `Vol20(jt)`, `Nilai(M)`, `VolSpike`, `RSI14`, `MA50`, `MA200`, `Status` | Tiap hari bursa |
+| **Murni harga** | `Harga`, `Vol20(jt)`, `Nilai(M)`, `VolSpike`, `RSI14`, `MA50`, `MA200`, `Status`, `NetAsing*` | Tiap hari bursa |
 | **Rasio harga ÷ lapkeu** | `PER`, `PBV`, `PERvsSektor`, `PBVvsSektor`, `Dividen%`, `MarketCap(T)`, `EV/EBITDA`, `FCFYield%`, `SkorValuasi` | **Tiap hari bursa** |
 | **Murni lapkeu** | `ROE%`, `ROA%`, `LabaYoY%`, `OmzetYoY%`, `DER`, semua margin, `CurrentRatio`, `QuickRatio`, `InterestCoverage`, `OCF/Laba`, `Payout%`, CAGR, `EPS`, `BVPS`, dan seluruh pos laporan keuangan | Per kuartal |
 
@@ -528,6 +528,23 @@ Catatan penting:
 - Jadwal cron hanya aktif di **branch default** repo — pastikan workflow ini sudah ter-merge ke branch utama. Workflow juga otomatis jalan sekali setiap ada push ke branch utama, jadi begitu di-merge, hasil pertama dan dashboard langsung tersedia tanpa menunggu malam.
 - GitHub menonaktifkan cron otomatis jika repo tidak ada aktivitas selama 60 hari; karena workflow ini meng-commit hasil tiap malam, repo tetap "aktif" dengan sendirinya.
 - Yahoo Finance sesekali membatasi request dari server GitHub. Kalau run gagal, coba **Run workflow** ulang, atau jalankan screening di komputer sendiri.
+
+## Net Beli Asing (stock.arjum.com)
+
+Yahoo Finance tidak punya data transaksi investor asing, jadi kolom ini diambil dari API [stock.arjum.com](https://stock.arjum.com) (endpoint `/api/history/{kode}`, satu request per emiten) oleh `arjum.py`:
+
+| Kolom | Arti |
+|---|---|
+| `NetAsing1H(M)` | Net beli asing hari bursa terakhir, miliar rupiah |
+| `NetAsing5H(M)` | Jumlah net beli asing 5 hari bursa terakhir |
+| `NetAsing20H(M)` | Jumlah net beli asing 20 hari bursa terakhir |
+| `TglAsing` | Tanggal bar terakhir yang dipakai |
+
+Positif = asing net beli, negatif = net jual. Angka lembar (`n_foreign`) dikali harga rata-rata hari itu supaya bisa dibandingkan antar-emiten. Dashboard menampilkan kolom 5H dan 20H.
+
+Butuh API key di environment variable `ARJUM_API_KEY` — untuk run malam, simpan sebagai secret repo (**Settings → Secrets and variables → Actions**). Tanpa key, atau kalau API sedang bermasalah, kolomnya kosong dan screening tetap jalan seperti biasa. Kuota paket gratis 1.000 request/jam; begitu API membalas 429 (kuota habis) atau 401/403 (key ditolak), sisa emiten dilewati.
+
+Workflow **Uji API Arjum** (`.github/workflows/uji-arjum.yml`) mengecek ke-13 endpoint API itu dan melaporkan bentuk response-nya — dipakai untuk memastikan key masih berlaku.
 
 ## Uji Akses IDX (net buy asing)
 

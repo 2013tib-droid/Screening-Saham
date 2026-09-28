@@ -64,7 +64,13 @@ jobs:
       # --output-pasar: IHSG vs MA50/MA200 untuk bilah "kondisi pasar" di
       # dashboard. Gagal menarik IHSG tidak menggagalkan langkah ini — berkas
       # lama dibiarkan dan dashboard menandainya basi dari tanggalnya.
+      #
+      # ARJUM_API_KEY: net beli asing dari stock.arjum.com (lihat arjum.py).
+      # Secret kosong atau API bermasalah tidak menggagalkan langkah ini —
+      # kolom NetAsing* saja yang kosong.
       - name: Ambil data & simpan tabel lengkap
+        env:
+          ARJUM_API_KEY: ${{ secrets.ARJUM_API_KEY }}
         run: python screener.py --output hasil/semua.csv --output-pasar hasil/pasar.json
 
       # RSI dibatasi 65, bukan 50. Alasannya: --max-rsi dan --min-volspike
