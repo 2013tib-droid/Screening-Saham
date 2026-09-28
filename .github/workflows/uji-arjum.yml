@@ -14,6 +14,10 @@ on:
         description: "Kode saham contoh"
         default: "BBCA"
         required: false
+      jalur:
+        description: "Opsional: satu path (mis. /api/openapi.json) — response-nya dicetak utuh"
+        default: ""
+        required: false
   # Tombol Run workflow baru muncul setelah file ini ada di branch default.
   # Selama masih di branch fitur, uji dipicu lewat push ke file uji ini saja.
   push:
@@ -40,4 +44,5 @@ jobs:
         env:
           ARJUM_API_KEY: ${{ secrets.ARJUM_API_KEY }}
           KODE: ${{ inputs.kode || 'BBCA' }}
+          JALUR: ${{ inputs.jalur }}
         run: python scripts/uji_arjum.py "$KODE"
