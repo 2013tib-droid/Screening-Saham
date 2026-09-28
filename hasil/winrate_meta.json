@@ -1,5 +1,5 @@
 {
-  "diperbarui": "2026-09-28T02:09:35Z",
+  "diperbarui": "2026-09-28T17:15:06Z",
   "modal": 10000000,
   "hari": 21,
   "feeBeli": 0.15,
@@ -7,12 +7,12 @@
   "lembarPerLot": 100,
   "posisi": 278,
   "posisiSelesai": 69,
-  "hariScreening": 29,
+  "hariScreening": 30,
   "pickPertama": "2026-08-11",
   "pickTerakhir": "2026-09-24",
   "posisiUlang": 184,
   "pembanding": {
-    "universe": 402,
+    "universe": 401,
     "nilaiMin": 5.0,
     "minEmiten": 30,
     "maPasar": 50
