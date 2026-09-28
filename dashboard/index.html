@@ -558,7 +558,7 @@
     </div>
     <div class="pisah"></div>
     <select id="kelompok" aria-label="Pilih kelompok kolom">
-      <option value="">Semua kolom (25)</option>
+      <option value="">Semua kolom (27)</option>
       <option value="ringkas">Ringkas</option>
       <option value="valuasi">Valuasi</option>
       <option value="fundamental">Fundamental</option>
@@ -637,7 +637,7 @@
           <li><span class="status s-tipis">TIPIS</span> nilai transaksi &lt; 1 miliar/hari — sinyal teknikal tidak berlaku, susah masuk-keluar.</li>
         </ul>
       </dd>
-      <dt>Kelompok kolom</dt><dd>Tabelnya 24 kolom dan tidak muat di layar mana pun sekaligus.
+      <dt>Kelompok kolom</dt><dd>Tabelnya 27 kolom dan tidak muat di layar mana pun sekaligus.
       Dropdown <strong>Semua kolom / Ringkas / Valuasi / Fundamental / Teknikal</strong> memotongnya
       jadi sekumpulan kolom yang memang dibaca bersamaan; Ticker, Nama, Status, dan Skor selalu ikut
       supaya barisnya tetap bisa dikenali. Kalau tetap ingin melihat semuanya, tombol
@@ -709,6 +709,9 @@
       <span class="nilai n-dingin">≤ 30</span> oversold (sudah jauh turun). Di antara keduanya
       dibiarkan polos — kalau setiap angka diwarnai, tidak ada satu pun yang menonjol.</dd>
       <dt>MA50 / MA200</dt><dd>Rata-rata harga 50 / 200 hari terakhir.</dd>
+      <dt>Asing 5H / 20H (M)</dt><dd>Net beli investor asing 5 / 20 hari bursa terakhir, dalam
+      miliar rupiah (sumber: stock.arjum.com). Positif (+) berarti asing lebih banyak membeli
+      daripada menjual; negatif berarti net jual. Kosong bila datanya tidak tersedia.</dd>
     </dl>
     <p>Klik judul kolom untuk mengurutkan. Data diperbarui otomatis tiap malam hari bursa
     dari harga penutupan (sumber: Yahoo Finance, delay ±15 menit).</p>
@@ -839,6 +842,11 @@ const KOLOM = [
   { k: "Nilai(M)",     label: "Nilai (M)", angka: true, desimal: 1 },
   { k: "VolSpike",     label: "VolSpike",  angka: true, desimal: 2 },
   { k: "RSI14",        label: "RSI14",     angka: true, desimal: 1 },
+  // Net beli asing 5 dan 20 hari bursa terakhir, miliar rupiah (arjum.py).
+  // Kolom 1 hari tetap ada di CSV tapi tidak ditampilkan: satu hari terlalu
+  // berisik untuk horizon swing.
+  { k: "NetAsing5H(M)",  label: "Asing 5H (M)",  angka: true, desimal: 1, bertanda: true },
+  { k: "NetAsing20H(M)", label: "Asing 20H (M)", angka: true, desimal: 1, bertanda: true },
   { k: "MA50",         label: "MA50",      angka: true },
   { k: "MA200",        label: "MA200",     angka: true },
 ];
@@ -878,7 +886,8 @@ const KELOMPOK = {
                 "ROE%", "DER", "Dividen%", "MarketCap(T)"],
   fundamental: ["Sektor", "Flag", "ROE%", "DER", "LabaYoY%", "OmzetYoY%",
                 "Dividen%", "MarketCap(T)"],
-  teknikal:    ["Harga", "MA50", "MA200", "RSI14", "VolSpike", "Vol20(jt)", "Nilai(M)"],
+  teknikal:    ["Harga", "MA50", "MA200", "RSI14", "VolSpike", "Vol20(jt)", "Nilai(M)",
+                "NetAsing5H(M)", "NetAsing20H(M)"],
 };
 
 function kolomTampil() {
@@ -1118,6 +1127,14 @@ function render() {
         const ket = v >= 70 ? "Overbought — RSI 70 ke atas, sudah jauh naik"
                             : "Oversold — RSI 30 ke bawah, sudah jauh turun";
         return `<td class="${kelas}"><span class="nilai ${zona}" title="${ket}">${isi}</span></td>`;
+      }
+      // Net asing: tanda + ditulis eksplisit supaya arah beli/jual terbaca
+      // tanpa harus membandingkan dengan nol. Sengaja tanpa warna, sama
+      // alasannya dengan RSI — setiap baris punya angka ini.
+      if (k.bertanda) {
+        const v = r[k.k];
+        if (v === null || v === undefined || v === "") return `<td class="${kelas}">–</td>`;
+        return `<td class="${kelas}">${v > 0 ? "+" : ""}${isi}</td>`;
       }
       // Lonjakan volume: 1,5× rata-rata 20 hari ke atas.
       if (k.k === "VolSpike") {

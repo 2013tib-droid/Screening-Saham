@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from arjum import KOLOM_ASING, ambil_net_asing
+
 KOLOM = [
     "Ticker", "Nama", "Grup", "Sektor", "Syariah", "Status", "Skor", "Flag", "Harga",
     "PER", "PBV", "PERvsSektor", "PBVvsSektor", "ROE%",
@@ -36,6 +38,9 @@ KOLOM = [
 # tersimpan supaya hasil/semua.csv bisa dipakai sebagai sumber analisa lanjutan
 # tanpa menarik ulang laporan keuangan.
 KOLOM_EKSTRA = [
+    # Net beli asing dari stock.arjum.com (lihat arjum.py), miliar rupiah.
+    # Kosong bila ARJUM_API_KEY tidak diset — sumber utamanya tetap Yahoo.
+    "NetAsing1H(M)", "NetAsing5H(M)", "NetAsing20H(M)", "TglAsing",
     "MarginKotor%", "MarginOperasi%", "MarginBersih%", "ROA%",
     "UtangBersih/EBITDA", "CurrentRatio", "QuickRatio", "InterestCoverage",
     "EV/EBITDA", "OCF/Laba", "FCFYield%", "Payout%", "Capex/OCF",
@@ -1085,6 +1090,14 @@ def main():
             tulis_kondisi_pasar(args.output_pasar)
         if not df.empty:
             df = gabung_fundamental(df, fund)
+            # Bar hari ini dibuang selama sesi belum tuntas, dengan aturan
+            # yang sama seperti histori Yahoo di ambil_histori: angka net
+            # asing setengah hari tidak boleh bersanding dengan harga penutupan.
+            sekarang = datetime.now(WIB)
+            buang = sekarang.date() if sekarang.time() < JAM_DATA_FINAL else None
+            asing = ambil_net_asing(df["Ticker"].tolist(), buang)
+            df = df.drop(columns=[k for k in KOLOM_ASING if k in df.columns])
+            df = df.merge(asing, on="Ticker", how="left")
 
     if df.empty:
         sys.exit("Tidak ada data yang berhasil diambil.")
