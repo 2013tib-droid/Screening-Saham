@@ -124,6 +124,20 @@ jobs:
         continue-on-error: true
         run: python analisa_smc.py --dari-csv hasil/swing.csv --output hasil/swing_smc.csv
 
+      # Broker summary (bandarmologi) untuk kandidat swing yang sama: siapa
+      # yang net beli dan net jual selama 5 hari bursa terakhir. Sengaja hanya
+      # atas swing.csv (~5-10 nama) — satu request per emiten, jadi kuota API
+      # 1.000/jam tetap longgar walau net asing sudah memakai ~400.
+      #
+      # continue-on-error: sumbernya API pihak ketiga. broker.py sendiri tidak
+      # gagal saat API bermasalah (alasannya ditulis di kolom Catatan), jadi
+      # ini hanya jaring pengaman untuk kegagalan yang tak terduga.
+      - name: Broker summary kandidat swing
+        continue-on-error: true
+        env:
+          ARJUM_API_KEY: ${{ secrets.ARJUM_API_KEY }}
+        run: python broker.py --dari-csv hasil/swing.csv --output hasil/swing_broker.csv
+
       - name: Catat waktu pembaruan
         run: |
           printf '{"diperbarui": "%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > hasil/meta.json

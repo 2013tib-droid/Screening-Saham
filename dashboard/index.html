@@ -112,7 +112,7 @@
   /* ---- Kartu ringkasan ---- */
   .tiles {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 12px;
     margin: 20px 0;
   }
@@ -162,6 +162,7 @@
   .tile[data-tab="tumbuh"] { --pita: #c07a11; }
   .tile[data-tab="semua"]  { --pita: #7a6ce0; }
   .tile[data-tab="smc"]    { --pita: #0f766e; }
+  .tile[data-tab="broker"] { --pita: #b4466b; }
 
   /* ---- Kendali ---- */
   .controls {
@@ -412,6 +413,11 @@
   .status.s-tunggu  { background: var(--warn-bg); color: var(--warn-fg); }
   .status.s-hindari { background: var(--neg-bg);  color: var(--neg-fg); }
   .status.s-kurang  { background: var(--chip-bg); color: var(--text-muted); }
+  /* Tab Broker: arah aliran dana top-3 broker. Hijau/merah di sini memang
+     penilaian — akumulasi mendukung swing, distribusi melawannya. */
+  .status.s-akumulasi  { background: var(--pos-bg);  color: var(--pos-fg); }
+  .status.s-distribusi { background: var(--neg-bg);  color: var(--neg-fg); }
+  .status.s-netral     { background: var(--chip-bg); color: var(--text-muted); }
   .status.s-siap, .status.s-pantau, .status.s-tunggu,
   .status.s-hindari, .status.s-kurang { min-width: 62px; }
 
@@ -546,6 +552,7 @@
     <button type="button" class="tile" data-tab="tumbuh"><div class="label">Lolos filter tumbuh</div><div class="value" id="t-tumbuh">–</div><div class="sub">Laba YoY ≥ 20%, ROE ≥ 10%, PER ≤ 25</div></button>
     <button type="button" class="tile" data-tab="semua"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">Seluruh emiten IDX di atas 1 T, plus daftar kurasi</div></button>
     <button type="button" class="tile" data-tab="smc"><div class="label">Zona &amp; target lengkap</div><div class="value" id="t-smc">–</div><div class="sub">Rencana SMC utuh — kelayakannya dibaca di kolom Sinyal</div></button>
+    <button type="button" class="tile" data-tab="broker"><div class="label">Diakumulasi broker</div><div class="value" id="t-broker">–</div><div class="sub">Kandidat swing yang top-3 pembelinya dominan (≥ 60%), 5 hari bursa</div></button>
   </div>
 
   <div class="controls">
@@ -555,6 +562,7 @@
       <button data-tab="tumbuh">Tumbuh</button>
       <button data-tab="semua">Semua</button>
       <button data-tab="smc">SMC</button>
+      <button data-tab="broker">Broker</button>
     </div>
     <div class="pisah"></div>
     <select id="kelompok" aria-label="Pilih kelompok kolom">
@@ -808,6 +816,30 @@
     itu lebih dulu. Ini pembacaan teknikal, bukan saran investasi.</p>
   </details>
 
+  <details id="ket-broker">
+    <summary>Tab Broker: cara membaca broker summary</summary>
+    <p>Tab Broker menjawab <strong>"siapa yang sedang membeli"</strong> kandidat swing: net beli dan
+    net jual tiap kode broker selama 5 hari bursa terakhir (sumber: stock.arjum.com). Angka dalam
+    miliar rupiah.</p>
+    <dl>
+      <dt>Top pembeli / penjual</dt><dd>Tiga broker dengan net beli terbesar dan tiga dengan net jual
+      terbesar, lengkap dengan nilainya. Karena setiap lembar yang dibeli pasti ada yang menjual,
+      total net seluruh broker selalu nol — yang dibaca adalah seberapa <strong>terkonsentrasi</strong>
+      masing-masing sisi.</dd>
+      <dt>Dominasi%</dt><dd>Net beli top-3 pembeli dibagi (net beli top-3 pembeli + net jual top-3
+      penjual). 50% berarti seimbang.</dd>
+      <dt>Bandar</dt><dd><span class="status s-akumulasi">Akumulasi</span> bila Dominasi 60% ke atas:
+      pembeli besar lebih agresif daripada penjual besar, mendukung skenario swing.
+      <span class="status s-distribusi">Distribusi</span> bila 40% ke bawah: barang sedang dilepas.
+      Di antaranya <span class="status s-netral">Netral</span>.</dd>
+      <dt>Avg beli top-3 &amp; Jarak avg%</dt><dd>Harga rata-rata beli (kotor) tiga pembeli terbesar,
+      dan jarak harga terakhir ke sana. Dekat 0% berarti masih bisa masuk di kisaran harga modal
+      mereka; jauh di atasnya berarti mereka sudah untung besar dan bisa jadi penjual berikutnya.</dd>
+    </dl>
+    <p>Satu kode broker menampung ribuan nasabah — ritel maupun institusi — jadi ini pembacaan aliran
+    dana, bukan bukti ada "bandar". Bukan saran investasi.</p>
+  </details>
+
   <footer>Bukan rekomendasi investasi — selalu lakukan analisis sendiri sebelum membeli.
   Dibuat dengan <a href="https://github.com/2013tib-droid/Screening-Saham">Screening-Saham</a>.</footer>
 </div>
@@ -874,7 +906,29 @@ const KOLOM_SMC = [
 // Kolom mana yang berlaku untuk satu tab. Dipakai juga oleh parseCSV supaya
 // kolom angka benar-benar diubah jadi angka: tanpa ini RR dan Stop masuk
 // sebagai teks dan pengurutannya jadi alfabetis ("1200" di bawah "980").
-function kolomSet(tab) { return tab === "smc" ? KOLOM_SMC : KOLOM; }
+// Tab Broker: siapa yang net beli / net jual kandidat swing selama 5 hari
+// bursa terakhir. Angkanya hasil broker.py (sumber: stock.arjum.com).
+const KOLOM_BROKER = [
+  { k: "Ticker",         label: "Ticker",      kiri: true },
+  { k: "Nama",           label: "Nama",        kiri: true },
+  { k: "Bandar",         label: "Bandar",      kiri: true },
+  { k: "Dominasi%",      label: "Dominasi%",   angka: true, desimal: 1 },
+  { k: "NetBeliTop3(M)", label: "Net beli top-3 (M)", angka: true, desimal: 1, bertanda: true },
+  { k: "NetJualTop3(M)", label: "Net jual top-3 (M)", angka: true, desimal: 1, bertanda: true },
+  { k: "TopBeli",        label: "Top pembeli (M)", kiri: true, teks: true },
+  { k: "TopJual",        label: "Top penjual (M)", kiri: true, teks: true },
+  { k: "Harga",          label: "Harga",       angka: true },
+  { k: "AvgBeliTop3",    label: "Avg beli top-3", angka: true },
+  { k: "JarakAvg%",      label: "Jarak avg%",  angka: true, desimal: 1, bertanda: true },
+  { k: "Mulai",          label: "Dari",        kiri: true, teks: true },
+  { k: "Akhir",          label: "Sampai",      kiri: true, teks: true },
+  { k: "Catatan",        label: "Catatan",     kiri: true },
+];
+
+// Tab yang kolomnya sama sekali lain dari tabel fundamental: tidak membawa
+// Grup/Status/Syariah, dan tidak ikut pemotongan kelompok kolom.
+const KOLOM_KHUSUS = { smc: KOLOM_SMC, broker: KOLOM_BROKER };
+function kolomSet(tab) { return KOLOM_KHUSUS[tab] || KOLOM; }
 
 // Kelompok kolom: 24 kolom tidak pernah muat sekaligus, jadi selain menggeser
 // mendatar, tabelnya bisa dipotong jadi sekumpulan kolom yang memang dibaca
@@ -893,7 +947,7 @@ const KELOMPOK = {
 function kolomTampil() {
   // Tab SMC cuma 15 kolom dan semuanya dibaca bersama, jadi tidak ikut
   // pemotongan kelompok.
-  if (state.tab === "smc") return KOLOM_SMC;
+  if (KOLOM_KHUSUS[state.tab]) return KOLOM_KHUSUS[state.tab];
   const daftar = KELOMPOK[state.kelompok];
   if (!daftar) return KOLOM;
   const pilih = new Set(JANGKAR.concat(daftar));
@@ -954,7 +1008,7 @@ const state = {
   // 0 berarti tanpa pagination (pilihan "Semua").
   perHal: 10,
   hal: 1,
-  data: { swing: null, value: null, tumbuh: null, semua: null, smc: null },
+  data: { swing: null, value: null, tumbuh: null, semua: null, smc: null, broker: null },
   urut: { kolom: null, naik: true },
   gagal: false,
   // Sekali saja per kunjungan: lihat pilihTab.
@@ -966,11 +1020,11 @@ function barisTerlihat() {
   // Tabel SMC tidak membawa kolom Grup/Status/Syariah. Kalau filter itu tetap
   // diterapkan, seluruh barisnya tersaring habis dan tabnya tampak kosong
   // seolah-olah datanya gagal dimuat.
-  const smc = state.tab === "smc";
-  if (!smc && state.grup) hasil = hasil.filter(r =>
+  const khusus = state.tab in KOLOM_KHUSUS;
+  if (!khusus && state.grup) hasil = hasil.filter(r =>
     String(r.Grup || "").split("/").includes(state.grup));
-  if (!smc && state.status) hasil = hasil.filter(r => r.Status === state.status);
-  if (!smc && state.syariah) hasil = hasil.filter(r =>
+  if (!khusus && state.status) hasil = hasil.filter(r => r.Status === state.status);
+  if (!khusus && state.syariah) hasil = hasil.filter(r =>
     String(r.Syariah || "").trim().toLowerCase() === state.syariah);
   const q = state.cari.trim().toUpperCase();
   hasil = !q ? hasil.slice() : hasil.filter(r =>
@@ -988,6 +1042,8 @@ function barisTerlihat() {
         ? URUT_STATUS.indexOf(va) - URUT_STATUS.indexOf(vb)
         : kolom === "Sinyal"
         ? URUT_SINYAL.indexOf(va) - URUT_SINYAL.indexOf(vb)
+        : kolom === "Bandar"
+        ? URUT_BANDAR.indexOf(va) - URUT_BANDAR.indexOf(vb)
         : numerik ? va - vb : String(va).localeCompare(String(vb));
       return naik ? cmp : -cmp;
     });
@@ -1024,6 +1080,9 @@ function render() {
       : state.tab === "smc"
       ? "Belum ada analisa struktur untuk malam ini — kandidat swing kosong, "
         + "atau langkah SMC pada run terakhir tidak selesai."
+      : state.tab === "broker"
+      ? "Belum ada broker summary untuk malam ini — kandidat swing kosong, "
+        + "atau langkah broker pada run terakhir tidak selesai."
       : "Tidak ada saham yang lolos filter ini malam ini.";
     wadah.innerHTML = '<div class="kosong">' + sebab + "</div>";
     sembunyikanPager();
@@ -1076,6 +1135,15 @@ function render() {
         if (!v) return `<td class="${kelas}">–</td>`;
         const slug = v.split(" ").pop().toLowerCase();
         return `<td class="${kelas}"><span class="status s-${slug}">${v}</span></td>`;
+      }
+      if (k.k === "Bandar") {
+        const v = String(r.Bandar || "").trim();
+        if (!v) return `<td class="${kelas}">–</td>`;
+        return `<td class="${kelas}"><span class="status s-${v.toLowerCase()}">${v}</span></td>`;
+      }
+      if (k.teks) {
+        const v = String(r[k.k] ?? "").trim();
+        return `<td class="${kelas}"><span class="nama">${v || "–"}</span></td>`;
       }
       if (k.k === "Catatan") {
         const v = String(r.Catatan || "").trim();
@@ -1286,11 +1354,12 @@ function pilihTab(tab) {
   }
   // Grup, Status, dan Syariah tidak ada di tabel SMC; menampilkan pilihan yang
   // tidak berpengaruh apa-apa lebih membingungkan daripada menyembunyikannya.
+  const khusus = tab in KOLOM_KHUSUS;
   const smc = tab === "smc";
-  document.getElementById("kelompok").hidden = smc;
+  document.getElementById("kelompok").hidden = khusus;
   ["grup", "status", "syariah"].forEach(id => {
     const el = document.getElementById(id);
-    el.hidden = smc || el.dataset.layak !== "1";
+    el.hidden = khusus || el.dataset.layak !== "1";
   });
   // Kosakata tab SMC (premium/discount, order block, RR) tidak muncul di tab
   // mana pun yang lain, dan keterangannya duduk di bawah tabel yang panjang —
@@ -1360,6 +1429,7 @@ document.getElementById("kelompok").addEventListener("change", e => {
 const URUT_STATUS = ["BUY", "BOW", "HOLD", "WSE", "JUAL", "TIPIS", "-"];
 // Skala kesiapan, bukan abjad: yang bisa ditindaklanjuti hari ini di atas.
 const URUT_SINYAL = ["SIAP", "PANTAU", "TUNGGU", "HINDARI", "DATA KURANG"];
+const URUT_BANDAR = ["Akumulasi", "Netral", "Distribusi"];
 
 function isiPilihanStatus() {
   const ada = new Set((state.data.semua || []).map(r => r.Status).filter(Boolean));
@@ -1450,7 +1520,7 @@ function tampilkanPasar(pasar, meta) {
 async function muat() {
   const t = Date.now();
   try {
-    const [semua, swing, value, tumbuh, smc, meta, pasar] = await Promise.all([
+    const [semua, swing, value, tumbuh, smc, broker, meta, pasar] = await Promise.all([
       fetch(`hasil/semua.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       fetch(`hasil/swing.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       fetch(`hasil/value.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
@@ -1458,6 +1528,7 @@ async function muat() {
       // filenya belum ada (run malam pertama setelah fitur ini ditambahkan).
       fetch(`hasil/tumbuh.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
       fetch(`hasil/swing_smc.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
+      fetch(`hasil/swing_broker.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
       fetch(`hasil/meta.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch(`hasil/pasar.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
@@ -1467,6 +1538,7 @@ async function muat() {
     state.data.value = parseCSV(value);
     state.data.tumbuh = tumbuh ? parseCSV(tumbuh) : [];
     state.data.smc = smc ? parseCSV(smc, KOLOM_SMC) : [];
+    state.data.broker = broker ? parseCSV(broker, KOLOM_BROKER) : [];
 
     isiPilihanGrup();
     isiPilihanStatus();
@@ -1487,6 +1559,8 @@ async function muat() {
     // cuma kolom Sinyal.
     document.getElementById("t-smc").textContent =
       state.data.smc.filter(r => r.RR !== null && r.RR !== undefined && r.RR !== "").length;
+    document.getElementById("t-broker").textContent =
+      state.data.broker.filter(r => r.Bandar === "Akumulasi").length;
     document.getElementById("tiles").hidden = false;
 
     const p = document.getElementById("pembaruan");

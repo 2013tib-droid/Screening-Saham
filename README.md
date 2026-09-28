@@ -546,6 +546,30 @@ Butuh API key di environment variable `ARJUM_API_KEY` — untuk run malam, simpa
 
 Workflow **Uji API Arjum** (`.github/workflows/uji-arjum.yml`) mengecek ke-13 endpoint API itu dan melaporkan bentuk response-nya — dipakai untuk memastikan key masih berlaku.
 
+## Broker Summary Kandidat Swing (`broker.py`)
+
+Untuk tiap emiten di `hasil/swing.csv`, `broker.py` menarik broker summary 5 hari bursa terakhir dari stock.arjum.com (`/api/broker-summary/{kode}` dengan `all_data=true` — tanpa itu API hanya mengirim 20 broker net **beli** teratas, jadi sisi penjual tidak terlihat) dan menyimpannya ke `hasil/swing_broker.csv`. Dashboard menampilkannya di tab **Broker**.
+
+| Kolom | Arti |
+|---|---|
+| `TopBeli` / `TopJual` | Tiga broker net beli / net jual terbesar beserta nilainya (miliar rupiah) |
+| `NetBeliTop3(M)` / `NetJualTop3(M)` | Jumlah net ketiga broker itu |
+| `Dominasi%` | Net beli top-3 ÷ (net beli top-3 + net jual top-3). 50% = seimbang |
+| `Bandar` | **Akumulasi** bila Dominasi ≥ 60%, **Distribusi** bila ≤ 40%, selain itu **Netral** |
+| `AvgBeliTop3` / `JarakAvg%` | Harga rata-rata beli (kotor) top-3 pembeli, dan jarak harga terakhir ke sana |
+| `Mulai` / `Akhir` | Periode yang benar-benar dipakai API |
+| `Catatan` | Alasan bila datanya kosong (API gagal, kuota habis, key tidak diset) |
+
+Jendelanya berakhir di tanggal `TglAsing` swing.csv (hari yang sama dengan kolom harga) dan mundur 5 hari kerja; libur bursa tidak dicek, jadi di minggu yang ada liburnya jendelanya sedikit lebih pendek. Hanya kandidat swing yang diambil — satu request per emiten — supaya kuota 1.000/jam tetap longgar.
+
+Ini pembacaan aliran dana, bukan bukti ada "bandar": satu kode broker menampung ribuan nasabah ritel maupun institusi.
+
+```bash
+python broker.py                          # dari hasil/swing.csv
+python broker.py --ticker BBCA TLKM       # ad-hoc
+python broker.py --hari 10                # jendela 10 hari bursa
+```
+
 ## Uji Akses IDX (net buy asing)
 
 Yahoo Finance **tidak** menyediakan data net buy asing, padahal itu salah satu sinyal yang sering dipakai. Sumber gratisnya ada di IDX ([Ringkasan Saham](https://www.idx.co.id/id/data-pasar/ringkasan-perdagangan/ringkasan-saham), berisi Foreign Buy/Sell per emiten per hari), tapi idx.co.id memakai Cloudflare yang rutin memblokir request non-browser — jadi kelayakannya harus diuji dulu di tempat workflow benar-benar jalan.

@@ -37,14 +37,22 @@ PARALEL = 4
 KOLOM_ASING = ["NetAsing1H(M)", "NetAsing5H(M)", "NetAsing20H(M)", "TglAsing"]
 
 
+def panggil(path: str, key: str, **query) -> dict:
+    """GET satu endpoint, kembalikan JSON-nya. Melempar bila gagal (HTTPError
+    membawa status, supaya pemanggil bisa membedakan 429/401 dari 5xx)."""
+    url = BASE + path
+    if query:
+        url += "?" + urllib.parse.urlencode(query)
+    req = urllib.request.Request(url, headers={
+        "X-API-Key": key, "Accept": "application/json",
+        "User-Agent": "Screening-Saham/screener"})
+    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+        return json.load(r)
+
+
 def _ambil(kode: str, key: str) -> list[dict]:
     """Baris histori harian satu emiten, terbaru dulu. Melempar bila gagal."""
-    req = urllib.request.Request(
-        f"{BASE}/api/history/{urllib.parse.quote(kode)}",
-        headers={"X-API-Key": key, "Accept": "application/json",
-                 "User-Agent": "Screening-Saham/screener"})
-    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-        return json.load(r).get("rows") or []
+    return panggil(f"/api/history/{urllib.parse.quote(kode)}", key).get("rows") or []
 
 
 def net_asing(rows: list[dict], buang_tanggal: date | None = None) -> dict:
