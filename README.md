@@ -542,7 +542,9 @@ Yahoo Finance tidak punya data transaksi investor asing, jadi kolom ini diambil 
 
 Positif = asing net beli, negatif = net jual. Angka lembar (`n_foreign`) dikali harga rata-rata hari itu supaya bisa dibandingkan antar-emiten. Dashboard menampilkan kolom 5H dan 20H.
 
-Butuh API key di environment variable `ARJUM_API_KEY` — untuk run malam, simpan sebagai secret repo (**Settings → Secrets and variables → Actions**). Tanpa key, atau kalau API sedang bermasalah, kolomnya kosong dan screening tetap jalan seperti biasa. Kuota paket gratis 1.000 request/jam; begitu API membalas 429 (kuota habis) atau 401/403 (key ditolak), sisa emiten dilewati.
+Butuh API key di environment variable `ARJUM_API_KEY` — untuk run malam, simpan sebagai secret repo (**Settings → Secrets and variables → Actions**). Tanpa key, atau kalau API sedang bermasalah, kolomnya kosong dan screening tetap jalan seperti biasa. Begitu API membalas 429 (kuota habis) atau 401/403 (key ditolak), sisa emiten dilewati.
+
+**Kuota paket gratis 1.000 request per hari** (reset 00:00 WIB — dashboard stock.arjum.com menulis "req/hr", tapi yang berlaku harian). Net asing memakai ~400 per run, jadi di run malam ia diambil sebagai langkah terpisah (`python arjum.py`) **sesudah** broker summary, diurut dari emiten paling likuid. Tiap push/merge ke branch utama juga memicu screening dan ikut memakai kuota hari itu.
 
 Workflow **Uji API Arjum** (`.github/workflows/uji-arjum.yml`) mengecek ke-13 endpoint API itu dan melaporkan bentuk response-nya — dipakai untuk memastikan key masih berlaku.
 
@@ -560,7 +562,7 @@ Untuk tiap emiten di `hasil/swing.csv`, `broker.py` menarik broker summary 5 har
 | `Mulai` / `Akhir` | Periode yang benar-benar dipakai API |
 | `Catatan` | Alasan bila datanya kosong (API gagal, kuota habis, key tidak diset) |
 
-Jendelanya berakhir di tanggal `TglAsing` swing.csv (hari yang sama dengan kolom harga) dan mundur 5 hari kerja; libur bursa tidak dicek, jadi di minggu yang ada liburnya jendelanya sedikit lebih pendek. Hanya kandidat swing yang diambil — satu request per emiten — supaya kuota 1.000/jam tetap longgar.
+Jendelanya berakhir di tanggal `TglAsing` swing.csv (hari yang sama dengan kolom harga) dan mundur 5 hari kerja; libur bursa tidak dicek, jadi di minggu yang ada liburnya jendelanya sedikit lebih pendek. Hanya kandidat swing yang diambil — satu request per emiten — dan langkahnya jalan sebelum net asing, jadi broker summary yang pertama kebagian kuota harian.
 
 Ini pembacaan aliran dana, bukan bukti ada "bandar": satu kode broker menampung ribuan nasabah ritel maupun institusi.
 

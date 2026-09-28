@@ -10,12 +10,22 @@ Butuh API key di environment variable ARJUM_API_KEY. Tanpa key, atau kalau API
 sedang bermasalah, kolomnya dibiarkan kosong — screening tetap jalan dengan
 data Yahoo seperti sebelumnya. Net asing adalah pelengkap, bukan syarat.
 
-Kuota paket gratis 1.000 request/jam, dan tiap emiten butuh satu request.
-Universe ~400 emiten muat, tapi dua run berdekatan (mis. push beruntun) bisa
-menabrak batasnya; begitu server membalas 429, sisa emiten dilewati alih-alih
-menembak terus dan memperparah.
+Kuota paket gratis 1.000 request PER HARI (reset 00:00 WIB) — dashboard
+stock.arjum.com menulis "req/hr", tapi server membalas 429 "Kuota harian ...
+(1000 req/hari)". Tiap emiten butuh satu request dan tidak ada versi batch,
+jadi universe ~400 emiten memakai ~40% kuota harian per run. Begitu server
+membalas 429, sisa emiten dilewati alih-alih menembak terus.
+
+Karena itu run malam memanggil modul ini sebagai langkah TERPISAH, sesudah
+broker.py (lihat screening-malam.yml): broker summary hanya ~5-10 request
+tapi paling berharga, dan tidak boleh kehabisan kuota gara-gara net asing.
+Emitennya diurut dari yang paling likuid, supaya bila kuota menipis yang
+kosong adalah emiten yang paling jarang ditransaksikan.
+
+    python arjum.py                      # isi kolom NetAsing di hasil/*.csv
 """
 
+import argparse
 import json
 import os
 import sys
@@ -141,3 +151,52 @@ def ambil_net_asing(kode_list: list[str], buang_tanggal: date | None = None) -> 
         print(f"  Gagal: {', '.join(gagal[:15])}" + (" …" if len(gagal) > 15 else ""),
               file=sys.stderr)
     return pd.DataFrame(baris, columns=["Ticker"] + KOLOM_ASING)
+
+
+def tulis_ke_csv(path: str, asing: pd.DataFrame) -> None:
+    """Ganti kolom KOLOM_ASING di satu CSV hasil dengan data baru.
+
+    Kolomnya diletakkan sesudah MA200, sama seperti urutan KOLOM_EKSTRA di
+    screener, supaya CSV yang ditulis screener dan yang diperkaya di sini
+    berbentuk sama. Emiten tanpa data asing dibiarkan kosong.
+    """
+    df = pd.read_csv(path)
+    if "Ticker" not in df.columns:
+        return
+    df = df.drop(columns=[k for k in KOLOM_ASING if k in df.columns])
+    df = df.merge(asing, on="Ticker", how="left")
+    kolom = [k for k in df.columns if k not in KOLOM_ASING]
+    sisip = kolom.index("MA200") + 1 if "MA200" in kolom else len(kolom)
+    df = df[kolom[:sisip] + KOLOM_ASING + kolom[sisip:]]
+    df.to_csv(path, index=False)
+
+
+def main() -> int:
+    from datetime import datetime
+
+    from screener import JAM_DATA_FINAL, WIB
+
+    p = argparse.ArgumentParser(description="Isi kolom net beli asing di CSV hasil screening.")
+    p.add_argument("--sumber", default="hasil/semua.csv",
+                   help="CSV berisi seluruh emiten yang diambil (kolom Ticker, Nilai(M))")
+    p.add_argument("--ke", nargs="+", metavar="CSV",
+                   default=["hasil/semua.csv", "hasil/swing.csv",
+                            "hasil/value.csv", "hasil/tumbuh.csv"],
+                   help="CSV yang kolom NetAsing-nya diisi ulang")
+    args = p.parse_args()
+
+    sumber = pd.read_csv(args.sumber)
+    if "Nilai(M)" in sumber.columns:
+        sumber = sumber.sort_values("Nilai(M)", ascending=False, na_position="last")
+    sekarang = datetime.now(WIB)
+    buang = sekarang.date() if sekarang.time() < JAM_DATA_FINAL else None
+    asing = ambil_net_asing(sumber["Ticker"].astype(str).tolist(), buang)
+    for path in args.ke:
+        if os.path.exists(path):
+            tulis_ke_csv(path, asing)
+            print(f"Kolom net asing ditulis ke {path}", file=sys.stderr)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
