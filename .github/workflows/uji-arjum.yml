@@ -1,0 +1,43 @@
+name: Uji API Arjum
+
+# Uji coba SEKALI JALAN untuk menjawab: endpoint API stock.arjum.com mana yang
+# bisa dipakai dengan key kita, dan seperti apa bentuk datanya? Tidak menyentuh
+# hasil screening, tidak commit apa pun — cuma melapor (log + ringkasan run).
+#
+# Butuh secret repo ARJUM_API_KEY (Settings -> Secrets and variables -> Actions).
+#
+# Cara menjalankan: tab Actions -> "Uji API Arjum" -> Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      kode:
+        description: "Kode saham contoh"
+        default: "BBCA"
+        required: false
+  # Tombol Run workflow baru muncul setelah file ini ada di branch default.
+  # Selama masih di branch fitur, uji dipicu lewat push ke file uji ini saja.
+  push:
+    branches: [claude/stock-website-access-v26lkh]
+    paths:
+      - .github/workflows/uji-arjum.yml
+      - scripts/uji_arjum.py
+
+permissions:
+  contents: read
+
+jobs:
+  uji:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      # Tanpa 'pip install': skrip sengaja hanya memakai stdlib.
+      - name: Tembak endpoint stock.arjum.com
+        env:
+          ARJUM_API_KEY: ${{ secrets.ARJUM_API_KEY }}
+          KODE: ${{ inputs.kode || 'BBCA' }}
+        run: python scripts/uji_arjum.py "$KODE"
