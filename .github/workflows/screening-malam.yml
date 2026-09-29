@@ -65,12 +65,10 @@ jobs:
       # dashboard. Gagal menarik IHSG tidak menggagalkan langkah ini — berkas
       # lama dibiarkan dan dashboard menandainya basi dari tanggalnya.
       #
-      # ARJUM_API_KEY: net beli asing dari stock.arjum.com (lihat arjum.py).
-      # Secret kosong atau API bermasalah tidak menggagalkan langkah ini —
-      # kolom NetAsing* saja yang kosong.
+      # Sengaja TANPA ARJUM_API_KEY: net asing diambil di langkah tersendiri
+      # sesudah broker summary (lihat "Net beli asing" di bawah), supaya
+      # kuota harian API tidak habis sebelum broker kebagian.
       - name: Ambil data & simpan tabel lengkap
-        env:
-          ARJUM_API_KEY: ${{ secrets.ARJUM_API_KEY }}
         run: python screener.py --output hasil/semua.csv --output-pasar hasil/pasar.json
 
       # RSI dibatasi 65, bukan 50. Alasannya: --max-rsi dan --min-volspike
@@ -123,6 +121,34 @@ jobs:
       - name: Analisa struktur SMC untuk kandidat swing
         continue-on-error: true
         run: python analisa_smc.py --dari-csv hasil/swing.csv --output hasil/swing_smc.csv
+
+      # Broker summary (bandarmologi) untuk kandidat swing yang sama: siapa
+      # yang net beli dan net jual selama 5 hari bursa terakhir. Sengaja hanya
+      # atas swing.csv (~5-10 nama), satu request per emiten.
+      #
+      # Kuota API stock.arjum.com 1.000 request PER HARI (reset 00:00 WIB).
+      # Langkah ini sengaja jalan SEBELUM net asing (~400 request): broker
+      # paling murah dan paling berharga, jadi dialah yang harus kebagian
+      # dulu bila hari itu kuota sudah terpakai run lain (mis. push/merge).
+      #
+      # continue-on-error: sumbernya API pihak ketiga. broker.py sendiri tidak
+      # gagal saat API bermasalah (alasannya ditulis di kolom Catatan), jadi
+      # ini hanya jaring pengaman untuk kegagalan yang tak terduga.
+      - name: Broker summary kandidat swing
+        continue-on-error: true
+        env:
+          ARJUM_API_KEY: ${{ secrets.ARJUM_API_KEY }}
+        run: python broker.py --dari-csv hasil/swing.csv --output hasil/swing_broker.csv
+
+      # Net beli asing (arjum.py): satu request per emiten untuk seluruh
+      # universe, diurut dari yang paling likuid, lalu kolom NetAsing* di
+      # semua.csv/swing.csv/value.csv/tumbuh.csv diisi. Kuota habis atau API
+      # bermasalah hanya membuat kolomnya kosong — tidak menggagalkan run.
+      - name: Net beli asing
+        continue-on-error: true
+        env:
+          ARJUM_API_KEY: ${{ secrets.ARJUM_API_KEY }}
+        run: python arjum.py
 
       - name: Catat waktu pembaruan
         run: |

@@ -14,6 +14,7 @@ jadi hasil uji sekaligus jadi dokumentasi.
 Pakai stdlib saja (urllib) supaya tidak menambah dependensi.
 
 Pemakaian lokal:  ARJUM_API_KEY=sk_live_... python scripts/uji_arjum.py [KODE]
+Satu endpoint utuh: JALUR=/api/openapi.json python scripts/uji_arjum.py
 """
 
 import json
@@ -86,6 +87,20 @@ def main() -> int:
         print("ARJUM_API_KEY kosong. Tambahkan dulu di GitHub: Settings -> Secrets and "
               "variables -> Actions -> New repository secret (Name: ARJUM_API_KEY).")
         return 1
+
+    # Mode satu jalur: cetak response UTUH satu endpoint (mis. openapi.json,
+    # atau endpoint dengan parameter tertentu) untuk dipelajari sebelum dipakai.
+    jalur = os.environ.get("JALUR", "").strip()
+    if jalur:
+        h = tembak(jalur if jalur.startswith("/") else "/" + jalur, key)
+        print(f"GET {jalur} -> HTTP {h['status']} {h.get('error', '')}")
+        teks = h["body"].decode("utf-8", "replace")
+        try:
+            teks = json.dumps(json.loads(teks), ensure_ascii=False, indent=1)
+        except json.JSONDecodeError:
+            pass
+        print(teks)
+        return 0 if h["status"] == 200 else 1
 
     print("=" * 72)
     print(f"UJI API stock.arjum.com — kode contoh: {kode}")
