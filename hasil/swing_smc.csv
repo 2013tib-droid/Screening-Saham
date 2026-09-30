@@ -1,12 +1,9 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-STAA,Sumber Tani Agung Resources ,81.0,BUY,1205,up,PREMIUM,75,BOS bull,down,down,OB SESI,1150,1135,1100,1320,4.18,4.6,3.3,BSL raid @ 1220,TUNGGU,harga di premium — tunggu pullback ke zona
-BFIN,BFI Finance  Indonesia Tbk,67.0,BOW,930,up,PREMIUM,76,BOS bull,up,down,FVG SESI,905,890,835,1040,2.28,2.7,4.0,BSL raid @ 935,TUNGGU,harga di premium — tunggu pullback ke zona
-AADI,Adaro Andalan Indonesia Tbk.,72.0,BOW,11050,up,PREMIUM,71,BOS bull,down,down,FVG D1,10500,10175,9025,12925,1.97,5.0,4.2,SSL raid @ 11000,TUNGGU,harga di premium — tunggu pullback ke zona
-AUTO,Astra Otoparts Tbk,80.0,BUY,3300,up,PREMIUM,84,BOS bull,down,down,FVG D1,3130,3100,2540,,,5.2,2.0,SSL raid @ 3280,TUNGGU,stop struktural terlalu lebar (17% dari harga)
-AALI,Astra Agro Lestari Tbk.,80.0,BOW,7800,up,PREMIUM,67,BOS bull,up,down,FVG D1,7550,7475,5850,,,3.2,3.1,SSL raid @ 7700,TUNGGU,stop struktural terlalu lebar (21% dari harga)
-SOCI,Soechi Lines Tbk.,48.0,BUY,615,up,PREMIUM,69,BOS bull,down,down,,,,,,,,8.5,BSL raid @ 685,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-DOOH,,,BOW,358,up,PREMIUM,69,BOS bull,down,up,,,,,,,,11.9,BSL raid @ 342,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-ADRO,Alamtri Resources Indonesia ,73.0,BOW,2470,down,PREMIUM,69,CHoCH bear,down,down,OB D1,2310,2280,2140,2860,3.65,6.5,3.1,BSL raid @ 2600,HINDARI,struktur D1 masih bearish
-VKTR,VKTR Teknologi Mobilitas Tbk,30.0,BUY,830,down,EQUILIBRIUM,43,BOS bear,up,up,,,,,,,,6.5,SSL raid @ 825,HINDARI,struktur D1 masih bearish
-ITMG,Indo Tambangraya Megah Tbk,74.0,BOW,24975,down,EQUILIBRIUM,52,CHoCH bear,down,down,OB D1,24050,23600,21700,,,3.7,2.2,BSL raid @ 26775,HINDARI,struktur D1 masih bearish
-MAPI,Mitra Adiperkasa Tbk,71.0,BUY,1550,down,EQUILIBRIUM,58,BOS bear,up,up,FVG SESI,1465,1395,1310,,,5.5,4.0,SSL raid @ 1400,HINDARI,struktur D1 masih bearish
+BFIN,BFI Finance  Indonesia Tbk,67.0,BOW,920,up,PREMIUM,74,BOS bull,up,down,FVG SESI,905,890,835,1040,2.28,1.6,4.1,BSL raid @ 935,TUNGGU,harga di premium — tunggu pullback ke zona
+SMIL,Sarana Mitra Luas Tbk.,52.0,BUY,450,up,PREMIUM,93,BOS bull,up,up,,,,,,,,4.6,SSL raid @ 420,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+AYAM,Janu Putra Sejahtera Tbk.,30.0,BUY,498,up,PREMIUM,79,BOS bull,up,down,,,,,,,,4.0,BSL raid @ 505,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+DOOH,,,BOW,342,up,PREMIUM,65,BOS bull,down,up,FVG D1,326,294,230,,,4.7,12.6,BSL raid @ 356,TUNGGU,stop struktural terlalu lebar (23% dari harga)
+ELSA,Elnusa Tbk,84.0,BOW,645,down,DISCOUNT,37,BOS bear,down,down,OB SESI,620,590,505,,,3.9,3.9,BSL raid @ 665,HINDARI,struktur D1 masih bearish
+HRTA,Hartadinata Abadi Tbk.,68.0,BUY,2280,down,EQUILIBRIUM,38,CHoCH bear,up,up,FVG SESI,2250,2200,2070,,,1.3,3.9,BSL raid @ 2350,HINDARI,struktur D1 masih bearish
+MAPI,Mitra Adiperkasa Tbk,71.0,BUY,1550,down,EQUILIBRIUM,58,BOS bear,up,up,FVG SESI,1465,1395,1310,,,5.5,4.1,SSL raid @ 1400,HINDARI,struktur D1 masih bearish
+HATM,Habco Trans Maritima Tbk.,46.0,BOW,550,down,PREMIUM,68,CHoCH bear,down,up,,,,,,,,5.8,SSL raid @ 500,HINDARI,struktur D1 masih bearish

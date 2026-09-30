@@ -1,12 +1,9 @@
 Ticker,Nama,Harga,Bandar,Dominasi%,NetBeliTop3(M),NetJualTop3(M),TopBeli,TopJual,AvgBeliTop3,JarakAvg%,Mulai,Akhir,Catatan
-VKTR,VKTR Teknologi Mobilitas Tbk,830,,,,,,,,,,,API membalas HTTP 429
-AUTO,Astra Otoparts Tbk,3300,,,,,,,,,,,API membalas HTTP 429
-AADI,Adaro Andalan Indonesia Tbk.,11050,,,,,,,,,,,API membalas HTTP 429
-ADRO,Alamtri Resources Indonesia ,2470,,,,,,,,,,,API membalas HTTP 429
-AALI,Astra Agro Lestari Tbk.,7800,,,,,,,,,,,API membalas HTTP 429
-STAA,Sumber Tani Agung Resources ,1205,,,,,,,,,,,API membalas HTTP 429
-BFIN,BFI Finance  Indonesia Tbk,930,,,,,,,,,,,API membalas HTTP 429
-ITMG,Indo Tambangraya Megah Tbk,24975,,,,,,,,,,,API membalas HTTP 429
-MAPI,Mitra Adiperkasa Tbk,1550,,,,,,,,,,,API membalas HTTP 429
-SOCI,Soechi Lines Tbk.,615,,,,,,,,,,,API membalas HTTP 429
-DOOH,,358,,,,,,,,,,,API membalas HTTP 429
+ELSA,Elnusa Tbk,645,Netral,40.4,9.5,-14.0,"DX 4,7 · CC 2,7 · PD 2,1","ZP -10,9 · XC -1,9 · AK -1,3",666,-3.1,2026-09-24,2026-09-30,
+HRTA,Hartadinata Abadi Tbk.,2280,Netral,48.3,14.5,-15.5,"ZP 6,0 · NI 4,7 · KZ 3,8","AK -7,3 · EP -4,5 · CP -3,7",2296,-0.7,2026-09-24,2026-09-30,
+BFIN,BFI Finance  Indonesia Tbk,920,Netral,44.4,40.2,-50.4,"PD 17,7 · AK 11,2 · KZ 11,2","DH -23,3 · ZP -16,8 · BB -10,3",947,-2.8,2026-09-24,2026-09-30,
+MAPI,Mitra Adiperkasa Tbk,1550,Netral,57.2,36.0,-26.9,"PD 35,1 · CC 0,5 · ES 0,4","AK -22,4 · ZP -2,3 · YU -2,2",1534,1.0,2026-09-24,2026-09-30,
+SMIL,Sarana Mitra Luas Tbk.,450,Akumulasi,64.2,7.3,-4.1,"OD 4,8 · DR 2,3 · LS 0,2","PP -1,6 · AK -1,3 · XL -1,2",438,2.8,2026-09-24,2026-09-30,
+HATM,Habco Trans Maritima Tbk.,550,Netral,45.0,1.0,-1.2,"BQ 0,4 · PC 0,3 · IU 0,3","BK -0,6 · XL -0,3 · AZ -0,3",543,1.3,2026-09-24,2026-09-30,
+AYAM,Janu Putra Sejahtera Tbk.,498,Netral,56.7,9.2,-7.0,"XA 8,9 · AG 0,2 · BK 0,2","AK -3,8 · CC -2,3 · AT -0,9",495,0.5,2026-09-24,2026-09-30,
+DOOH,,342,Netral,40.3,32.9,-48.7,"YB 19,4 · CP 7,5 · SQ 6,0","GR -24,3 · LG -13,6 · YJ -10,7",369,-7.3,2026-09-24,2026-09-30,
