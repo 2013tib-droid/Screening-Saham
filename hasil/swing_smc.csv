@@ -1,9 +1,5 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-BFIN,BFI Finance  Indonesia Tbk,67.0,BOW,920,up,PREMIUM,74,BOS bull,down,down,FVG SESI,905,890,835,1040,2.28,1.6,4.1,BSL raid @ 935,TUNGGU,harga di premium — tunggu pullback ke zona
-SMIL,Sarana Mitra Luas Tbk.,52.0,BUY,450,up,PREMIUM,93,BOS bull,up,up,,,,,,,,4.6,SSL raid @ 420,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-AYAM,Janu Putra Sejahtera Tbk.,30.0,BUY,498,up,PREMIUM,79,BOS bull,up,down,,,,,,,,4.0,BSL raid @ 505,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-DOOH,,,BOW,342,up,PREMIUM,65,BOS bull,down,up,FVG D1,326,294,230,,,4.7,12.6,BSL raid @ 356,TUNGGU,stop struktural terlalu lebar (23% dari harga)
-ELSA,Elnusa Tbk,84.0,BOW,645,down,DISCOUNT,37,BOS bear,down,down,FVG D1,595,580,505,710,1.48,7.8,3.9,BSL raid @ 665,HINDARI,struktur D1 masih bearish
-HRTA,Hartadinata Abadi Tbk.,68.0,BUY,2280,down,EQUILIBRIUM,38,CHoCH bear,up,up,,,,,,,,3.9,BSL raid @ 2350,HINDARI,struktur D1 masih bearish
-MAPI,Mitra Adiperkasa Tbk,71.0,BUY,1550,down,EQUILIBRIUM,58,BOS bear,up,up,FVG SESI,1465,1395,1310,,,5.5,4.1,SSL raid @ 1400,HINDARI,struktur D1 masih bearish
-HATM,Habco Trans Maritima Tbk.,46.0,BOW,550,down,PREMIUM,68,CHoCH bear,down,up,,,,,,,,5.8,SSL raid @ 500,HINDARI,struktur D1 masih bearish
+SINI,Singaraja Putra Tbk.,31.0,BUY,15850,up,PREMIUM,81,BOS bull,up,up,FVG SESI,15425,14750,12825,18500,1.51,2.7,6.3,BSL raid @ 15975,TUNGGU,harga di premium — tunggu pullback ke zona
+DOOH,,,BUY,366,up,PREMIUM,71,BOS bull,down,up,,,,,,,,12.4,BSL raid @ 356,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+GGRM,Gudang Garam Tbk,73.0,BOW,16900,down,EQUILIBRIUM,45,BOS bear,down,down,,,,,,,,3.7,BSL raid @ 16575,HINDARI,struktur D1 masih bearish
+HATM,Habco Trans Maritima Tbk.,46.0,BOW,530,down,PREMIUM,63,CHoCH bear,down,up,,,,,,,,5.7,SSL raid @ 500,HINDARI,struktur D1 masih bearish
