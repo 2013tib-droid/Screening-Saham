@@ -1,7 +1,5 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-SINI,Singaraja Putra Tbk.,31.0,BUY,16625,up,PREMIUM,87,BOS bull,up,up,FVG SESI,15425,14750,12825,18500,1.51,7.2,6.2,BSL raid @ 15975,TUNGGU,harga di premium — tunggu pullback ke zona
-JAWA,Jaya Agra Wattie Tbk.,34.0,BOW,155,up,EQUILIBRIUM,39,BOS bull,up,down,,,,,,,,17.5,BSL raid @ 220,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-MARK,Mark Dynamics Indonesia Tbk.,78.0,BUY,1200,up,PREMIUM,89,BOS bull,up,up,,,,,,,,4.4,BSL raid @ 1115,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-KETR,Ketrosden Triasmitra Tbk.,80.0,BUY,930,up,PREMIUM,81,BOS bull,up,down,,,,,,,,7.9,BSL raid @ 1030,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-TUGU,Asuransi Tugu Pratama Indone,73.0,BUY,1545,down,PREMIUM,79,CHoCH bear,down,up,FVG SESI,1515,1415,1290,1705,1.37,1.9,6.1,BSL raid @ 1590,HINDARI,struktur D1 masih bearish
-AGAR,,,BUY,1935,down,EQUILIBRIUM,58,CHoCH bear,up,up,,,,,,,,24.1,SSL raid @ 1570,HINDARI,struktur D1 masih bearish
+AUTO,Astra Otoparts Tbk,80,BUY,3390,up,PREMIUM,90,BOS bull,up,up,FVG SESI,3350,3300,3230,3520,2.05,1.2,2.6,SSL raid @ 3280,TUNGGU,harga di premium — tunggu pullback ke zona
+MAPI,Mitra Adiperkasa Tbk,71,BUY,1550,down,EQUILIBRIUM,58,BOS bear,up,up,FVG SESI,1525,1490,1440,,,1.6,4.1,SSL raid @ 1400,HINDARI,struktur D1 masih bearish
+BYAN,Bayan Resources Tbk,60,BUY,13450,down,EQUILIBRIUM,48,BOS bear,down,up,,,,,,,,6.8,SSL raid @ 11100,HINDARI,struktur D1 masih bearish
+IATA,Karya Pacific Energy Tbk.,30,BUY,115,down,EQUILIBRIUM,44,CHoCH bear,up,up,,,,,,,,7.0,SSL raid @ 104,HINDARI,struktur D1 masih bearish

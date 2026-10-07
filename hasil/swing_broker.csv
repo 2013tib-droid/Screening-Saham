@@ -1,7 +1,5 @@
 Ticker,Nama,Harga,Bandar,Dominasi%,NetBeliTop3(M),NetJualTop3(M),TopBeli,TopJual,AvgBeliTop3,JarakAvg%,Mulai,Akhir,Catatan
-SINI,Singaraja Putra Tbk.,16625,Distribusi,38.5,74.4,-119.0,"XL 37,6 · AZ 22,3 · PD 14,5","AK -59,9 · CC -45,6 · MG -13,6",16665,-0.2,2026-09-30,2026-10-06,
-JAWA,Jaya Agra Wattie Tbk.,155,Distribusi,36.9,1.9,-3.2,"CC 0,9 · XL 0,5 · MG 0,5","ZP -2,1 · YP -1,1 · AT -0,1",164,-5.4,2026-09-30,2026-10-06,
-TUGU,Asuransi Tugu Pratama Indone,1545,Netral,45.4,4.7,-5.6,"YP 2,0 · SH 1,9 · XL 0,8","AT -3,2 · AK -1,3 · BK -1,1",1504,2.7,2026-09-30,2026-10-06,
-MARK,Mark Dynamics Indonesia Tbk.,1200,Netral,48.9,4.1,-4.3,"BK 1,8 · BB 1,4 · AZ 0,9","AG -3,1 · KK -0,7 · XL -0,4",1189,0.9,2026-09-30,2026-10-06,
-KETR,Ketrosden Triasmitra Tbk.,930,Netral,49.4,11.4,-11.7,"XL 4,2 · YP 3,8 · CP 3,4","LG -8,3 · YB -1,8 · GR -1,6",940,-1.0,2026-09-30,2026-10-06,
-AGAR,,1935,Netral,58.1,0.6,-0.4,"XL 0,3 · XC 0,2 · DH 0,1","AK -0,2 · PD -0,2 · YP -0,1",1882,2.8,2026-09-30,2026-10-06,
+AUTO,Astra Otoparts Tbk,3390,Distribusi,37.8,11.0,-18.1,"CC 4,7 · PD 3,7 · DX 2,6","AK -16,2 · BB -1,2 · TP -0,7",3362,0.8,2026-10-01,2026-10-07,
+MAPI,Mitra Adiperkasa Tbk,1550,Netral,51.8,118.9,-110.6,"PD 114,2 · CC 3,8 · AI 0,9","AK -70,4 · ZP -29,7 · NI -10,6",1539,0.7,2026-10-01,2026-10-07,
+BYAN,Bayan Resources Tbk,13450,Netral,52.0,30.0,-27.7,"NI 15,8 · CP 7,3 · PD 7,0","ZP -12,4 · LG -10,3 · XA -5,0",12908,4.2,2026-10-01,2026-10-07,
+IATA,Karya Pacific Energy Tbk.,115,Akumulasi,63.4,18.7,-10.8,"XL 12,9 · XA 3,8 · PD 2,0","AK -4,6 · BK -3,2 · DR -2,9",108,6.9,2026-10-01,2026-10-07,
