@@ -1,5 +1,4 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-AUTO,Astra Otoparts Tbk,80,BUY,3390,up,PREMIUM,90,BOS bull,up,up,FVG SESI,3350,3300,3230,3520,2.05,1.2,2.6,SSL raid @ 3280,TUNGGU,harga di premium — tunggu pullback ke zona
-MAPI,Mitra Adiperkasa Tbk,71,BUY,1550,down,EQUILIBRIUM,58,BOS bear,up,up,FVG SESI,1525,1490,1440,,,1.6,4.1,SSL raid @ 1400,HINDARI,struktur D1 masih bearish
-BYAN,Bayan Resources Tbk,60,BUY,13450,down,EQUILIBRIUM,48,BOS bear,down,up,,,,,,,,6.8,SSL raid @ 11100,HINDARI,struktur D1 masih bearish
-IATA,Karya Pacific Energy Tbk.,30,BUY,115,down,EQUILIBRIUM,44,CHoCH bear,up,up,,,,,,,,7.0,SSL raid @ 104,HINDARI,struktur D1 masih bearish
+ERAA,Erajaya Swasembada Tbk.,72,BUY,615,up,PREMIUM,91,BOS bull,down,up,,,,,,,,4.1,BSL raid @ 645,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+MAPI,Mitra Adiperkasa Tbk,71,BUY,1550,down,EQUILIBRIUM,58,BOS bear,up,up,FVG SESI,1525,1490,1445,,,1.6,3.7,SSL raid @ 1400,HINDARI,struktur D1 masih bearish
+MDIA,Intermedia Capital Tbk.,35,BOW,138,down,EQUILIBRIUM,38,BOS bear,down,down,,,,,,,,12.6,BSL raid @ 148,HINDARI,struktur D1 masih bearish

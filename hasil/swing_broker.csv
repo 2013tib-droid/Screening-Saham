@@ -1,5 +1,4 @@
 Ticker,Nama,Harga,Bandar,Dominasi%,NetBeliTop3(M),NetJualTop3(M),TopBeli,TopJual,AvgBeliTop3,JarakAvg%,Mulai,Akhir,Catatan
-AUTO,Astra Otoparts Tbk,3390,Distribusi,37.8,11.0,-18.1,"CC 4,7 · PD 3,7 · DX 2,6","AK -16,2 · BB -1,2 · TP -0,7",3362,0.8,2026-10-01,2026-10-07,
-MAPI,Mitra Adiperkasa Tbk,1550,Netral,51.8,118.9,-110.6,"PD 114,2 · CC 3,8 · AI 0,9","AK -70,4 · ZP -29,7 · NI -10,6",1539,0.7,2026-10-01,2026-10-07,
-BYAN,Bayan Resources Tbk,13450,Netral,52.0,30.0,-27.7,"NI 15,8 · CP 7,3 · PD 7,0","ZP -12,4 · LG -10,3 · XA -5,0",12908,4.2,2026-10-01,2026-10-07,
-IATA,Karya Pacific Energy Tbk.,115,Akumulasi,63.4,18.7,-10.8,"XL 12,9 · XA 3,8 · PD 2,0","AK -4,6 · BK -3,2 · DR -2,9",108,6.9,2026-10-01,2026-10-07,
+ERAA,Erajaya Swasembada Tbk.,615,Netral,44.3,35.5,-44.7,"CP 14,8 · OD 10,5 · BK 10,3","AK -20,8 · ZP -12,1 · DR -11,8",616,-0.1,2026-10-02,2026-10-08,
+MAPI,Mitra Adiperkasa Tbk,1550,Netral,51.7,120.0,-111.9,"PD 115,8 · CC 3,3 · AI 0,9","AK -70,5 · ZP -31,2 · NI -10,3",1542,0.5,2026-10-02,2026-10-08,
+MDIA,Intermedia Capital Tbk.,138,Netral,52.6,23.0,-20.8,"XL 10,2 · KI 6,8 · PD 6,1","IF -9,9 · MG -5,5 · AK -5,4",146,-5.7,2026-10-02,2026-10-08,
