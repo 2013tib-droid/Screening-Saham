@@ -1,4 +1,5 @@
 Ticker,Nama,Harga,Bandar,Dominasi%,NetBeliTop3(M),NetJualTop3(M),TopBeli,TopJual,AvgBeliTop3,JarakAvg%,Mulai,Akhir,Catatan
-ERAA,Erajaya Swasembada Tbk.,615,Netral,44.3,35.5,-44.7,"CP 14,8 · OD 10,5 · BK 10,3","AK -20,8 · ZP -12,1 · DR -11,8",616,-0.1,2026-10-02,2026-10-08,
-MAPI,Mitra Adiperkasa Tbk,1550,Netral,51.7,120.0,-111.9,"PD 115,8 · CC 3,3 · AI 0,9","AK -70,5 · ZP -31,2 · NI -10,3",1542,0.5,2026-10-02,2026-10-08,
-MDIA,Intermedia Capital Tbk.,138,Netral,52.6,23.0,-20.8,"XL 10,2 · KI 6,8 · PD 6,1","IF -9,9 · MG -5,5 · AK -5,4",146,-5.7,2026-10-02,2026-10-08,
+SINI,Singaraja Putra Tbk.,15000,Netral,47.7,52.3,-57.4,"HP 31,7 · YU 11,4 · PD 9,3","LG -25,8 · ZP -20,4 · CC -11,2",16063,-6.6,2026-10-05,2026-10-09,
+BFIN,BFI Finance  Indonesia Tbk,945,Netral,50.0,30.8,-30.8,"AK 19,6 · CC 7,9 · NI 3,3","YU -18,5 · ZP -10,4 · DH -1,9",938,0.7,2026-10-05,2026-10-09,
+MDIA,Intermedia Capital Tbk.,138,Netral,50.2,19.9,-19.7,"XL 7,7 · KI 7,5 · PD 4,7","IF -9,5 · MG -6,6 · AK -3,7",143,-3.8,2026-10-05,2026-10-09,
+DOOH,,310,Netral,45.9,18.6,-21.9,"CC 7,5 · XA 7,3 · YB 3,8","AZ -11,8 · GR -5,4 · XL -4,7",321,-3.4,2026-10-05,2026-10-09,
