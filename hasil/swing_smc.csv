@@ -1,5 +1,9 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-SINI,Singaraja Putra Tbk.,31.0,BOW,15000,up,PREMIUM,75,BOS bull,down,down,FVG D1,14250,13975,12825,18500,3.41,5.0,5.9,BSL raid @ 15975,TUNGGU,harga di premium — tunggu pullback ke zona
-BFIN,BFI Finance  Indonesia Tbk,67.0,BUY,945,down,PREMIUM,80,CHoCH bear,up,up,,,,,,,,3.1,SSL raid @ 915,HINDARI,struktur D1 masih bearish
-MDIA,Intermedia Capital Tbk.,35.0,BOW,138,down,EQUILIBRIUM,38,BOS bear,down,down,,,,,,,,12.9,BSL raid @ 148,HINDARI,struktur D1 masih bearish
-DOOH,,,BOW,310,down,EQUILIBRIUM,57,CHoCH bear,down,down,OB D1,290,262,230,,,6.5,13.1,SSL raid @ 338,HINDARI,struktur D1 masih bearish
+ITMG,Indo Tambangraya Megah Tbk,73.0,BOW,25375,up,EQUILIBRIUM,56,CHoCH bull,up,up,OB D1,25225,24575,24200,29500,6.57,0.6,2.5,BSL raid @ 25875,SIAP,"zona OB D1 aktif, RR 6.57"
+SINI,Singaraja Putra Tbk.,31.0,BUY,15800,up,PREMIUM,81,BOS bull,down,down,,,,,,,,6.2,BSL raid @ 15975,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+BEKS,,,BUY,33,up,PREMIUM,67,CHoCH bull,up,up,,,,,,,,14.1,BSL raid @ 34,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+GGRM,Gudang Garam Tbk,73.0,BOW,18000,down,EQUILIBRIUM,58,BOS bear,down,up,FVG SESI,17475,17200,16500,21825,5.36,2.9,3.0,BSL raid @ 16600,HINDARI,struktur D1 masih bearish
+HATM,Habco Trans Maritima Tbk.,46.0,BOW,550,down,PREMIUM,68,CHoCH bear,up,up,OB SESI,545,525,498,685,4.05,0.9,5.4,SSL raid @ 500,HINDARI,struktur D1 masih bearish
+TOWR,Sarana Menara Nusantara Tbk.,63.0,BUY,458,down,EQUILIBRIUM,45,BOS bear,down,up,,,,,,,,3.8,SSL raid @ 430,HINDARI,struktur D1 masih bearish
+IATA,Karya Pacific Energy Tbk.,30.0,BOW,106,down,DISCOUNT,37,CHoCH bear,up,up,,,,,,,,8.2,SSL raid @ 104,HINDARI,struktur D1 masih bearish
+DOOH,,,BOW,270,down,EQUILIBRIUM,46,CHoCH bear,down,down,,,,,,,,15.0,SSL raid @ 338,HINDARI,struktur D1 masih bearish

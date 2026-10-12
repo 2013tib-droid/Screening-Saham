@@ -1,5 +1,9 @@
 Ticker,Nama,Harga,Bandar,Dominasi%,NetBeliTop3(M),NetJualTop3(M),TopBeli,TopJual,AvgBeliTop3,JarakAvg%,Mulai,Akhir,Catatan
-SINI,Singaraja Putra Tbk.,15000,Netral,47.7,52.3,-57.4,"HP 31,7 · YU 11,4 · PD 9,3","LG -25,8 · ZP -20,4 · CC -11,2",16063,-6.6,2026-10-05,2026-10-09,
-BFIN,BFI Finance  Indonesia Tbk,945,Netral,50.0,30.8,-30.8,"AK 19,6 · CC 7,9 · NI 3,3","YU -18,5 · ZP -10,4 · DH -1,9",938,0.7,2026-10-05,2026-10-09,
-MDIA,Intermedia Capital Tbk.,138,Netral,50.2,19.9,-19.7,"XL 7,7 · KI 7,5 · PD 4,7","IF -9,5 · MG -6,6 · AK -3,7",143,-3.8,2026-10-05,2026-10-09,
-DOOH,,310,Netral,45.9,18.6,-21.9,"CC 7,5 · XA 7,3 · YB 3,8","AZ -11,8 · GR -5,4 · XL -4,7",321,-3.4,2026-10-05,2026-10-09,
+SINI,Singaraja Putra Tbk.,15800,Distribusi,36.8,58.8,-101.1,"HP 26,8 · XL 21,0 · TP 11,1","LG -64,2 · ZP -18,7 · RF -18,2",15235,3.7,2026-10-06,2026-10-12,
+TOWR,Sarana Menara Nusantara Tbk.,458,Akumulasi,69.1,124.7,-55.8,"SQ 101,6 · BK 20,9 · CP 2,2","AK -21,2 · ZP -18,0 · CC -16,6",443,3.3,2026-10-06,2026-10-12,
+GGRM,Gudang Garam Tbk,18000,Akumulasi,65.1,34.0,-18.2,"BK 16,4 · RX 14,1 · ZP 3,5","AK -8,3 · PD -5,6 · TP -4,3",17796,1.1,2026-10-06,2026-10-12,
+ITMG,Indo Tambangraya Megah Tbk,25375,Netral,56.0,87.2,-68.4,"NI 68,7 · BK 11,8 · ZP 6,7","KZ -47,1 · YU -11,4 · TP -9,9",25577,-0.8,2026-10-06,2026-10-12,
+IATA,Karya Pacific Energy Tbk.,106,Netral,57.6,20.4,-15.0,"XL 10,7 · XA 6,3 · GR 3,3","AK -6,2 · BK -5,6 · DR -3,2",108,-2.2,2026-10-06,2026-10-12,
+HATM,Habco Trans Maritima Tbk.,550,Netral,52.0,4.7,-4.3,"LG 3,9 · YP 0,5 · RG 0,3","AO -3,2 · AZ -0,7 · ZP -0,4",569,-3.3,2026-10-06,2026-10-12,
+DOOH,,270,Netral,42.0,18.2,-25.1,"CC 8,2 · XA 5,6 · XL 4,4","AZ -14,7 · CP -6,1 · AI -4,3",314,-14.1,2026-10-06,2026-10-12,
+BEKS,,33,Akumulasi,61.5,10.5,-6.6,"NI 9,5 · FZ 0,5 · LG 0,5","YP -3,3 · CC -2,0 · YJ -1,3",35,-5.6,2026-10-06,2026-10-12,
