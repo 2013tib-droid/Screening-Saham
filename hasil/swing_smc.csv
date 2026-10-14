@@ -1,9 +1,10 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-ITMG,Indo Tambangraya Megah Tbk,73.0,BOW,25375,up,EQUILIBRIUM,56,CHoCH bull,up,up,OB D1,25225,24575,24200,29500,6.57,0.6,2.5,BSL raid @ 25875,SIAP,"zona OB D1 aktif, RR 6.57"
-SINI,Singaraja Putra Tbk.,31.0,BUY,15800,up,PREMIUM,81,BOS bull,down,down,,,,,,,,6.2,BSL raid @ 15975,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-BEKS,,,BUY,33,up,PREMIUM,67,CHoCH bull,up,up,,,,,,,,14.1,BSL raid @ 34,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-GGRM,Gudang Garam Tbk,73.0,BOW,18000,down,EQUILIBRIUM,58,BOS bear,down,up,FVG SESI,17475,17200,16500,21825,5.36,2.9,3.0,BSL raid @ 16600,HINDARI,struktur D1 masih bearish
-HATM,Habco Trans Maritima Tbk.,46.0,BOW,550,down,PREMIUM,68,CHoCH bear,up,up,OB SESI,545,525,498,685,4.05,0.9,5.4,SSL raid @ 500,HINDARI,struktur D1 masih bearish
-TOWR,Sarana Menara Nusantara Tbk.,63.0,BUY,458,down,EQUILIBRIUM,45,BOS bear,down,up,,,,,,,,3.8,SSL raid @ 430,HINDARI,struktur D1 masih bearish
-IATA,Karya Pacific Energy Tbk.,30.0,BOW,106,down,DISCOUNT,37,CHoCH bear,up,up,,,,,,,,8.2,SSL raid @ 104,HINDARI,struktur D1 masih bearish
-DOOH,,,BOW,270,down,EQUILIBRIUM,46,CHoCH bear,down,down,,,,,,,,15.0,SSL raid @ 338,HINDARI,struktur D1 masih bearish
+ITMG,Indo Tambangraya Megah Tbk,73,BOW,25450,up,EQUILIBRIUM,57,CHoCH bull,up,up,OB SESI,24950,24575,24150,29500,7.73,2.0,2.3,BSL raid @ 25875,SIAP,"zona OB SESI aktif, RR 7.73"
+ELSA,Elnusa Tbk,84,BOW,680,up,EQUILIBRIUM,43,CHoCH bull,up,up,FVG SESI,675,660,615,710,0.81,0.7,3.8,SSL raid @ 615,PANTAU,RR baru 0.81 — di bawah 2
+PTBA,Bukit Asam (Persero) Tbk.,64,BUY,3270,up,PREMIUM,84,BOS bull,up,down,OB D1,3150,3030,2940,3490,2.67,3.7,4.0,BSL raid @ 3200,TUNGGU,harga di premium — tunggu pullback ke zona
+SINI,Singaraja Putra Tbk.,31,BOW,14550,up,PREMIUM,72,BOS bull,down,down,,,,,,,,7.5,BSL raid @ 15975,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+ERAA,Erajaya Swasembada Tbk.,72,BUY,625,up,PREMIUM,93,BOS bull,down,up,,,,,,,,4.3,BSL raid @ 650,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+MARK,Mark Dynamics Indonesia Tbk.,79,BOW,1125,up,PREMIUM,77,BOS bull,down,down,,,,,,,,3.9,SSL raid @ 1110,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+MEDC,Medco Energi Internasional T,59,BUY,1545,up,EQUILIBRIUM,57,CHoCH bull,up,up,FVG SESI,1495,1455,1350,,,3.2,3.5,BSL raid @ 1380,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+AYAM,Janu Putra Sejahtera Tbk.,30,BUY,505,up,PREMIUM,82,BOS bull,up,down,,,,,,,,3.8,BSL raid @ 515,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+INTP,Indocement Tunggal Prakarsa ,82,BOW,5250,down,EQUILIBRIUM,54,BOS bear,up,up,FVG D1,5200,5125,4760,6325,2.89,1.0,2.9,BSL raid @ 4860,HINDARI,struktur D1 masih bearish
