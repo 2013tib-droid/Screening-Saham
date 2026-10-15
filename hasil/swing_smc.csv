@@ -1,10 +1,12 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-ITMG,Indo Tambangraya Megah Tbk,73,BOW,25450,up,EQUILIBRIUM,57,CHoCH bull,up,up,OB SESI,24950,24575,24150,29500,7.73,2.0,2.3,BSL raid @ 25875,SIAP,"zona OB SESI aktif, RR 7.73"
-ELSA,Elnusa Tbk,84,BOW,680,up,EQUILIBRIUM,43,CHoCH bull,up,up,FVG SESI,675,660,615,710,0.81,0.7,3.8,SSL raid @ 615,PANTAU,RR baru 0.81 — di bawah 2
-PTBA,Bukit Asam (Persero) Tbk.,64,BUY,3270,up,PREMIUM,84,BOS bull,up,down,OB D1,3150,3030,2940,3490,2.67,3.7,4.0,BSL raid @ 3200,TUNGGU,harga di premium — tunggu pullback ke zona
-SINI,Singaraja Putra Tbk.,31,BOW,14550,up,PREMIUM,72,BOS bull,down,down,,,,,,,,7.5,BSL raid @ 15975,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-ERAA,Erajaya Swasembada Tbk.,72,BUY,625,up,PREMIUM,93,BOS bull,down,up,,,,,,,,4.3,BSL raid @ 650,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-MARK,Mark Dynamics Indonesia Tbk.,79,BOW,1125,up,PREMIUM,77,BOS bull,down,down,,,,,,,,3.9,SSL raid @ 1110,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-MEDC,Medco Energi Internasional T,59,BUY,1545,up,EQUILIBRIUM,57,CHoCH bull,up,up,FVG SESI,1495,1455,1350,,,3.2,3.5,BSL raid @ 1380,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
-AYAM,Janu Putra Sejahtera Tbk.,30,BUY,505,up,PREMIUM,82,BOS bull,up,down,,,,,,,,3.8,BSL raid @ 515,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-INTP,Indocement Tunggal Prakarsa ,82,BOW,5250,down,EQUILIBRIUM,54,BOS bear,up,up,FVG D1,5200,5125,4760,6325,2.89,1.0,2.9,BSL raid @ 4860,HINDARI,struktur D1 masih bearish
+ITMG,Indo Tambangraya Megah Tbk,73.0,BOW,25300,up,EQUILIBRIUM,55,CHoCH bull,up,up,OB SESI,24950,24575,24175,29500,8.06,1.4,2.3,BSL raid @ 25875,SIAP,"zona OB SESI aktif, RR 8.06"
+AKRA,AKR Corporindo Tbk,75.0,BUY,1470,up,PREMIUM,80,CHoCH bull,up,down,OB SESI,1395,1385,1345,1560,3.78,5.1,2.9,BSL raid @ 1455,TUNGGU,harga di premium — tunggu pullback ke zona
+SMDR,Samudera Indonesia  Tbk,70.0,BOW,386,up,PREMIUM,75,BOS bull,down,down,OB SESI,364,356,304,434,1.32,5.7,4.4,BSL raid @ 420,TUNGGU,harga di premium — tunggu pullback ke zona
+SINI,Singaraja Putra Tbk.,31.0,BOW,14075,up,PREMIUM,68,BOS bull,down,down,,,,,,,,8.3,BSL raid @ 15975,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+SQMI,Wilton Makmur Indonesia Tbk.,27.0,BUY,100,up,PREMIUM,78,BOS bull,up,down,,,,,,,,10.0,SSL raid @ 83,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+TEBE,Dana Brata Luhur Tbk.,58.0,BOW,2330,up,PREMIUM,67,BOS bull,up,down,,,,,,,,9.2,BSL raid @ 2670,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+BEKS,,,BUY,35,up,PREMIUM,76,CHoCH bull,up,up,,,,,,,,15.5,BSL raid @ 34,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+INDF,Indofood Sukses Makmur Tbk,75.0,BOW,6950,down,PREMIUM,67,BOS bear,up,down,FVG D1,6825,6775,6600,7250,2.25,1.8,2.2,SSL raid @ 6850,HINDARI,struktur D1 masih bearish
+PSAB,J Resources Asia Pasifik Tbk,89.0,BOW,500,down,PREMIUM,63,BOS bear,down,down,OB D1,478,456,390,,,4.3,5.4,BSL raid @ 500,HINDARI,struktur D1 masih bearish
+TINS,TIMAH (Persero) Tbk.,81.0,BOW,4170,down,PREMIUM,66,BOS bear,down,down,,,,,,,,4.2,BSL raid @ 4220,HINDARI,struktur D1 masih bearish
+KETR,Ketrosden Triasmitra Tbk.,81.0,BOW,770,down,EQUILIBRIUM,58,BOS bear,down,down,,,,,,,,9.9,SSL raid @ 805,HINDARI,struktur D1 masih bearish
