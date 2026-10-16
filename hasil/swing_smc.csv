@@ -1,12 +1,17 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-ITMG,Indo Tambangraya Megah Tbk,73.0,BOW,25300,up,EQUILIBRIUM,55,CHoCH bull,up,up,OB SESI,24950,24575,24175,29500,8.06,1.4,2.3,BSL raid @ 25875,SIAP,"zona OB SESI aktif, RR 8.06"
-AKRA,AKR Corporindo Tbk,75.0,BUY,1470,up,PREMIUM,80,CHoCH bull,up,down,OB SESI,1395,1385,1345,1560,3.78,5.1,2.9,BSL raid @ 1455,TUNGGU,harga di premium — tunggu pullback ke zona
-SMDR,Samudera Indonesia  Tbk,70.0,BOW,386,up,PREMIUM,75,BOS bull,down,down,OB SESI,364,356,304,434,1.32,5.7,4.4,BSL raid @ 420,TUNGGU,harga di premium — tunggu pullback ke zona
-SINI,Singaraja Putra Tbk.,31.0,BOW,14075,up,PREMIUM,68,BOS bull,down,down,,,,,,,,8.3,BSL raid @ 15975,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-SQMI,Wilton Makmur Indonesia Tbk.,27.0,BUY,100,up,PREMIUM,78,BOS bull,up,down,,,,,,,,10.0,SSL raid @ 83,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-TEBE,Dana Brata Luhur Tbk.,58.0,BOW,2330,up,PREMIUM,67,BOS bull,up,down,,,,,,,,9.2,BSL raid @ 2670,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-BEKS,,,BUY,35,up,PREMIUM,76,CHoCH bull,up,up,,,,,,,,15.5,BSL raid @ 34,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-INDF,Indofood Sukses Makmur Tbk,75.0,BOW,6950,down,PREMIUM,67,BOS bear,up,down,FVG D1,6825,6775,6600,7250,2.25,1.8,2.2,SSL raid @ 6850,HINDARI,struktur D1 masih bearish
-PSAB,J Resources Asia Pasifik Tbk,89.0,BOW,500,down,PREMIUM,63,BOS bear,down,down,OB D1,478,456,390,,,4.3,5.4,BSL raid @ 500,HINDARI,struktur D1 masih bearish
-TINS,TIMAH (Persero) Tbk.,81.0,BOW,4170,down,PREMIUM,66,BOS bear,down,down,,,,,,,,4.2,BSL raid @ 4220,HINDARI,struktur D1 masih bearish
-KETR,Ketrosden Triasmitra Tbk.,81.0,BOW,770,down,EQUILIBRIUM,58,BOS bear,down,down,,,,,,,,9.9,SSL raid @ 805,HINDARI,struktur D1 masih bearish
+ASGR,Astra Graphia Tbk,80,BUY,2260,up,PREMIUM,82,BOS bull,down,down,FVG D1,2140,1970,1795,2500,1.71,5.3,6.1,SSL raid @ 2150,TUNGGU,harga di premium — tunggu pullback ke zona
+AALI,Astra Agro Lestari Tbk.,79,BOW,7825,up,PREMIUM,75,BOS bull,down,down,OB SESI,7225,7100,5675,,,7.7,4.5,BSL raid @ 8525,TUNGGU,stop struktural terlalu lebar (19% dari harga)
+BSSR,Baramulti Suksessarana Tbk.,72,BUY,4940,up,PREMIUM,92,BOS bull,up,down,,,,,,,,4.1,SSL raid @ 4900,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+BDMN,Bank Danamon Indonesia Tbk.,65,BOW,4420,up,PREMIUM,79,BOS bull,down,down,,,,,,,,4.7,BSL raid @ 4500,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+ULTJ,Ultrajaya Milk Industry & Tr,79,BUY,2010,up,PREMIUM,82,BOS bull,up,down,,,,,,,,3.2,SSL raid @ 2000,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+SMDR,Samudera Indonesia  Tbk,70,BOW,350,down,EQUILIBRIUM,57,CHoCH bear,down,down,OB D1,326,314,300,434,5.7,6.9,5.6,BSL raid @ 356,HINDARI,struktur D1 masih bearish
+ERAA,Erajaya Swasembada Tbk.,73,BOW,525,down,PREMIUM,65,CHoCH bear,down,down,FVG D1,515,505,462,650,2.92,1.9,6.1,BSL raid @ 545,HINDARI,struktur D1 masih bearish
+PSAB,J Resources Asia Pasifik Tbk,89,BOW,446,down,EQUILIBRIUM,48,BOS bear,down,down,FVG D1,426,412,388,505,2.77,4.4,6.6,BSL raid @ 460,HINDARI,struktur D1 masih bearish
+AYAM,Janu Putra Sejahtera Tbk.,30,BOW,460,down,PREMIUM,65,CHoCH bear,down,down,FVG D1,442,424,382,555,2.39,3.9,4.9,SSL raid @ 458,HINDARI,struktur D1 masih bearish
+PTBA,Bukit Asam (Persero) Tbk.,65,BOW,2800,down,EQUILIBRIUM,50,CHoCH bear,down,down,FVG D1,2700,2590,2320,3200,1.71,3.6,5.7,BSL raid @ 2840,HINDARI,struktur D1 masih bearish
+DMAS,Puradelta Lestari Tbk.,79,BOW,159,down,EQUILIBRIUM,45,BOS bear,down,down,FVG D1,158,149,136,,,0.6,4.9,SSL raid @ 180,HINDARI,struktur D1 masih bearish
+AADI,Adaro Andalan Indonesia Tbk.,71,BOW,9900,down,EQUILIBRIUM,54,CHoCH bear,down,down,OB D1,9350,9025,8625,,,5.6,5.6,BSL raid @ 10325,HINDARI,struktur D1 masih bearish
+INDF,Indofood Sukses Makmur Tbk,74,BOW,6625,down,EQUILIBRIUM,51,BOS bear,down,down,,,,,,,,3.2,SSL raid @ 6600,HINDARI,struktur D1 masih bearish
+AUTO,Astra Otoparts Tbk,80,BOW,3110,down,PREMIUM,75,CHoCH bear,down,down,,,,,,,,3.8,BSL raid @ 3340,HINDARI,struktur D1 masih bearish
+TAPG,Triputra Agro Persada Tbk.,81,BOW,1765,down,EQUILIBRIUM,44,BOS bear,down,down,,,,,,,,4.6,BSL raid @ 1815,HINDARI,struktur D1 masih bearish
+POWR,Cikarang Listrindo Tbk.,74,BOW,840,down,EQUILIBRIUM,53,BOS bear,down,down,,,,,,,,4.4,SSL raid @ 935,HINDARI,struktur D1 masih bearish
