@@ -1,9 +1,9 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
 ASGR,Astra Graphia Tbk,80,BUY,2260,up,PREMIUM,82,BOS bull,down,down,FVG D1,2140,1970,1795,2500,1.71,5.3,6.1,SSL raid @ 2150,TUNGGU,harga di premium — tunggu pullback ke zona
+BSSR,Baramulti Suksessarana Tbk.,72,BUY,4940,up,PREMIUM,92,BOS bull,down,down,,,,,,,,4.1,SSL raid @ 4900,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
 AALI,Astra Agro Lestari Tbk.,79,BOW,7825,up,PREMIUM,75,BOS bull,down,down,OB SESI,7225,7100,5675,,,7.7,4.5,BSL raid @ 8525,TUNGGU,stop struktural terlalu lebar (19% dari harga)
-BSSR,Baramulti Suksessarana Tbk.,72,BUY,4940,up,PREMIUM,92,BOS bull,up,down,,,,,,,,4.1,SSL raid @ 4900,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
 BDMN,Bank Danamon Indonesia Tbk.,65,BOW,4420,up,PREMIUM,79,BOS bull,down,down,,,,,,,,4.7,BSL raid @ 4500,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-ULTJ,Ultrajaya Milk Industry & Tr,79,BUY,2010,up,PREMIUM,82,BOS bull,up,down,,,,,,,,3.2,SSL raid @ 2000,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+ULTJ,Ultrajaya Milk Industry & Tr,79,BUY,2010,up,PREMIUM,82,BOS bull,down,down,,,,,,,,3.2,SSL raid @ 2000,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
 SMDR,Samudera Indonesia  Tbk,70,BOW,350,down,EQUILIBRIUM,57,CHoCH bear,down,down,OB D1,326,314,300,434,5.7,6.9,5.6,BSL raid @ 356,HINDARI,struktur D1 masih bearish
 ERAA,Erajaya Swasembada Tbk.,73,BOW,525,down,PREMIUM,65,CHoCH bear,down,down,FVG D1,515,505,462,650,2.92,1.9,6.1,BSL raid @ 545,HINDARI,struktur D1 masih bearish
 PSAB,J Resources Asia Pasifik Tbk,89,BOW,446,down,EQUILIBRIUM,48,BOS bear,down,down,FVG D1,426,412,388,505,2.77,4.4,6.6,BSL raid @ 460,HINDARI,struktur D1 masih bearish
