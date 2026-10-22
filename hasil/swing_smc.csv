@@ -1,15 +1,12 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-DMAS,Puradelta Lestari Tbk.,76.0,BUY,208,up,PREMIUM,94,CHoCH bull,up,up,,,,,,,,5.2,SSL raid @ 175,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-AALI,Astra Agro Lestari Tbk.,79.0,BUY,8800,up,PREMIUM,104,BOS bull,up,up,FVG SESI,8425,8275,7375,,,4.3,4.8,BSL raid @ 8525,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
-SGER,Sumber Global Energy Tbk.,26.0,BUY,755,up,PREMIUM,94,BOS bull,down,up,,,,,,,,5.2,BSL raid @ 760,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-AYAM,Janu Putra Sejahtera Tbk.,30.0,BOW,478,down,PREMIUM,72,CHoCH bear,down,down,FVG D1,442,424,382,555,2.39,7.5,5.4,SSL raid @ 464,HINDARI,struktur D1 masih bearish
-ITMG,Indo Tambangraya Megah Tbk,72.0,BOW,24900,down,EQUILIBRIUM,46,CHoCH bear,down,down,FVG SESI,24650,24225,21525,29500,1.74,1.0,3.9,SSL raid @ 24575,HINDARI,struktur D1 masih bearish
-INTP,Indocement Tunggal Prakarsa ,82.0,BUY,5500,down,PREMIUM,66,BOS bear,up,up,FVG D1,5300,5150,4570,6325,1.68,3.6,4.3,SSL raid @ 4760,HINDARI,struktur D1 masih bearish
-AADI,Adaro Andalan Indonesia Tbk.,70.0,BOW,11100,down,PREMIUM,72,CHoCH bear,down,down,FVG D1,10600,10375,9025,12925,1.67,4.5,5.4,SSL raid @ 10725,HINDARI,struktur D1 masih bearish
-MGLV,NexAI Digital Infrastruktur ,35.0,BOW,11425,down,PREMIUM,63,BOS bear,down,down,,,,,,,,9.7,SSL raid @ 10500,HINDARI,struktur D1 masih bearish
-INDF,Indofood Sukses Makmur Tbk,75.0,BOW,6650,down,EQUILIBRIUM,52,BOS bear,down,down,,,,,,,,3.3,BSL raid @ 6550,HINDARI,struktur D1 masih bearish
-BNGA,Bank CIMB Niaga Tbk.,70.0,BUY,1725,down,PREMIUM,87,BOS bear,up,up,,,,,,,,4.3,SSL raid @ 1710,HINDARI,struktur D1 masih bearish
-GGRM,Gudang Garam Tbk,73.0,BOW,16500,down,EQUILIBRIUM,41,BOS bear,down,down,FVG SESI,15375,15075,14425,,,6.8,4.8,SSL raid @ 14500,HINDARI,struktur D1 masih bearish
-TINS,TIMAH (Persero) Tbk.,81.0,BOW,3780,down,EQUILIBRIUM,49,BOS bear,down,down,FVG D1,3620,3410,3290,,,4.2,5.7,BSL raid @ 3800,HINDARI,struktur D1 masih bearish
-MARK,Mark Dynamics Indonesia Tbk.,78.0,BUY,1140,down,PREMIUM,79,CHoCH bear,down,down,,,,,,,,5.3,SSL raid @ 1050,HINDARI,struktur D1 masih bearish
-DOOH,,,BOW,256,down,EQUILIBRIUM,43,BOS bear,down,up,,,,,,,,14.1,BSL raid @ 258,HINDARI,struktur D1 masih bearish
+SMIL,Sarana Mitra Luas Tbk.,52.0,BUY,456,up,PREMIUM,85,BOS bull,down,down,,,,,,,,5.1,BSL raid @ 468,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+SGER,Sumber Global Energy Tbk.,26.0,BUY,800,up,PREMIUM,102,BOS bull,up,up,OB SESI,740,715,655,,,7.5,5.5,BSL raid @ 760,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
+AKRA,AKR Corporindo Tbk,76.0,BOW,1320,down,EQUILIBRIUM,48,BOS bear,down,up,FVG D1,1250,1215,1150,1560,3.97,5.3,4.9,SSL raid @ 1245,HINDARI,struktur D1 masih bearish
+AADI,Adaro Andalan Indonesia Tbk.,71.0,BUY,11300,down,PREMIUM,75,CHoCH bear,down,up,FVG D1,10600,10375,9500,12925,2.47,6.2,5.5,SSL raid @ 10725,HINDARI,struktur D1 masih bearish
+ELSA,Elnusa Tbk,84.0,BOW,660,down,EQUILIBRIUM,40,CHoCH bear,down,down,FVG SESI,615,575,540,710,2.09,6.8,5.3,SSL raid @ 610,HINDARI,struktur D1 masih bearish
+BNGA,Bank CIMB Niaga Tbk.,71.0,BOW,1665,down,PREMIUM,70,BOS bear,up,up,OB SESI,1565,1530,1435,1765,1.93,6.0,4.8,BSL raid @ 1670,HINDARI,struktur D1 masih bearish
+INTP,Indocement Tunggal Prakarsa ,81.0,BUY,5625,down,PREMIUM,71,BOS bear,up,up,FVG D1,5300,5150,4570,6325,1.68,5.8,4.5,SSL raid @ 4760,HINDARI,struktur D1 masih bearish
+TINS,TIMAH (Persero) Tbk.,81.0,BOW,3840,down,EQUILIBRIUM,52,BOS bear,down,up,FVG D1,3620,3410,3280,,,5.7,6.0,SSL raid @ 3810,HINDARI,struktur D1 masih bearish
+MEDC,Medco Energi Internasional T,58.0,BUY,1450,down,EQUILIBRIUM,47,BOS bear,down,up,FVG SESI,1335,1290,1200,,,7.9,5.6,SSL raid @ 1320,HINDARI,struktur D1 masih bearish
+TEBE,Dana Brata Luhur Tbk.,60.0,BOW,1920,down,EQUILIBRIUM,50,CHoCH bear,down,up,FVG SESI,1910,1735,1590,,,0.5,12.1,SSL raid @ 1625,HINDARI,struktur D1 masih bearish
+DOOH,,,BOW,250,down,EQUILIBRIUM,41,BOS bear,down,up,,,,,,,,13.8,BSL raid @ 258,HINDARI,struktur D1 masih bearish
