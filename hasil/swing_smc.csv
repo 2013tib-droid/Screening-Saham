@@ -1,12 +1,6 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-SMIL,Sarana Mitra Luas Tbk.,52.0,BUY,456,up,PREMIUM,85,BOS bull,down,down,,,,,,,,5.1,BSL raid @ 468,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-SGER,Sumber Global Energy Tbk.,26.0,BUY,800,up,PREMIUM,102,BOS bull,up,up,OB SESI,740,715,655,,,7.5,5.5,BSL raid @ 760,TUNGGU,tidak ada likuiditas di atas harga dalam jangkauan target
-AKRA,AKR Corporindo Tbk,76.0,BOW,1320,down,EQUILIBRIUM,48,BOS bear,down,up,FVG D1,1250,1215,1150,1560,3.97,5.3,4.9,SSL raid @ 1245,HINDARI,struktur D1 masih bearish
-AADI,Adaro Andalan Indonesia Tbk.,71.0,BUY,11300,down,PREMIUM,75,CHoCH bear,down,up,FVG D1,10600,10375,9500,12925,2.47,6.2,5.5,SSL raid @ 10725,HINDARI,struktur D1 masih bearish
-ELSA,Elnusa Tbk,84.0,BOW,660,down,EQUILIBRIUM,40,CHoCH bear,down,down,FVG SESI,615,575,540,710,2.09,6.8,5.3,SSL raid @ 610,HINDARI,struktur D1 masih bearish
-BNGA,Bank CIMB Niaga Tbk.,71.0,BOW,1665,down,PREMIUM,70,BOS bear,up,up,OB SESI,1565,1530,1435,1765,1.93,6.0,4.8,BSL raid @ 1670,HINDARI,struktur D1 masih bearish
-INTP,Indocement Tunggal Prakarsa ,81.0,BUY,5625,down,PREMIUM,71,BOS bear,up,up,FVG D1,5300,5150,4570,6325,1.68,5.8,4.5,SSL raid @ 4760,HINDARI,struktur D1 masih bearish
-TINS,TIMAH (Persero) Tbk.,81.0,BOW,3840,down,EQUILIBRIUM,52,BOS bear,down,up,FVG D1,3620,3410,3280,,,5.7,6.0,SSL raid @ 3810,HINDARI,struktur D1 masih bearish
-MEDC,Medco Energi Internasional T,58.0,BUY,1450,down,EQUILIBRIUM,47,BOS bear,down,up,FVG SESI,1335,1290,1200,,,7.9,5.6,SSL raid @ 1320,HINDARI,struktur D1 masih bearish
-TEBE,Dana Brata Luhur Tbk.,60.0,BOW,1920,down,EQUILIBRIUM,50,CHoCH bear,down,up,FVG SESI,1910,1735,1590,,,0.5,12.1,SSL raid @ 1625,HINDARI,struktur D1 masih bearish
-DOOH,,,BOW,250,down,EQUILIBRIUM,41,BOS bear,down,up,,,,,,,,13.8,BSL raid @ 258,HINDARI,struktur D1 masih bearish
+DMAS,Puradelta Lestari Tbk.,77,BUY,214,up,PREMIUM,100,BOS bull,up,up,OB D1,212,202,152,,,0.9,5.3,SSL raid @ 175,TUNGGU,stop struktural terlalu lebar (26% dari harga)
+AYAM,Janu Putra Sejahtera Tbk.,30,BOW,490,down,PREMIUM,76,CHoCH bear,up,up,OB SESI,488,478,458,555,2.88,0.4,5.1,SSL raid @ 480,HINDARI,struktur D1 masih bearish
+AKRA,AKR Corporindo Tbk,75,BOW,1390,down,PREMIUM,63,BOS bear,down,up,FVG SESI,1375,1340,1245,1560,1.8,1.1,4.8,SSL raid @ 1350,HINDARI,struktur D1 masih bearish
+ASLI,Asri Karya Lestari Tbk.,30,BOW,362,down,EQUILIBRIUM,39,CHoCH bear,down,down,,,,,,,,13.7,SSL raid @ 316,HINDARI,struktur D1 masih bearish
+TEBE,Dana Brata Luhur Tbk.,59,BOW,2110,down,EQUILIBRIUM,58,CHoCH bear,down,up,,,,,,,,12.0,SSL raid @ 1625,HINDARI,struktur D1 masih bearish
