@@ -1,16 +1,6 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-DMAS,Puradelta Lestari Tbk.,77,BUY,204,up,PREMIUM,90,BOS bull,up,up,,,,,,,,5.9,BSL raid @ 214,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-UNTR,United Tractors Tbk,62,BUY,26500,up,EQUILIBRIUM,59,CHoCH bull,up,up,OB D1,25325,24900,21050,,,4.4,4.4,SSL raid @ 23750,TUNGGU,stop struktural terlalu lebar (15% dari harga)
-POWR,Cikarang Listrindo Tbk.,74,BOW,900,down,PREMIUM,66,BOS bear,down,down,FVG D1,880,825,785,1040,2.78,2.2,5.3,SSL raid @ 900,HINDARI,struktur D1 masih bearish
-PTBA,Bukit Asam (Persero) Tbk.,63,BUY,3170,down,PREMIUM,77,CHoCH bear,down,up,FVG SESI,2920,2800,2620,3490,2.62,7.9,6.2,SSL raid @ 2940,HINDARI,struktur D1 masih bearish
-AKRA,AKR Corporindo Tbk,74,BUY,1435,down,PREMIUM,73,BOS bear,down,up,FVG D1,1395,1340,1245,1560,1.57,2.8,5.0,SSL raid @ 1405,HINDARI,struktur D1 masih bearish
-ELSA,Elnusa Tbk,83,BUY,685,down,EQUILIBRIUM,44,CHoCH bear,down,up,,,,,,,,5.5,BSL raid @ 655,HINDARI,struktur D1 masih bearish
-INDF,Indofood Sukses Makmur Tbk,75,BOW,6650,down,EQUILIBRIUM,52,BOS bear,down,down,,,,,,,,3.6,BSL raid @ 6550,HINDARI,struktur D1 masih bearish
-GGRM,Gudang Garam Tbk,73,BOW,17150,down,EQUILIBRIUM,48,BOS bear,up,down,FVG D1,16400,15800,14250,,,4.4,5.2,BSL raid @ 16525,HINDARI,struktur D1 masih bearish
-AADI,Adaro Andalan Indonesia Tbk.,70,BUY,11700,down,PREMIUM,81,CHoCH bear,down,up,,,,,,,,5.4,SSL raid @ 10725,HINDARI,struktur D1 masih bearish
-TINS,TIMAH (Persero) Tbk.,81,BOW,3730,down,EQUILIBRIUM,47,BOS bear,down,down,FVG D1,3620,3410,3260,,,2.9,6.7,BSL raid @ 3780,HINDARI,struktur D1 masih bearish
-DSNG,Dharma Satya Nusantara Tbk.,79,BOW,1470,down,EQUILIBRIUM,59,CHoCH bear,down,up,,,,,,,,5.5,BSL raid @ 1410,HINDARI,struktur D1 masih bearish
-ITMG,Indo Tambangraya Megah Tbk,73,BOW,24650,down,EQUILIBRIUM,43,CHoCH bear,down,down,,,,,,,,4.2,BSL raid @ 25850,HINDARI,struktur D1 masih bearish
-TAPG,Triputra Agro Persada Tbk.,80,BOW,1915,down,EQUILIBRIUM,55,BOS bear,down,up,FVG SESI,1860,1730,1645,,,2.9,5.0,SSL raid @ 1885,HINDARI,struktur D1 masih bearish
-MMIX,Multi Medika Internasional T,53,BOW,765,down,PREMIUM,79,BOS bear,down,up,,,,,,,,8.5,SSL raid @ 735,HINDARI,struktur D1 masih bearish
-AYAM,Janu Putra Sejahtera Tbk.,30,BOW,484,down,PREMIUM,74,CHoCH bear,up,up,,,,,,,,5.0,SSL raid @ 480,HINDARI,struktur D1 masih bearish
+DMAS,Puradelta Lestari Tbk.,78,BUY,181,up,PREMIUM,90,BOS bull,up,up,FVG SESI,174,167,131,,,3.9,5.9,BSL raid @ 184,TUNGGU,stop struktural terlalu lebar (22% dari harga)
+NATO,Olympus Strategic Indonesia ,34,BOW,850,down,EQUILIBRIUM,40,CHoCH bear,down,up,,,,,,,,11.0,BSL raid @ 700,HINDARI,struktur D1 masih bearish
+TAPG,Triputra Agro Persada Tbk.,80,BOW,1935,down,EQUILIBRIUM,57,BOS bear,down,up,FVG SESI,1860,1730,1645,,,3.9,5.1,SSL raid @ 1885,HINDARI,struktur D1 masih bearish
+SMIL,Sarana Mitra Luas Tbk.,52,BOW,402,down,PREMIUM,66,CHoCH bear,down,down,,,,,,,,6.4,BSL raid @ 420,HINDARI,struktur D1 masih bearish
+AYAM,Janu Putra Sejahtera Tbk.,30,BOW,492,down,PREMIUM,77,CHoCH bear,up,down,,,,,,,,4.7,SSL raid @ 480,HINDARI,struktur D1 masih bearish
