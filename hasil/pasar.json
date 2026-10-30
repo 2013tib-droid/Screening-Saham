@@ -1,12 +1,12 @@
 {
-  "tanggal": "2026-10-28",
-  "ihsg": 5282.31,
-  "ma50": 6152.0,
-  "ma200": 6898.98,
+  "tanggal": "2026-10-29",
+  "ihsg": 5098.06,
+  "ma50": 6126.08,
+  "ma200": 6881.55,
   "diAtasMA50": false,
   "diAtasMA200": false,
   "sejak": "2026-09-22",
   "sejakPasti": true,
-  "hariBursa": 27,
+  "hariBursa": 28,
   "maPasar": 50
 }

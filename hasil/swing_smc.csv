@@ -1,6 +1,5 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-DMAS,Puradelta Lestari Tbk.,78,BUY,181,up,PREMIUM,90,BOS bull,up,up,FVG SESI,174,167,131,,,3.9,5.9,BSL raid @ 184,TUNGGU,stop struktural terlalu lebar (22% dari harga)
-NATO,Olympus Strategic Indonesia ,34,BOW,850,down,EQUILIBRIUM,40,CHoCH bear,down,up,,,,,,,,11.0,BSL raid @ 700,HINDARI,struktur D1 masih bearish
-TAPG,Triputra Agro Persada Tbk.,80,BOW,1935,down,EQUILIBRIUM,57,BOS bear,down,up,FVG SESI,1860,1730,1645,,,3.9,5.1,SSL raid @ 1885,HINDARI,struktur D1 masih bearish
-SMIL,Sarana Mitra Luas Tbk.,52,BOW,402,down,PREMIUM,66,CHoCH bear,down,down,,,,,,,,6.4,BSL raid @ 420,HINDARI,struktur D1 masih bearish
-AYAM,Janu Putra Sejahtera Tbk.,30,BOW,492,down,PREMIUM,77,CHoCH bear,up,down,,,,,,,,4.7,SSL raid @ 480,HINDARI,struktur D1 masih bearish
+VICI,Victoria Care Indonesia Tbk.,57,BUY,1055,up,EQUILIBRIUM,60,BOS bull,up,up,,,,,,,,10.3,SSL raid @ 880,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+LSIP,PP London Sumatra Indonesia ,89,BOW,1410,down,EQUILIBRIUM,54,CHoCH bear,up,down,FVG D1,1370,1290,1210,,,2.8,5.3,SSL raid @ 1435,HINDARI,struktur D1 masih bearish
+SMDR,Samudera Indonesia  Tbk,70,BOW,380,down,PREMIUM,72,CHoCH bear,down,down,,,,,,,,6.3,BSL raid @ 376,HINDARI,struktur D1 masih bearish
+DSNG,Dharma Satya Nusantara Tbk.,79,BOW,1410,down,EQUILIBRIUM,51,CHoCH bear,up,up,,,,,,,,6.1,BSL raid @ 1410,HINDARI,struktur D1 masih bearish
