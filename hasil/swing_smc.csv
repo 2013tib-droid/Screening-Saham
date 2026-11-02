@@ -1,5 +1,7 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-VICI,Victoria Care Indonesia Tbk.,57,BUY,1055,up,EQUILIBRIUM,60,BOS bull,up,up,,,,,,,,10.3,SSL raid @ 880,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-LSIP,PP London Sumatra Indonesia ,89,BOW,1410,down,EQUILIBRIUM,54,CHoCH bear,up,down,FVG D1,1370,1290,1210,,,2.8,5.3,SSL raid @ 1435,HINDARI,struktur D1 masih bearish
-SMDR,Samudera Indonesia  Tbk,70,BOW,380,down,PREMIUM,72,CHoCH bear,down,down,,,,,,,,6.3,BSL raid @ 376,HINDARI,struktur D1 masih bearish
-DSNG,Dharma Satya Nusantara Tbk.,79,BOW,1410,down,EQUILIBRIUM,51,CHoCH bear,up,up,,,,,,,,6.1,BSL raid @ 1410,HINDARI,struktur D1 masih bearish
+POWR,Cikarang Listrindo Tbk.,73,BUY,960,up,PREMIUM,80,CHoCH bull,up,up,OB D1,940,905,785,1040,0.85,2.1,5.5,BSL raid @ 975,TUNGGU,harga di premium — tunggu pullback ke zona
+DSNG,Dharma Satya Nusantara Tbk.,78,BUY,1550,down,PREMIUM,69,CHoCH bear,up,up,FVG SESI,1445,1415,1210,1680,1.14,6.8,6.3,BSL raid @ 1410,HINDARI,struktur D1 masih bearish
+ERAA,Erajaya Swasembada Tbk.,74,BOW,482,down,EQUILIBRIUM,52,CHoCH bear,down,down,FVG D1,454,432,372,,,5.8,8.5,BSL raid @ 488,HINDARI,struktur D1 masih bearish
+SMDR,Samudera Indonesia  Tbk,70,BOW,354,down,EQUILIBRIUM,59,CHoCH bear,down,down,,,,,,,,7.0,BSL raid @ 376,HINDARI,struktur D1 masih bearish
+GGRM,Gudang Garam Tbk,74,BOW,16400,down,EQUILIBRIUM,40,BOS bear,up,up,FVG SESI,15375,15075,14250,,,6.2,5.5,BSL raid @ 16200,HINDARI,struktur D1 masih bearish
+MPMX,Mitra Pinasthika Mustika Tbk,68,BOW,1020,down,PREMIUM,89,CHoCH bear,down,up,FVG D1,1000,985,880,,,2.0,2.2,SSL raid @ 1005,HINDARI,struktur D1 masih bearish
