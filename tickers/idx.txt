@@ -10,8 +10,8 @@
 #   maksimal 400 nama.
 # Diperbarui: 2026-11-05 — 400 emiten.
 
-BBCA  # Bank Central Asia Tbk — 629.7 T
-BBRI  # Bank Rakyat Indonesia (Persero) — 408.1 T
+BBCA  # Bank Central Asia Tbk — 629.6 T
+BBRI  # Bank Rakyat Indonesia (Persero) — 408.4 T
 DCII  # DCI Indonesia Tbk. — 403.4 T
 BMRI  # Bank Mandiri (Persero) Tbk — 336.9 T
 BREN  # Barito Renewables Energy Tbk. — 291.6 T
@@ -74,7 +74,7 @@ MYOR  # Mayora Indah Tbk — 29.1 T
 GGRM  # Gudang Garam Tbk — 28.7 T
 MTEL  # Dayamitra Telekomunikasi Tbk. — 27.8 T
 EXCL  # XLSMART Telecom Sejahtera Tbk. — 27.5 T
-ITMG  # Indo Tambangraya Megah Tbk — 26.8 T
+ITMG  # Indo Tambangraya Megah Tbk — 27.1 T
 NISP  # Bank OCBC NISP Tbk — 26.4 T
 BTPN  # Bank SMBC Indonesia Tbk. — 26.1 T
 AKRA  # AKR Corporindo Tbk — 25.9 T
@@ -95,7 +95,7 @@ TOWR  # Sarana Menara Nusantara Tbk. — 20.2 T
 JSMR  # Jasa Marga (Persero) Tbk — 20.0 T
 LIFE  # MSIG Life Insurance Indonesia T — 19.8 T
 SMAR  # Sinar Mas Agro Resources and Te — 19.5 T
-JPFA  # Japfa Comfeed Indonesia Tbk. — 19.4 T
+JPFA  # Japfa Comfeed Indonesia Tbk. — 19.5 T
 TKIM  # Pabrik Kertas Tjiwi Kimia Tbk — 19.1 T
 INTP  # Indocement Tunggal Prakarsa Tbk — 19.0 T
 MLPT  # Multipolar Technology Tbk. — 18.9 T
@@ -185,6 +185,7 @@ ARTO  # Bank Jago Tbk. — 7.0 T
 BMAS  # Bank Kasikorn Indonesia Tbk. — 7.0 T
 ABMM  # ABM Investama Tbk. — 6.9 T
 BOGA  # Apollo Global Interactive Tbk. — 6.9 T
+RMKE  # RMK Energy Tbk. — 6.8 T
 RLCO  # Abadi Lestari Indonesia Tbk. — 6.8 T
 TLDN  # Teladan Prima Agro Tbk. — 6.6 T
 TMAS  # Temas Tbk. — 6.5 T
@@ -388,7 +389,6 @@ TRST  # Trias Sentosa Tbk — 1.4 T
 SONA  # Sona Topas Tourism Industry Tbk — 1.4 T
 CSAP  # Catur Sentosa Adiprana Tbk. — 1.4 T
 CSRA  # Cisadane Sawit Raya Tbk. — 1.4 T
-RMKE  # RMK Energy Tbk. — 1.4 T
 PNBS  # Bank Panin Dubai Syariah Tbk. — 1.4 T
 FAST  # Fast Food Indonesia Tbk — 1.4 T
 AMFG  # Asahimas Flat Glass Tbk — 1.3 T
