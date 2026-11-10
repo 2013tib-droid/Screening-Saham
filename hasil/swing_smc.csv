@@ -1,3 +1,5 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-ASGR,Astra Graphia Tbk,75,BUY,2500,up,PREMIUM,99,BOS bull,up,up,,,,,,,,4.2,BSL raid @ 2510,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-NATO,Olympus Strategic Indonesia ,33,BOW,910,down,DISCOUNT,38,CHoCH bear,up,down,,,,,,,,11.7,SSL raid @ 930,HINDARI,struktur D1 masih bearish
+SRTG,Saratoga Investama Sedaya Tb,84,BUY,1735,up,PREMIUM,69,CHoCH bull,up,up,,,,,,,,4.8,SSL raid @ 1680,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+AYAM,Janu Putra Sejahtera Tbk.,19,BOW,490,down,PREMIUM,76,CHoCH bear,up,up,OB SESI,482,474,460,555,4.28,1.6,3.4,SSL raid @ 480,HINDARI,struktur D1 masih bearish
+DOOH,Era Media Sejahtera Tbk.,75,BOW,212,down,DISCOUNT,32,BOS bear,down,down,FVG SESI,204,186,102,,,3.8,12.1,BSL raid @ 184,HINDARI,struktur D1 masih bearish
+SMIL,Sarana Mitra Luas Tbk.,50,BOW,402,down,PREMIUM,66,CHoCH bear,down,up,,,,,,,,5.2,SSL raid @ 398,HINDARI,struktur D1 masih bearish
