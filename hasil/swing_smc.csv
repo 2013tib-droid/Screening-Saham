@@ -1,5 +1,3 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-SRTG,Saratoga Investama Sedaya Tb,84,BUY,1735,up,PREMIUM,69,CHoCH bull,up,up,,,,,,,,4.8,SSL raid @ 1680,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-AYAM,Janu Putra Sejahtera Tbk.,19,BOW,490,down,PREMIUM,76,CHoCH bear,up,up,OB SESI,482,474,460,555,4.28,1.6,3.4,SSL raid @ 480,HINDARI,struktur D1 masih bearish
-DOOH,Era Media Sejahtera Tbk.,75,BOW,212,down,DISCOUNT,32,BOS bear,down,down,FVG SESI,204,186,102,,,3.8,12.1,BSL raid @ 184,HINDARI,struktur D1 masih bearish
-SMIL,Sarana Mitra Luas Tbk.,50,BOW,402,down,PREMIUM,66,CHoCH bear,down,up,,,,,,,,5.2,SSL raid @ 398,HINDARI,struktur D1 masih bearish
+AYAM,Janu Putra Sejahtera Tbk.,19,BOW,494,down,PREMIUM,78,CHoCH bear,up,up,OB SESI,482,474,460,555,4.28,2.4,3.3,BSL raid @ 496,HINDARI,struktur D1 masih bearish
+SMIL,Sarana Mitra Luas Tbk.,50,BOW,418,down,PREMIUM,71,CHoCH bear,down,up,,,,,,,,5.0,SSL raid @ 398,HINDARI,struktur D1 masih bearish
