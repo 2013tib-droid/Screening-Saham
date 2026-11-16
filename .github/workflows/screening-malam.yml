@@ -181,9 +181,35 @@ jobs:
       # Tanpa --dari-git: checkout di sini dangkal (fetch-depth 1), jadi riwayat
       # commit swing.csv memang tidak ada untuk dibongkar. Arsipnya sudah
       # di-commit ke repo dan cukup ditambahi.
+      #
+      # --simpan-harga: harga universe yang ditarik di sini dipakai ulang oleh
+      # langkah tren di bawah. Isinya mencakup seluruh hasil/semua.csv (tren.csv
+      # turunan dari tabel itu) dan dimulai dari pick swing paling awal, yang
+      # selalu lebih tua daripada pick tren paling awal.
       - name: Uji winrate daftar swing
         continue-on-error: true
-        run: python uji_winrate.py
+        run: python uji_winrate.py --simpan-harga "$RUNNER_TEMP/harga-winrate.csv"
+
+      # Daftar Tren diuji dengan aturan yang sama persis (uji_winrate.py
+      # --daftar tren) tapi arsip dan keluarannya sendiri: hasil/riwayat_tren.csv
+      # dan hasil/winrate_tren*.csv. Hasil swing tidak pernah tertimpa.
+      #
+      # Harga dibaca dari berkas langkah swing bila ada, supaya universe tidak
+      # ditarik dua kali dari Yahoo. Kalau langkah swing gagal sebelum sempat
+      # menyimpannya, langkah ini menarik sendiri.
+      #
+      # Malam saat tren.csv kosong (pasar turun, tidak ada yang 8/8) langkah
+      # ini keluar dengan kode 1 selama arsipnya masih kosong — wajar, dan
+      # continue-on-error mencegahnya menggagalkan run.
+      - name: Uji winrate daftar tren
+        continue-on-error: true
+        run: |
+          harga="$RUNNER_TEMP/harga-winrate.csv"
+          if [ -f "$harga" ]; then
+            python uji_winrate.py --daftar tren --harga-csv "$harga"
+          else
+            python uji_winrate.py --daftar tren
+          fi
 
       - name: Commit hasil
         run: |

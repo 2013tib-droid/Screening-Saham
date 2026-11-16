@@ -1,4 +1,6 @@
 name: Uji Winrate Swing
+# (Nama dipertahankan supaya tautan dan riwayat run lama tetap cocok; sejak
+# input "daftar" ada, workflow ini juga menghitung ulang daftar Tren.)
 
 # Hitung ulang uji winrate SAJA, tanpa menjalankan screening 400 emiten yang
 # makan ~20 menit. Gunanya dua:
@@ -15,8 +17,13 @@ name: Uji Winrate Swing
 on:
   workflow_dispatch:
     inputs:
+      daftar:
+        description: "Daftar yang diuji"
+        type: choice
+        options: [swing, tren]
+        default: swing
       dari_git:
-        description: "Bongkar riwayat commit hasil/swing.csv ke arsip"
+        description: "Bongkar riwayat commit CSV daftarnya (swing.csv / tren.csv) ke arsip"
         type: boolean
         default: false
       modal:
@@ -62,7 +69,7 @@ jobs:
       # merusak apa-apa (duplikatnya dibuang), tapi juga tidak ada gunanya.
       - name: Hitung ulang uji winrate
         run: >
-          python uji_winrate.py --tanpa-pick-baru
+          python uji_winrate.py --daftar ${{ inputs.daftar }} --tanpa-pick-baru
           ${{ inputs.dari_git && '--dari-git' || '' }}
           --modal ${{ inputs.modal }} --hari ${{ inputs.hari }}
 
@@ -70,13 +77,20 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add hasil/riwayat_swing.csv hasil/winrate.csv hasil/winrate_ringkas.csv hasil/winrate_meta.json
-          # Tidak ada kalau run ini gagal menarik harga pembanding — `git add`
-          # atas berkas yang tidak ada akan menggagalkan seluruh langkah.
-          if [ -f hasil/winrate_pembanding.csv ]; then git add hasil/winrate_pembanding.csv; fi
+          if [ "${{ inputs.daftar }}" = "tren" ]; then
+            berkas="hasil/riwayat_tren.csv hasil/winrate_tren.csv hasil/winrate_tren_ringkas.csv hasil/winrate_tren_meta.json hasil/winrate_tren_pembanding.csv"
+          else
+            berkas="hasil/riwayat_swing.csv hasil/winrate.csv hasil/winrate_ringkas.csv hasil/winrate_meta.json hasil/winrate_pembanding.csv"
+          fi
+          # Berkas yang tidak ada dilewati satu per satu: pembanding tidak
+          # ditulis kalau harga gagal ditarik, dan `git add` atas berkas yang
+          # tidak ada akan menggagalkan seluruh langkah.
+          for f in $berkas; do
+            if [ -f "$f" ]; then git add "$f"; fi
+          done
           if git diff --cached --quiet; then
             echo "Hasilnya sama persis — tidak ada yang di-commit."
             exit 0
           fi
-          git commit -m "Uji winrate $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
+          git commit -m "Uji winrate ${{ inputs.daftar }} $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
           git push

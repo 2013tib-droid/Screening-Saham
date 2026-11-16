@@ -1,0 +1,100 @@
+name: Uji Ulang Tren vs Swing
+
+# Uji ulang historis uji_ulang_tren.py: aturan swing lama, TT=8, TT≥7, dan
+# RS≥80 diterapkan ke histori harga universe hari ini sejak April 2024,
+# dengan dan tanpa filter IHSG > MA50. Butuh Yahoo (±420 emiten, ~3,5 tahun
+# harga harian), jadi dijalankan di sini, bukan di mesin lokal.
+#
+# Sengaja TIDAK terjadwal: hasilnya hanya berubah berarti kalau aturannya
+# berubah atau sudah lewat beberapa bulan data baru. Jalankan manual lewat
+# tab Actions -> "Uji Ulang Tren vs Swing" -> Run workflow.
+#
+# Hasilnya di-commit ke hasil/uji_ulang_tren*.{csv,json,md}. Harga yang
+# ditarik disimpan sebagai artifact run (bukan di-commit: puluhan MB) supaya
+# angkanya bisa diperiksa ulang dengan --harga-csv tanpa menarik ulang.
+on:
+  workflow_dispatch:
+    inputs:
+      mulai:
+        description: "Tanggal sinyal pertama (YYYY-MM-DD)"
+        default: "2024-04-01"
+      seed:
+        description: "Jumlah urutan acak pengisian slot portofolio"
+        default: "20"
+
+permissions:
+  contents: write
+
+# Grup yang sama dengan screening-malam.yml dan uji-winrate.yml: ketiganya
+# commit dan push ke repo yang sama.
+concurrency:
+  group: tulis-repo
+  cancel-in-progress: false
+
+jobs:
+  uji-ulang:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependensi
+        run: pip install -r requirements.txt
+
+      # Uji matematikanya dulu (offline, harga buatan). Kalau gagal, angka
+      # dari Yahoo tidak ada artinya dan tidak boleh sampai di-commit.
+      - name: Uji offline
+        run: |
+          python scripts/uji_winrate.py
+          python scripts/uji_ulang_tren.py
+
+      - name: Uji ulang
+        run: >
+          python uji_ulang_tren.py
+          --mulai ${{ inputs.mulai || '2024-04-01' }}
+          --seed ${{ inputs.seed || '20' }}
+          --simpan-harga "$RUNNER_TEMP/harga-uji-ulang.csv"
+
+      - name: Simpan harga sebagai artifact
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: harga-uji-ulang
+          path: ${{ runner.temp }}/harga-uji-ulang.csv
+          if-no-files-found: ignore
+          retention-days: 30
+
+      # Penyelarasan saat push ditolak sama dengan screening-malam.yml: ambil
+      # keadaan remote apa adanya, lalu tulis ulang HANYA berkas run ini.
+      - name: Commit hasil
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add hasil/uji_ulang_tren*
+          if git diff --cached --quiet; then
+            echo "Hasilnya sama persis — tidak ada yang di-commit."
+            exit 0
+          fi
+          pesan="Uji ulang tren vs swing $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
+          git commit -m "$pesan"
+          simpan="$(mktemp -d)"
+          cp hasil/uji_ulang_tren* "$simpan/"
+          for percobaan in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            git fetch origin "$GITHUB_REF_NAME"
+            git reset --hard FETCH_HEAD
+            cp "$simpan"/* hasil/
+            git add hasil/uji_ulang_tren*
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "$pesan"
+          done
+          echo "Push tetap gagal setelah 3 percobaan." >&2
+          exit 1

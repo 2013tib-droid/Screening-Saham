@@ -17,7 +17,10 @@ Pemakaian:
 Keluar dengan kode 1 bila ada pemeriksaan yang gagal, jadi bisa dipakai di CI.
 """
 
+import json
+import subprocess
 import sys
+import tempfile
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -291,6 +294,57 @@ periksa("ringkas: selisih rata-rata (5,5 - 4,5)/2", float(r.loc[1, "Selisih%"]),
 periksa("ringkas: satu dari dua mengalahkan saham acak", float(r.loc[1, "MenangVsAcak%"]), 50.0)
 periksa("tanpa pembanding kolomnya kosong, bukan error",
         pd.isna(ringkas(p, hari=1).set_index("Hari").loc[1, "Selisih%"]), True)
+
+
+print("\n== --daftar tren: aturan sama, berkas terpisah ==")
+# Satu repo tiruan di direktori sementara: swing.csv dan tren.csv memuat pick
+# yang SAMA. Kalau aturan simulasinya benar-benar sama, kedua winrate.csv
+# harus identik baris per baris; dan menjalankan --daftar tren tidak boleh
+# menyentuh satu pun berkas milik swing.
+AKAR = Path(__file__).resolve().parent.parent
+with tempfile.TemporaryDirectory() as d:
+    d = Path(d)
+    (d / "hasil").mkdir()
+    tgl = [(date(2026, 1, 1) + timedelta(days=i)).isoformat() for i in range(80)]
+    harga = [deret(KODE_IHSG, [100.0 + i for i in range(80)], tanggal=tgl)]
+    for i in range(MIN_EMITEN_PEMBANDING + 2):
+        harga.append(deret(f"L{i:02d}", [1000.0 + i * (j % 7) for j in range(80)], tanggal=tgl))
+    pd.concat(harga, ignore_index=True).to_csv(d / "harga.csv", index=False)
+    pick = pd.DataFrame({"Ticker": ["L03", "L07"], "Nama": ["Tiga", "Tujuh"],
+                         "Status": ["BUY", "BUY"], "Skor": [60, 70], "Harga": [1000, 1000]})
+    pick.to_csv(d / "hasil/swing.csv", index=False)
+    pick.to_csv(d / "hasil/tren.csv", index=False)
+    pd.DataFrame({"Ticker": [f"L{i:02d}" for i in range(MIN_EMITEN_PEMBANDING + 2)]}) \
+        .to_csv(d / "hasil/semua.csv", index=False)
+    (d / "hasil/meta.json").write_text(json.dumps({"diperbarui": tgl[60] + "T11:00:00Z"}))
+
+    def jalan(*arg):
+        return subprocess.run([sys.executable, str(AKAR / "uji_winrate.py"),
+                               "--harga-csv", "harga.csv", *arg],
+                              cwd=d, capture_output=True, text=True)
+
+    r = jalan("--daftar", "tren")
+    periksa("run --daftar tren berhasil", r.returncode, 0)
+    ada = {p.name for p in (d / "hasil").iterdir()}
+    periksa("arsip tren terpisah", "riwayat_tren.csv" in ada, True)
+    periksa("keluaran tren terpisah",
+            {"winrate_tren.csv", "winrate_tren_ringkas.csv", "winrate_tren_pembanding.csv",
+             "winrate_tren_meta.json"} <= ada, True)
+    periksa("berkas swing tidak tersentuh",
+            ada & {"riwayat_swing.csv", "winrate.csv", "winrate_ringkas.csv",
+                   "winrate_pembanding.csv", "winrate_meta.json"}, set())
+    meta = json.loads((d / "hasil/winrate_tren_meta.json").read_text())
+    periksa("meta mencatat nama daftar", meta.get("daftar"), "tren")
+
+    r = jalan()
+    periksa("run swing (bawaan) berhasil", r.returncode, 0)
+    sw = pd.read_csv(d / "hasil/winrate.csv")
+    tr = pd.read_csv(d / "hasil/winrate_tren.csv")
+    periksa("pick sama -> hasil simulasi identik", sw.equals(tr), True)
+    periksa("ringkasan identik", pd.read_csv(d / "hasil/winrate_ringkas.csv")
+            .equals(pd.read_csv(d / "hasil/winrate_tren_ringkas.csv")), True)
+    periksa("arsip swing hanya berisi pick swing",
+            len(pd.read_csv(d / "hasil/riwayat_swing.csv")), 2)
 
 
 print()

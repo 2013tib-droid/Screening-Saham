@@ -181,6 +181,14 @@
   select:hover, input[type="search"]:hover { border-color: var(--text-muted); }
   select:focus-visible, input[type="search"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   #cari { flex: 1; min-width: 170px; max-width: 300px; }
+  /* Catatan per daftar (mis. "sampel Tren masih kecil"). Sengaja di atas kartu,
+     bukan di keterangan bawah yang tertutup: angka dari 12 posisi harus
+     terbaca bersama peringatannya, bukan sesudah orang terlanjur percaya. */
+  .catatan-daftar {
+    margin: 0 0 14px; padding: 10px 14px; border-radius: 10px;
+    background: var(--warn-bg); color: var(--warn-fg); font-size: .86rem; line-height: 1.5;
+  }
+  .catatan-daftar strong { font-weight: 700; }
   .hitung { margin-left: auto; font-size: .8rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
   /* ---- Tabel ---- */
@@ -276,10 +284,12 @@
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="ikon">🎯</span>Uji Winrate Swing</h1>
+    <h1><span class="ikon">🎯</span><span id="judul">Uji Winrate Swing</span></h1>
     <p><span class="titik"></span><span id="pembaruan">Memuat data …</span></p>
     <a class="balik" href="index.html">← Kembali ke screening</a>
   </header>
+
+  <p class="catatan-daftar" id="catatan-daftar" hidden></p>
 
   <div class="tiles" id="tiles" hidden>
     <div class="tile" style="--pita:#2a78d6"><div class="label">Winrate seminggu</div><div class="value" id="t-wr5">–</div><div class="sub" id="s-wr5">hari bursa ke-5</div></div>
@@ -297,6 +307,14 @@
        data yang sama persis. Filter per grafik akan membuat kartu ringkasan dan
        kurva bercerita tentang dua kumpulan posisi yang berbeda. -->
   <div class="controls">
+    <!-- Ganti daftar = muat ulang halaman dengan ?daftar=..., bukan tukar data di
+         tempat: semua pilihan lain (tanggal, status) dibangun dari isi CSV-nya,
+         dan menyetelnya ulang satu per satu gampang meninggalkan sisa daftar
+         sebelumnya. Alamatnya juga jadi bisa dibagikan. -->
+    <select id="daftar" aria-label="Pilih daftar yang diuji">
+      <option value="swing">Daftar Swing</option>
+      <option value="tren">Daftar Tren (TT 8/8)</option>
+    </select>
     <select id="periode" aria-label="Saring berdasarkan tanggal screening">
       <option value="">Semua tanggal screening</option>
     </select>
@@ -359,7 +377,7 @@
 
   <details id="ket-uji">
     <summary>Bagaimana angkanya dihitung — dan apa yang belum dijawabnya</summary>
-    <p>Halaman ini menjawab dua pertanyaan: <strong>kalau seluruh isi daftar swing dibeli
+    <p>Halaman ini menjawab dua pertanyaan: <strong>kalau seluruh isi <span id="k-daftar">daftar swing</span> dibeli
     apa adanya, hasilnya bagaimana — dan apakah itu lebih baik daripada membeli saham acak?</strong> Tidak ada stop loss, tidak ada target, tidak ada
     penilaian ulang di tengah jalan. Justru itu maksudnya — yang diukur adalah nilai daftarnya
     sendiri. Kalau daftar mentah saja sudah tidak menghasilkan, aturan keluar apa pun cuma
@@ -398,7 +416,7 @@
       <dt>Pembanding</dt><dd>Tiap posisi dibandingkan dengan dua hal yang dibeli di pembukaan sesi
       yang sama, dengan biaya beli dan jual yang sama: <strong>IHSG</strong>, dan <strong>saham
       acak</strong> — rata-rata seluruh emiten universe yang malam itu cukup likuid untuk lolos syarat
-      likuiditas daftar swing sendiri (nilai transaksi 20 hari ≥ Rp5 miliar, biasanya 170-an emiten).
+      likuiditas daftar itu sendiri (nilai transaksi 20 hari ≥ Rp5 miliar, biasanya 170-an emiten).
       Saham acak adalah pembanding yang jujur: winrate 68% saat hampir semua saham naik tidak
       membuktikan kemampuan memilih. Daftar yang benar-benar pintar punya <strong>selisih</strong>
       positif dan mengalahkan saham acak di lebih dari separuh posisinya. Kalau selisihnya di sekitar
@@ -541,7 +559,29 @@ function parseCSV(teks, angkaSet) {
   return { baris: isi, header };
 }
 
+// Daftar yang bisa dipilih, dan berkas milik masing-masing. Sama dengan DAFTAR
+// di uji_winrate.py: daftar selain swing punya arsip dan keluarannya sendiri.
+const DAFTAR = {
+  swing: {
+    judul: "Uji Winrate Swing",
+    nama: "daftar swing",
+    berkas: { hasil: "hasil/winrate.csv", meta: "hasil/winrate_meta.json",
+              pembanding: "hasil/winrate_pembanding.csv" },
+  },
+  tren: {
+    judul: "Uji Winrate Tren",
+    nama: "daftar Tren (Trend Template 8/8, nilai transaksi ≥ Rp5 M)",
+    berkas: { hasil: "hasil/winrate_tren.csv", meta: "hasil/winrate_tren_meta.json",
+              pembanding: "hasil/winrate_tren_pembanding.csv" },
+  },
+};
+function daftarDariAlamat() {
+  const v = new URLSearchParams(location.search).get("daftar");
+  return Object.hasOwn(DAFTAR, v) ? v : "swing";
+}
+
 const state = {
+  daftar: daftarDariAlamat(),
   posisi: [],
   hariMaks: 21,
   meta: null,
@@ -927,7 +967,7 @@ function gambarSemua(perHari) {
   gambar(document.getElementById("c-laba"), {
     judul: "Rata-rata laba per hari ke-N, dibandingkan IHSG dan saham acak", titik: hari,
     nilai: perHari.map(p => p.rata),
-    labelUtama: "Daftar swing",
+    labelUtama: state.daftar === "tren" ? "Daftar Tren" : "Daftar swing",
     seri: [
       { label: "IHSG", nilai: perHari.map(p => p.ihsg), warna: "var(--seri-ihsg)", pola: POLA_IHSG },
       { label: "Saham acak", nilai: perHari.map(p => p.acak), warna: "var(--seri-acak)", pola: POLA_ACAK },
@@ -984,9 +1024,13 @@ function sel(r, kol) {
 function render() {
   const wadah = document.getElementById("tabel");
   if (state.gagal) {
+    const berkas = DAFTAR[state.daftar].berkas.hasil;
     wadah.innerHTML = '<div class="gagal">Data uji winrate belum tersedia.<br>'
-      + 'Berkas <code>hasil/winrate.csv</code> dibuat oleh run malam — '
-      + 'kalau ini run pertama sesudah fitur ini ditambahkan, tunggu satu run.</div>';
+      + `Berkas <code>${esc(berkas)}</code> dibuat oleh run malam — `
+      + (state.daftar === "tren"
+        ? "daftar Tren baru dicatat sejak 16 November 2026, dan berkasnya baru ditulis sesudah "
+          + "ada malam dengan saham yang lolos 8/8. Saat pasar turun daftarnya wajar kosong berhari-hari.</div>"
+        : "kalau ini run pertama sesudah fitur ini ditambahkan, tunggu satu run.</div>");
     document.getElementById("rowpager").hidden = true;
     return;
   }
@@ -1070,6 +1114,49 @@ function isiPilihan(id, nilai, label) {
     el.appendChild(o);
   }
 }
+function pasangDaftar() {
+  const el = document.getElementById("daftar");
+  el.value = state.daftar;
+  el.addEventListener("change", e => {
+    const u = new URL(location.href);
+    if (e.target.value === "swing") u.searchParams.delete("daftar");
+    else u.searchParams.set("daftar", e.target.value);
+    location.href = u.toString();
+  });
+  const d = DAFTAR[state.daftar];
+  document.getElementById("judul").textContent = d.judul;
+  document.title = `${d.judul} · Screening Saham IDX`;
+  document.getElementById("k-daftar").textContent = d.nama;
+}
+
+// Daftar Tren baru lahir 16 Nov 2026. Angkanya ditampilkan apa adanya, tapi
+// selalu bersama peringatan ini — winrate dari belasan posisi yang semuanya
+// dibeli di minggu yang sama bukan bukti apa pun, ke arah mana pun.
+function isiCatatanDaftar() {
+  const el = document.getElementById("catatan-daftar");
+  if (state.daftar !== "tren") { el.hidden = true; return; }
+  const dasar = state.posisi.filter(r => r.Ulang !== "Ya");
+  const hari = new Set(dasar.map(r => r.Tanggal)).size;
+  const genap = dasar.filter(r => r.Selesai === "Ya").length;
+  // Ambang 100 posisi genap: di bawah itu satu-dua saham yang meledak masih
+  // cukup untuk membalik selisih rata-ratanya.
+  const kecil = genap < 100;
+  el.innerHTML = (kecil ? "<strong>Sampelnya masih kecil.</strong> " : "<strong>Catatan.</strong> ")
+    + "Daftar Tren baru dicatat sejak 16 November 2026"
+    + (state.posisi.length
+      ? ` — sejauh ini ${angka(dasar.length)} posisi dari ${angka(hari)} hari screening, `
+        + `${angka(genap)} di antaranya sudah genap ${state.hariMaks} hari bursa. `
+      : ". ")
+    + (kecil
+      ? "Posisi yang dikumpulkan dalam beberapa minggu sebagian besar mencerminkan kondisi pasar "
+        + "minggu-minggu itu, jadi angka di bawah belum bisa dibandingkan dengan daftar swing yang "
+        + "dicatat sejak Agustus 2026. "
+      : "Bandingkan dengan daftar swing pada rentang tanggal yang sama, bukan seluruh riwayatnya. ")
+    + "Uji ulang historis April 2024 – sekarang ada di README "
+    + "(bagian “Uji Ulang Tren vs Swing”) — itu pun kena bias survivorship.";
+  el.hidden = false;
+}
+
 function pasangKendali() {
   const ubah = (id, kunci, angkaSaja) => document.getElementById(id).addEventListener("change", e => {
     state[kunci] = angkaSaja ? Number(e.target.value) : e.target.value;
@@ -1102,12 +1189,14 @@ function pasangKendali() {
 
 async function muat() {
   const t = Date.now();
+  const berkas = DAFTAR[state.daftar].berkas;
+  pasangDaftar();
   try {
     const [csv, meta, csvBanding] = await Promise.all([
-      fetch(`hasil/winrate.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
-      fetch(`hasil/winrate_meta.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`${berkas.hasil}?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
+      fetch(`${berkas.meta}?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
       // Opsional: data lama (sebelum pembanding ada) tetap tampil apa adanya.
-      fetch(`hasil/winrate_pembanding.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
+      fetch(`${berkas.pembanding}?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
     ]);
     const hari = /^Hari\d+%$/;
     const { baris, header } = parseCSV(csv, h => ANGKA.has(h) || hari.test(h));
@@ -1166,6 +1255,7 @@ async function muat() {
     state.gagal = true;
     document.getElementById("pembaruan").textContent = "Data belum tersedia";
   }
+  isiCatatanDaftar();
   pasangKendali();
   render();
   const tw = document.getElementById("tabel");
