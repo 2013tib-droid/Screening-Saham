@@ -291,7 +291,7 @@ def perbarui_riwayat(berkas: str, baru: list[dict]) -> pd.DataFrame:
 KOLOM_HARGA = ["Ticker", "Tanggal", "Open", "High", "Low", "Close", "Volume"]
 
 
-def ambil_harga(tickers: list[str], mulai: date) -> pd.DataFrame:
+def ambil_harga(tickers: list[str], mulai: date, adj: bool = False) -> pd.DataFrame:
     """Open/High/Low/Close/Volume harian tiap emiten, dalam format panjang.
 
     Kolom: Ticker, Tanggal, Open, High, Low, Close, Volume. Format panjang
@@ -302,6 +302,11 @@ def ambil_harga(tickers: list[str], mulai: date) -> pd.DataFrame:
     ada pembanding, yang ditarik bukan lagi puluhan pick melainkan seluruh
     universe (~400 emiten), dan 400 request berurutan makan belasan menit.
     Kode yang diawali "^" (IHSG) dikirim apa adanya; sisanya diberi .JK.
+
+    adj=True menambah kolom AdjClose (penutupan yang disesuaikan dividen) —
+    dipakai uji_ulang_tren.py untuk menghitung indikator persis seperti
+    screener.py, yang membaca history() dengan auto_adjust bawaan. Simulasi
+    beli/jual tetap memakai Open/Close biasa, sama dengan uji winrate.
     """
     import yfinance as yf
 
@@ -332,12 +337,16 @@ def ambil_harga(tickers: list[str], mulai: date) -> pd.DataFrame:
             x = hist[["Open", "High", "Low", "Close"]].astype(float)
             x["Volume"] = (hist["Volume"].fillna(0).astype(float)
                            if "Volume" in hist.columns else 0.0)
+            if adj:
+                x["AdjClose"] = (hist["Adj Close"].astype(float)
+                                 if "Adj Close" in hist.columns else x["Close"])
             x["Tanggal"] = [t.date().isoformat() for t in hist.index]
             x["Ticker"] = simbol[s]
             potongan.append(x)
+    kolom = KOLOM_HARGA + (["AdjClose"] if adj else [])
     if not potongan:
-        return pd.DataFrame(columns=KOLOM_HARGA)
-    harga = pd.concat(potongan, ignore_index=True)[KOLOM_HARGA]
+        return pd.DataFrame(columns=kolom)
+    harga = pd.concat(potongan, ignore_index=True)[kolom]
     kosong = len(tickers) - harga["Ticker"].nunique()
     if kosong:
         print(f"  {kosong} dari {len(tickers)} simbol tanpa data harga.", file=sys.stderr)
