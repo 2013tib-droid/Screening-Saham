@@ -18,15 +18,22 @@ dibandingkan dengan dua hal yang dibeli di sesi yang sama, dengan biaya yang
 sama: IHSG, dan rata-rata seluruh saham likuid di universe ("saham acak").
 Kalau daftar swing tidak mengalahkan saham acak, winrate-nya cuma ikut pasar.
 
+Daftar yang bisa diuji dipilih lewat --daftar. Bawaannya swing (hasil/swing.csv);
+--daftar tren menguji hasil/tren.csv (Trend Template 8/8, nilai ≥ Rp5 M) dengan
+aturan simulasi, biaya, kalender, pembanding, dan penanganan pick ulang yang
+sama persis — yang beda cuma berkas masukan dan keluarannya, supaya hasil
+swing tidak pernah tertimpa.
+
 Pemakaian:
     python uji_winrate.py                        # perbarui arsip + hitung ulang
+    python uji_winrate.py --daftar tren          # daftar Tren, berkas terpisah
     python uji_winrate.py --dari-git             # ikut baca riwayat swing.csv di git
     python uji_winrate.py --modal 5000000        # modal lain per posisi
     python uji_winrate.py --hari 40              # jendela lebih panjang
     python uji_winrate.py --harga-csv contoh.csv # harga dari berkas, tanpa Yahoo
     python uji_winrate.py --tanpa-pembanding     # cepat: tanpa IHSG & saham acak
 
-Keluaran:
+Keluaran (--daftar swing; untuk tren lihat DAFTAR di bawah):
     hasil/riwayat_swing.csv      arsip pick harian (tumbuh terus, tidak pernah ditimpa)
     hasil/winrate.csv            satu baris per posisi, plus kolom Hari0%..HariN%
     hasil/winrate_ringkas.csv    winrate, laba, dan selisih vs pembanding per hari ke-N
@@ -108,14 +115,43 @@ MUNDUR_HARI = 100
 # Jumlah simbol per panggilan yf.download.
 UKURAN_BLOK = 50
 
-BERKAS_SWING = "hasil/swing.csv"
 BERKAS_SEMUA = "hasil/semua.csv"
-BERKAS_RIWAYAT = "hasil/riwayat_swing.csv"
 BERKAS_META_SCREENING = "hasil/meta.json"
-BERKAS_HASIL = "hasil/winrate.csv"
-BERKAS_RINGKAS = "hasil/winrate_ringkas.csv"
-BERKAS_PEMBANDING = "hasil/winrate_pembanding.csv"
-BERKAS_META = "hasil/winrate_meta.json"
+
+# Berkas masukan dan keluaran per daftar. Nama berkas swing dibiarkan seperti
+# semula (tanpa akhiran) supaya dashboard, workflow, dan arsip lama tetap
+# jalan. Daftar lain mendapat arsip dan keluarannya sendiri: arsip pick
+# adalah catatan keputusan yang tidak bisa dibuat ulang, jadi satu daftar
+# tidak boleh sampai menimpa arsip daftar lain.
+#
+# Ambang likuiditas pembanding saham acak (NILAI_MIN_PEMBANDING) berlaku untuk
+# semua daftar: tren.csv juga disaring --min-nilai 5 di screening-malam.yml.
+DAFTAR = {
+    "swing": {
+        "pick": "hasil/swing.csv",
+        "riwayat": "hasil/riwayat_swing.csv",
+        "hasil": "hasil/winrate.csv",
+        "ringkas": "hasil/winrate_ringkas.csv",
+        "pembanding": "hasil/winrate_pembanding.csv",
+        "meta": "hasil/winrate_meta.json",
+    },
+    "tren": {
+        "pick": "hasil/tren.csv",
+        "riwayat": "hasil/riwayat_tren.csv",
+        "hasil": "hasil/winrate_tren.csv",
+        "ringkas": "hasil/winrate_tren_ringkas.csv",
+        "pembanding": "hasil/winrate_tren_pembanding.csv",
+        "meta": "hasil/winrate_tren_meta.json",
+    },
+}
+
+# Nama lama, dipertahankan untuk siapa pun yang mengimpornya.
+BERKAS_SWING = DAFTAR["swing"]["pick"]
+BERKAS_RIWAYAT = DAFTAR["swing"]["riwayat"]
+BERKAS_HASIL = DAFTAR["swing"]["hasil"]
+BERKAS_RINGKAS = DAFTAR["swing"]["ringkas"]
+BERKAS_PEMBANDING = DAFTAR["swing"]["pembanding"]
+BERKAS_META = DAFTAR["swing"]["meta"]
 
 KOLOM_RIWAYAT = ["Tanggal", "Waktu", "Ticker", "Nama", "Status", "Skor", "HargaScreening"]
 
@@ -390,13 +426,18 @@ def tanggal_beli(bar: pd.DataFrame, waktu: datetime) -> int | None:
     awal yang benar-benar bisa dieksekusi. Run pagi (mis. commit 08:08 WIB)
     ikut tertangani sendiri — sesi hari itu belum buka, jadi bar hari itu
     juga yang terpilih.
+
+    Dicari lewat searchsorted, bukan diperiksa bar demi bar: uji ulang
+    (uji_ulang_tren.py) memanggil fungsi ini puluhan ribu kali atas histori
+    dua setengah tahun. Tanggalnya string ISO, jadi urutan teks = urutan waktu.
+    Sesi tanggal D dibuka D 09:00 WIB; ia sesudah screening kalau D lebih
+    besar dari tanggal screening, atau sama tapi screening-nya sebelum 09:00.
     """
     batas = waktu.astimezone(WIB)
-    for i, t in enumerate(bar["Tanggal"]):
-        buka = datetime.combine(date.fromisoformat(t), JAM_BUKA, tzinfo=WIB)
-        if buka > batas:
-            return i
-    return None
+    hari = batas.date().isoformat()
+    sisi = "left" if batas.time() < JAM_BUKA else "right"
+    i = int(bar["Tanggal"].searchsorted(hari, side=sisi))
+    return i if i < len(bar) else None
 
 
 def simulasi(riwayat: pd.DataFrame, bars: dict[str, pd.DataFrame],
@@ -722,18 +763,22 @@ def persen(n, tanda: bool = True) -> str:
 # ------------------------------------------------------------------ CLI
 def main() -> int:
     p = argparse.ArgumentParser(
-        description="Uji winrate daftar swing: beli modal tetap, tahan sampai N hari bursa.",
+        description="Uji winrate daftar swing/tren: beli modal tetap, tahan sampai N hari bursa.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__.split("Pemakaian:")[1] if "Pemakaian:" in __doc__ else None,
     )
-    p.add_argument("--swing", default=BERKAS_SWING, help="CSV pick swing terkini")
-    p.add_argument("--riwayat", default=BERKAS_RIWAYAT, help="arsip pick harian")
+    p.add_argument("--daftar", choices=sorted(DAFTAR), default="swing",
+                   help="daftar yang diuji; menentukan berkas masukan & keluaran bawaan "
+                        "(default swing)")
+    p.add_argument("--swing", "--pick", dest="pick", default=None,
+                   help="CSV pick terkini (default sesuai --daftar, mis. hasil/swing.csv)")
+    p.add_argument("--riwayat", default=None, help="arsip pick harian")
     p.add_argument("--meta-screening", default=BERKAS_META_SCREENING,
                    help="meta.json untuk cap waktu pick terkini")
     p.add_argument("--dari-git", action="store_true",
-                   help="bongkar riwayat commit hasil/swing.csv ke arsip (butuh clone penuh)")
+                   help="bongkar riwayat commit CSV pick ke arsip (butuh clone penuh)")
     p.add_argument("--tanpa-pick-baru", action="store_true",
-                   help="hitung ulang dari arsip saja, jangan baca swing.csv")
+                   help="hitung ulang dari arsip saja, jangan baca CSV pick")
     p.add_argument("--modal", type=int, default=MODAL_DEFAULT,
                    help=f"modal per posisi, rupiah (default {MODAL_DEFAULT:,})".replace(",", "."))
     p.add_argument("--hari", type=int, default=HARI_DEFAULT,
@@ -747,23 +792,33 @@ def main() -> int:
                    help="CSV screening lengkap; tickernya jadi universe saham acak")
     p.add_argument("--tanpa-pembanding", action="store_true",
                    help="lewati IHSG & saham acak (tidak menarik harga universe)")
-    p.add_argument("--output", default=BERKAS_HASIL, help="CSV hasil per posisi")
-    p.add_argument("--output-ringkas", default=BERKAS_RINGKAS, help="CSV ringkasan per hari")
-    p.add_argument("--output-pembanding", default=BERKAS_PEMBANDING,
+    p.add_argument("--output", default=None, help="CSV hasil per posisi")
+    p.add_argument("--output-ringkas", default=None, help="CSV ringkasan per hari")
+    p.add_argument("--output-pembanding", default=None,
                    help="CSV pembanding per tanggal beli")
-    p.add_argument("--output-meta", default=BERKAS_META, help="JSON parameter simulasi")
+    p.add_argument("--output-meta", default=None, help="JSON parameter simulasi")
     a = p.parse_args()
+    # Berkas yang tidak disebut eksplisit mengikuti --daftar. Diselesaikan di
+    # sini, bukan lewat default argparse, supaya `--daftar tren` tanpa flag
+    # lain tidak diam-diam menulis ke berkas milik swing.
+    bawaan = DAFTAR[a.daftar]
+    a.pick = a.pick or bawaan["pick"]
+    a.riwayat = a.riwayat or bawaan["riwayat"]
+    a.output = a.output or bawaan["hasil"]
+    a.output_ringkas = a.output_ringkas or bawaan["ringkas"]
+    a.output_pembanding = a.output_pembanding or bawaan["pembanding"]
+    a.output_meta = a.output_meta or bawaan["meta"]
 
     if a.hari < 1:
         print("--hari minimal 1.", file=sys.stderr)
         return 2
 
-    print("Menyusun arsip pick ...", file=sys.stderr)
+    print(f"Menyusun arsip pick daftar {a.daftar} ...", file=sys.stderr)
     baru = []
     if a.dari_git:
-        baru += pick_dari_git(a.swing)
+        baru += pick_dari_git(a.pick)
     if not a.tanpa_pick_baru:
-        baru += pick_terkini(a.swing, a.meta_screening)
+        baru += pick_terkini(a.pick, a.meta_screening)
     riwayat = perbarui_riwayat(a.riwayat, baru)
     if riwayat.empty:
         print("Arsip masih kosong — belum ada yang bisa diuji.", file=sys.stderr)
@@ -824,6 +879,8 @@ def main() -> int:
         banding.to_csv(a.output_pembanding, index=False)
     Path(a.output_meta).write_text(json.dumps({
         "diperbarui": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "daftar": a.daftar,
+        "berkasPick": a.pick,
         "modal": a.modal,
         "hari": a.hari,
         "feeBeli": a.fee_beli,
@@ -848,7 +905,7 @@ def main() -> int:
     # (hari pertama, seminggu, sebulan) tenggelam di antara yang tidak dibaca.
     sorot = sorted({0, 1, 2, 3, 5, 10, 15, a.hari})
     ulang = int((posisi["Ulang"] == "Ya").sum())
-    print(f"\n{len(posisi) - ulang} posisi (+{ulang} pick ulang tidak dihitung), "
+    print(f"\nDaftar {a.daftar}: {len(posisi) - ulang} posisi (+{ulang} pick ulang tidak dihitung), "
           f"{riwayat['Tanggal'].nunique()} hari screening, "
           f"modal {rupiah(a.modal)}/posisi", file=sys.stderr)
     print(f"{'Hari':>5} {'Posisi':>7} {'Winrate':>8} {'Rata':>8} {'Median':>8} "
