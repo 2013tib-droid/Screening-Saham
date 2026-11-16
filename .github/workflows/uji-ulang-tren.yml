@@ -26,7 +26,7 @@ on:
   # supaya hasilnya ikut di-review; dihapus sebelum merge.
   push:
     branches: [claude/test-tren-vs-swing-9asfy0]
-    paths: [.github/workflows/uji-ulang-tren.yml]
+    paths: [.github/workflows/uji-ulang-tren.yml, uji_ulang_tren.py]
 
 permissions:
   contents: write

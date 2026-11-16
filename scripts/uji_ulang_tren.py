@@ -267,6 +267,7 @@ banding = pd.DataFrame({"TanggalBeli": ["d1", "d2"], "IHSGdiAtasMA50": ["Ya", "Y
                         "AcakJumlah": [40, 40], "IHSG5%": [0.0, 0.0], "Acak5%": [1.0, 2.0]})
 posisi = pd.DataFrame({
     "TanggalBeli": ["d1", "d1", "d2", "d2"], "Ulang": ["Tidak"] * 4, "Modal": [1e7] * 4,
+    "Ticker": ["P", "Q", "P", "R"],
     "Hari5%": [3.0, 1.0, 2.0, 6.0],
 })
 r = ringkas_sinyal(posisi, banding, hari=5, sorot=(5,))[0]
@@ -275,6 +276,22 @@ r = ringkas_sinyal(posisi, banding, hari=5, sorot=(5,))[0]
 periksa("selisih rata-rata", r["Selisih%"], 1.5)
 periksa("SE dihitung per tanggal beli, bukan per posisi", r["SelisihSE%"], 0.5)
 periksa("jumlah tanggal beli", r["TanggalBeli"], 2)
+periksa("median selisih per posisi (0, 0, 2, 4)", r["MedianSelisih%"], 1.0)
+# Kurang dari 11 emiten: membuang 10 teratas menghabiskan semuanya.
+periksa("tanpa 10 emiten teratas, sampel habis -> kosong", r["SelisihTanpa10%"], None)
+from uji_ulang_tren import penyumbang  # noqa: E402
+py = penyumbang(posisi, banding, 5).set_index("Ticker")
+# P: 2 + 0 = 2, R: 4, Q: 0 -> R teratas, porsi R = 4/6.
+periksa("penyumbang terbesar R", py.index[0], "R")
+periksa("porsi R dari total selisih", float(py.loc["R", "PorsiDariTotal%"]), 66.7)
+periksa("P dijumlah dari dua posisi", float(py.loc["P", "JumlahSelisih%"]), 2.0)
+# Pangkas 5%/95% atas 40 nilai: buang 2 ekstrem tiap ujung.
+sel40 = pd.DataFrame({"TanggalBeli": ["d1"] * 40, "Ulang": ["Tidak"] * 40, "Modal": [1e7] * 40,
+                      "Ticker": [f"E{i}" for i in range(40)],
+                      "Hari5%": [1.0] * 38 + [1000.0, -1.0 + 1.0]})
+r = ringkas_sinyal(sel40, banding, hari=5, sorot=(5,))[0]
+periksa("pangkas membuang ekstrem atas", r["SelisihPangkas%"] < 1.0, True)
+periksa("tanpa 10 emiten teratas mengeluarkan si +999", r["SelisihTanpa10%"] < 1.0, True)
 
 
 print("\n== Sinyal -> simulasi uji_winrate (aturan sama persis) ==")
@@ -299,8 +316,8 @@ with tempfile.TemporaryDirectory() as dd:
     if hasil.returncode:
         print(hasil.stderr[-3000:])
     ada = {p.name for p in (dd / "keluar").glob("*")} if (dd / "keluar").exists() else set()
-    periksa("enam berkas keluaran", ada, {
-        "uji_ulang_tren_sinyal.csv", "uji_ulang_tren_semester.csv",
+    periksa("tujuh berkas keluaran", ada, {
+        "uji_ulang_tren_sinyal.csv", "uji_ulang_tren_semester.csv", "uji_ulang_tren_penyumbang.csv",
         "uji_ulang_tren_portofolio.csv", "uji_ulang_tren_ekuitas.csv",
         "uji_ulang_tren_meta.json", "uji_ulang_tren.md"})
     if "uji_ulang_tren_sinyal.csv" in ada:

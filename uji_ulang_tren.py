@@ -51,6 +51,7 @@ Pemakaian:
 Keluaran (di --output-dir, bawaan hasil/):
     uji_ulang_tren_sinyal.csv      per aturan × filter × hari ke-5/10/21
     uji_ulang_tren_semester.csv    selisih hari ke-21 per semester
+    uji_ulang_tren_penyumbang.csv  10 emiten penyumbang selisih terbesar per aturan
     uji_ulang_tren_portofolio.csv  drawdown & hasil portofolio 10 posisi
     uji_ulang_tren_ekuitas.csv     kurva ekuitas (seed pertama), per tanggal
     uji_ulang_tren_meta.json       parameter & cakupan data
@@ -287,6 +288,16 @@ def ringkas_sinyal(posisi: pd.DataFrame, banding: pd.DataFrame, hari: int,
     yang sama, sektor yang sering sama), jadi memperlakukannya sebagai
     sampel bebas membuat angkanya tampak jauh lebih pasti dari aslinya.
     Kasarnya, selisih yang kurang dari dua kali SE belum bisa dibedakan dari nol.
+
+    Tiga kolom ketahanan menjawab "apakah rata-ratanya diangkat segelintir
+    saham?" — pertanyaan yang penting justru karena bias survivorship:
+    saham yang naik ratusan persen ada di universe hari ini KARENA kenaikan
+    itu, dan aturan momentum paling rajin membelinya.
+      MedianSelisih%     median selisih per posisi
+      SelisihPangkas%    rata-rata sesudah membuang 5% posisi teratas DAN
+                         terbawah (sama untuk semua aturan, jadi adil)
+      SelisihTanpa10%    rata-rata sesudah membuang seluruh posisi dari 10
+                         emiten yang total selisihnya paling besar
     """
     if posisi.empty:
         return [{"Hari": n, "Posisi": 0} for n in sorot]
@@ -299,12 +310,21 @@ def ringkas_sinyal(posisi: pd.DataFrame, banding: pd.DataFrame, hari: int,
             continue
         r = tabel.loc[n]
         kol = f"Hari{n}%"
-        x = dasar[["TanggalBeli", kol]].dropna()
+        x = dasar[["TanggalBeli", "Ticker", kol]].dropna()
         acak = pd.to_numeric(x["TanggalBeli"].map(b[f"Acak{n}%"]), errors="coerce")
         sel = (x[kol] - acak).dropna()
         per_tgl = sel.groupby(x.loc[sel.index, "TanggalBeli"]).mean()
         se = (float(per_tgl.std(ddof=1) / np.sqrt(len(per_tgl)))
               if len(per_tgl) > 1 else None)
+        median_sel = pangkas = tanpa10 = None
+        if len(sel):
+            median_sel = round(float(sel.median()), 2)
+            bawah, atas = sel.quantile(0.05), sel.quantile(0.95)
+            pangkas = round(float(sel[(sel >= bawah) & (sel <= atas)].mean()), 2)
+            emiten = x.loc[sel.index, "Ticker"]
+            top = sel.groupby(emiten).sum().nlargest(10).index
+            sisa = sel[~emiten.isin(top)]
+            tanpa10 = round(float(sisa.mean()), 2) if len(sisa) else None
         keluar.append({
             "Hari": n,
             "Posisi": int(r["Posisi"]),
@@ -317,8 +337,31 @@ def ringkas_sinyal(posisi: pd.DataFrame, banding: pd.DataFrame, hari: int,
             "Selisih%": r["Selisih%"],
             "SelisihSE%": None if se is None else round(se, 2),
             "MenangVsAcak%": r["MenangVsAcak%"],
+            "MedianSelisih%": median_sel,
+            "SelisihPangkas%": pangkas,
+            "SelisihTanpa10%": tanpa10,
         })
     return keluar
+
+
+def penyumbang(posisi: pd.DataFrame, banding: pd.DataFrame, n: int, jumlah: int = 10) -> pd.DataFrame:
+    """Emiten yang paling banyak menyumbang selisih hari ke-n (jumlah, bukan rata-rata)."""
+    dasar = posisi[posisi["Ulang"] != "Ya"]
+    kol = f"Hari{n}%"
+    if dasar.empty or kol not in dasar.columns:
+        return pd.DataFrame()
+    b = banding.set_index("TanggalBeli")
+    acak = pd.to_numeric(dasar["TanggalBeli"].map(b[f"Acak{n}%"]), errors="coerce")
+    sel = (dasar[kol] - acak).dropna()
+    if sel.empty:
+        return pd.DataFrame()
+    emiten = dasar.loc[sel.index, "Ticker"]
+    g = sel.groupby(emiten)
+    total = float(sel.sum())
+    t = pd.DataFrame({"Posisi": g.size(), "JumlahSelisih%": g.sum().round(1),
+                      "RataSelisih%": g.mean().round(2)})
+    t["PorsiDariTotal%"] = (t["JumlahSelisih%"] / total * 100).round(1) if total else None
+    return t.nlargest(jumlah, "JumlahSelisih%").reset_index(names="Ticker")
 
 
 def per_semester(posisi: pd.DataFrame, banding: pd.DataFrame, n: int) -> pd.DataFrame:
@@ -452,7 +495,9 @@ def metrik_ekuitas(e: pd.Series, isi=None, slot: int = SLOT, beli_n: int | None 
 # ------------------------------------------------------------------ keluaran
 # Kolom yang ditulis dengan tanda +/− (laba, selisih); kolom persen lain
 # (winrate, keterisian) tanpa tanda. Angka bergaya Indonesia: koma desimal.
-_BERTANDA = {"RataLaba%", "MedianLaba%", "RataIHSG%", "RataAcak%", "Selisih%", "CAGR%Median"}
+_BERTANDA = {"RataLaba%", "MedianLaba%", "RataIHSG%", "RataAcak%", "Selisih%", "CAGR%Median",
+             "MedianSelisih%", "SelisihPangkas%", "SelisihTanpa10%", "JumlahSelisih%",
+             "RataSelisih%"}
 
 
 def _angka_id(v: float, desimal: int, tanda: bool) -> str:
@@ -484,7 +529,7 @@ def tabel_md(df: pd.DataFrame) -> str:
 
 
 def tulis_md(path: Path, meta: dict, sinyal_df: pd.DataFrame, porto_df: pd.DataFrame,
-             semester_df: pd.DataFrame) -> None:
+             semester_df: pd.DataFrame, penyumbang_df: pd.DataFrame | None = None) -> None:
     s = sinyal_df.copy()
     baris = ["# Uji Ulang Tren vs Swing", "",
              f"Dihitung {meta['diperbarui']} oleh `uji_ulang_tren.py`. "
@@ -503,6 +548,19 @@ def tulis_md(path: Path, meta: dict, sinyal_df: pd.DataFrame, porto_df: pd.DataF
         bagian = s[s["Hari"] == n][["Aturan", "Filter", "Posisi", "Winrate%", "RataLaba%",
                                     "RataAcak%", "Selisih%", "SelisihSE%", "MenangVsAcak%"]]
         baris += [f"### Hari bursa ke-{n}", "", tabel_md(bagian), ""]
+    baris += ["## Ketahanan: apakah selisihnya datang dari segelintir saham?", "",
+              "Hari bursa ke-21. `MedianSelisih%` = median per posisi; `SelisihPangkas%` = rata-rata "
+              "sesudah membuang 5% posisi teratas dan terbawah; `SelisihTanpa10%` = rata-rata sesudah "
+              "membuang semua posisi dari 10 emiten penyumbang selisih terbesar. Kalau selisih rata-rata "
+              "positif tapi ketiga kolom ini mendekati nol atau negatif, keunggulannya bergantung pada "
+              "beberapa saham yang meledak — persis bagian yang paling rawan bias survivorship.", "",
+              tabel_md(s[s["Hari"] == HARI_SOROT[-1]][["Aturan", "Filter", "Posisi", "Selisih%",
+                                                        "MedianSelisih%", "SelisihPangkas%",
+                                                        "SelisihTanpa10%", "MenangVsAcak%"]]), ""]
+    if penyumbang_df is not None and not penyumbang_df.empty:
+        baris += ["### 10 penyumbang selisih terbesar (hari ke-21, tanpa filter)", ""]
+        for aturan, g in penyumbang_df.groupby("Aturan", sort=False):
+            baris += [f"**{aturan}**", "", tabel_md(g.drop(columns=["Aturan"])), ""]
     baris += ["## Portofolio 10 posisi, tahan 21 hari bursa", "",
               f"Median dari {meta['seed']} urutan acak pengisian slot (rentang min–maks dalam kurung). "
               "Ekuitas awal 1, tanpa pembulatan lot.", ""]
@@ -588,13 +646,18 @@ def main() -> int:
     banding = pembanding(tgl_beli, bars, set(bars) - {KODE_IHSG}, a.hari, a.fee_beli, a.fee_jual)
 
     hari_bursa = harian.loc[harian["Tanggal"] >= pd.Timestamp(a.mulai), "Tanggal"].nunique()
-    baris_sinyal, baris_semester = [], []
+    baris_sinyal, baris_semester, baris_penyumbang = [], [], []
     for k, label, _ in semua_aturan:
         for f, nama_f in FILTER.items():
             pos, n_sinyal = posisi_aturan[(k, f)]
             for r in ringkas_sinyal(pos, banding, a.hari):
                 baris_sinyal.append({"Aturan": label, "Kode": k, "Filter": nama_f,
                                      "SinyalPerHari": round(n_sinyal / max(hari_bursa, 1), 1), **r})
+            if not pos.empty and f == "tanpa":
+                py = penyumbang(pos, banding, a.hari)
+                if not py.empty:
+                    py.insert(0, "Aturan", label)
+                    baris_penyumbang.append(py)
             if not pos.empty:
                 sm = per_semester(pos, banding, a.hari)
                 if not sm.empty:
@@ -603,6 +666,8 @@ def main() -> int:
                     baris_semester.append(sm)
     sinyal_df = pd.DataFrame(baris_sinyal)
     semester_df = pd.concat(baris_semester, ignore_index=True) if baris_semester else pd.DataFrame()
+    penyumbang_df = (pd.concat(baris_penyumbang, ignore_index=True)
+                     if baris_penyumbang else pd.DataFrame())
 
     # ---- portofolio
     print(f"Simulasi portofolio ({a.seed} urutan acak per aturan) ...", file=sys.stderr)
@@ -658,6 +723,7 @@ def main() -> int:
     awal = a.awalan
     sinyal_df.to_csv(keluar / f"{awal}_sinyal.csv", index=False)
     semester_df.to_csv(keluar / f"{awal}_semester.csv", index=False)
+    penyumbang_df.to_csv(keluar / f"{awal}_penyumbang.csv", index=False)
     porto_df.to_csv(keluar / f"{awal}_portofolio.csv", index=False)
     ekuitas_df.to_csv(keluar / f"{awal}_ekuitas.csv")
     t_sinyal = pd.concat([s["Tanggal"] for s in sinyal_aturan.values()])
@@ -677,7 +743,7 @@ def main() -> int:
                              "mengecil, atau keluar dari 400 terbesar tidak ada di data."),
     }
     (keluar / f"{awal}_meta.json").write_text(json.dumps(meta, indent=2, default=str) + "\n")
-    tulis_md(keluar / f"{awal}.md", meta, sinyal_df, porto_df, semester_df)
+    tulis_md(keluar / f"{awal}.md", meta, sinyal_df, porto_df, semester_df, penyumbang_df)
 
     # ---- ringkasan terminal
     print(f"\nSinyal {meta['sinyalPertama']} – {meta['sinyalTerakhir']}, "
