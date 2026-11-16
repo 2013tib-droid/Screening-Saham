@@ -248,7 +248,7 @@ Matematikanya diuji terhadap harga buatan yang jawabannya sudah diketahui: `pyth
 
 ### Hitung ulang tanpa run malam
 
-Workflow **Uji Winrate Swing** (`.github/workflows/uji-winrate.yml`) menghitung ulang uji ini saja, tanpa screening 400 emiten yang makan ~20 menit: tab **Actions → Uji Winrate Swing → Run workflow**. Ada tiga input — bongkar riwayat git, modal per posisi, dan panjang jendela — jadi parameter lain bisa dicoba tanpa mengubah run malam.
+Workflow **Uji Winrate Swing** (`.github/workflows/uji-winrate.yml`) menghitung ulang uji ini saja, tanpa screening 400 emiten yang makan ~20 menit: tab **Actions → Uji Winrate Swing → Run workflow**. Ada empat input — daftar (swing/tren), bongkar riwayat git, modal per posisi, dan panjang jendela — jadi parameter lain bisa dicoba tanpa mengubah run malam.
 
 ## Kondisi Pasar (IHSG vs MA50)
 
@@ -307,6 +307,78 @@ TT ditulis sebagai hitungan, bukan ya/tidak: 7 dari 8 (sering cuma RS yang kuran
 Run malam menulis `hasil/tren.csv` (TT = 8 dan nilai transaksi ≥ Rp5 miliar) dan dashboard menampilkannya di tab **Tren**. Saat pasar sedang turun, tab ini wajar kosong — memang hampir tidak ada saham yang trennya tertata.
 
 ⚠️ **Ini hipotesis, belum terbukti dengan pick nyata.** Trend Template dan RS populer di pasar AS. Di IDX ia diuji dua cara: dengan pick nyata lewat `uji_winrate.py --daftar tren` (sampelnya baru mulai terkumpul), dan dengan [uji ulang historis](#uji-ulang-tren-vs-swing-uji_ulang_trenpy) April 2024 – sekarang. Daftar swing tetap memakai aturan lamanya. Matematikanya diuji terhadap harga buatan: `python scripts/uji_tren.py`.
+
+## Uji Ulang Tren vs Swing (`uji_ulang_tren.py`)
+
+Pertanyaannya: **apakah daftar Tren lebih baik dari daftar swing, dan dari saham likuid acak?** Pick nyata `tren.csv` baru terkumpul sejak November 2026, jadi jawaban sementara datang dari uji ulang: aturan yang sama diterapkan ke histori harga universe hari ini, **1 April 2024 – 13 November 2026** (623 hari bursa, 402 emiten), seolah screening malam sudah berjalan sejak itu.
+
+```bash
+python uji_ulang_tren.py                          # tarik harga dari Yahoo (~2 menit)
+python uji_ulang_tren.py --harga-csv harga.csv    # tanpa jaringan
+python scripts/uji_ulang_tren.py                  # uji matematikanya, harga buatan
+```
+
+Karena butuh Yahoo, ia dijalankan di **Actions → Uji Ulang Tren vs Swing → Run workflow** (`.github/workflows/uji-ulang-tren.yml`), yang meng-commit hasilnya ke `hasil/uji_ulang_tren*.{csv,json,md}` dan menyimpan harga yang ditarik sebagai artifact run. Ringkasan lengkapnya ada di [`hasil/uji_ulang_tren.md`](hasil/uji_ulang_tren.md).
+
+**Yang dibandingkan** — empat aturan, semuanya dengan nilai transaksi ≥ Rp5 miliar, masing-masing dengan dan tanpa filter IHSG > MA50 (dibaca di penutupan malam sinyal):
+
+| Kode | Aturan |
+|---|---|
+| swing | Aturan `swing.csv`: RSI ≤ 65, harga > MA200, VolSpike ≥ 1,2 |
+| tt8 | Trend Template 8/8 (aturan `tren.csv`) |
+| tt7 | Trend Template ≥ 7 |
+| rs80 | RS ≥ 80 saja |
+
+**Cara menghitungnya.** Per sinyal: fungsi `simulasi()` dan `pembanding()` dari `uji_winrate.py` dipakai apa adanya — beli di pembukaan sesi berikutnya, modal tetap, biaya 0,15% + 0,25%, pick ulang tidak dihitung, dibandingkan dengan rata-rata saham likuid yang dibeli di sesi yang sama. Per portofolio: 10 slot, tiap posisi baru 1/10 ekuitas, tahan 21 hari bursa; saat sinyal lebih banyak dari slot kosong urutannya diacak, diulang 20 kali, dan yang dilaporkan median beserta rentangnya. Indikator tiap tanggal dihitung hanya dari bar sampai tanggal itu, dan RS diperingkat terhadap universe **pada tanggal itu** (emiten yang belum punya histori setahun tidak ikut; yang sedang disuspensi ikut dengan bar terakhirnya). Uji offline mencocokkan tiap angka — MA, RSI, VolSpike, nilai transaksi, 52 minggu, RS, TT — dengan fungsi `screener.py` yang dijalankan atas histori yang dipotong di tanggal itu, dan memeriksa bahwa mengubah harga masa depan tidak menggeser satu pun angka masa lalu.
+
+### Hasilnya: per sinyal, hari bursa ke-21
+
+| Aturan | Filter | Posisi | Selisih vs acak | ± SE | Median selisih | Pangkas 5% | Tanpa 10 emiten teratas | Mengalahkan acak |
+|---|---|---|---|---|---|---|---|---|
+| swing | — | 1.839 | −0,49% | 0,55 | −2,92% | −2,17% | −1,51% | 39% |
+| swing | IHSG > MA50 | 1.189 | −0,04% | 0,69 | −3,52% | −2,29% | −1,63% | 37% |
+| tt8 | — | 1.029 | **+3,30%** | 1,00 | −2,62% | −0,07% | +0,89% | 44% |
+| tt8 | IHSG > MA50 | 736 | **+5,03%** | 1,93 | −2,75% | +1,07% | +1,65% | 45% |
+| tt7 | — | 1.571 | +2,33% | 0,71 | −2,73% | −0,58% | +0,79% | 43% |
+| tt7 | IHSG > MA50 | 1.141 | +3,22% | 1,29 | −2,86% | −0,04% | +0,96% | 43% |
+| rs80 | — | 1.409 | +3,10% | 0,96 | −1,89% | +0,01% | +1,36% | 44% |
+| rs80 | IHSG > MA50 | 947 | +5,18% | 2,13 | −1,92% | +1,34% | +2,54% | 46% |
+
+SE = galat baku yang dihitung per tanggal beli (pick di sesi yang sama bergerak bersama, jadi bukan sampel bebas). "Pangkas 5%" membuang 5% posisi teratas dan terbawah; "tanpa 10 emiten teratas" membuang semua posisi dari 10 emiten penyumbang selisih terbesar. Di hari ke-5 dan ke-10 polanya sama, lebih kecil: tt8 +0,84% dan +1,65%, swing −0,23% dan −0,19%.
+
+### Hasilnya: portofolio 10 posisi
+
+| Aturan | Drawdown terdalam, tanpa filter | Drawdown terdalam, IHSG > MA50 | Total hasil, IHSG > MA50 |
+|---|---|---|---|
+| swing | −55% | **−25%** | +96% (+44 … +156) |
+| tt8 | −55% | −32% | +114% (+46 … +221) |
+| tt7 | −52% | −29% | +133% (+57 … +367) |
+| rs80 | −56% | −38% | +150% (+60 … +471) |
+| saham likuid acak | −51% | −22% | +47% (+0 … +155) |
+| IHSG beli-dan-tahan | −46% | | −27% (total, tanpa filter) |
+
+Median 20 urutan acak; angka dalam kurung rentang min–maks.
+
+### Cara membacanya
+
+1. **Dibanding swing: ya, Tren lebih baik.** Di setiap ukuran — rata-rata, pangkas 5%, tanpa 10 emiten teratas — tt8 di atas swing, dengan atau tanpa filter. Swing sendiri kembali terkonfirmasi tidak punya kemampuan memilih (selisih ≈ 0, mediannya justru −3%), sama dengan uji ulang sebelumnya.
+2. **Dibanding saham acak: belum terbukti.** Rata-rata selisih tt8 +3,3% (sekitar 3 SE dari nol) terlihat kuat, tapi **median pick-nya tetap kalah −2,6%** dan hanya 44% posisi mengalahkan saham acak. Keunggulannya datang dari ekor kanan: 10 emiten (BUVA, WIFI, JARR, INDS, INET, NATO, MLPT, PTRO, CBRE, ASLI) menyumbang ±75% total selisih tt8. Buang 5% posisi ekstrem dan selisihnya jadi −0,07%. Itu bukan otomatis cacat — strategi momentum memang hidup dari sedikit pemenang besar — tapi justru ekor kanan inilah yang paling terkena bias survivorship (lihat di bawah).
+3. **Tidak konsisten antar-periode.** Selisih tt8 per semester (tanpa filter): 2024-S1 −2,6%, 2024-S2 +3,2%, 2025-S1 +1,7%, **2025-S2 +8,3%**, 2026-S1 −3,4%, 2026-S2 +6,2%. Satu semester reli menyumbang sebagian besar hasilnya.
+4. **Tren tidak melindungi dari pasar turun.** Tanpa filter, semua daftar — termasuk saham acak — jatuh −51% s.d. −56%. Dengan filter IHSG > MA50, drawdown Tren (−32%) justru **lebih dalam** daripada swing (−25%) dan saham acak (−22%); RS ≥ 80 paling dalam (−38%). Total hasilnya lebih tinggi, tapi rentang antar-urutannya sangat lebar.
+5. **Filter IHSG > MA50 tetap aturan yang paling berpengaruh**, di semua daftar: drawdown kira-kira separuhnya.
+6. **TT 8/8 tidak lebih baik dari RS ≥ 80 saja.** Syarat MA-nya hampir tidak menambah apa-apa di atas RS; TT ≥ 7 lebih lemah dari keduanya.
+
+**Kesimpulan:** belum ada alasan mengganti aturan `swing.csv` dengan Trend Template. Tren mengalahkan swing, tapi keunggulannya terhadap saham acak bertumpu pada segelintir saham yang meledak, terkonsentrasi di satu semester, dan disertai drawdown yang lebih dalam. Yang menentukan sekarang adalah pick nyata: `uji_winrate.py --daftar tren` terus mengumpulkannya tiap malam.
+
+### ⚠️ Bias survivorship — kenapa angka ini terlalu bagus
+
+Universe-nya daftar emiten **hari ini**: 400 emiten terbesar per hari ini (`tickers/idx.txt`) plus daftar kurasi. Emiten yang dulu naik lalu ambruk, mengecil, atau delisting tidak ada di data. Akibatnya:
+
+- **Angka absolut terlalu bagus.** Contoh paling jelas: portofolio saham likuid acak dengan filter IHSG menghasilkan +47%, sementara IHSG sendiri −27% di periode yang sama. Sebagian besar selisih itu adalah bias universe, bukan kepintaran.
+- **Aturan momentum terkena paling parah.** TT dan RS membeli saham yang sedang naik kencang. Saham yang naik ratusan persen lalu bertahan besar ada di universe hari ini *karena* kenaikan itu — dan merekalah 10 penyumbang terbesar di atas. Saham yang naik kencang lalu ambruk keluar dari 400 terbesar dan hilang dari data, padahal Tren juga akan membelinya.
+- **Kolom selisih hanya menghapus sebagian.** Saham acak diambil dari universe yang sama sehingga ikut menikmati bias itu, tapi tidak sebesar daftar yang justru menyaring saham terkuat.
+
+Batas lain: uji ini satu siklus pasar (reli 2025, kejatuhan Januari–Juni 2026); portofolio tidak membulatkan lot dan menjual emiten yang disuspensi di penutupan terakhirnya; angka bisa bergeser sedikit (±1% jumlah posisi) antar-run karena Yahoo kadang mengirim data yang sedikit berbeda. Simulasi portofolio di sini tidak identik dengan uji ulang filter IHSG terdahulu (skripnya tidak ada di repo), jadi drawdown swing-nya sedikit berbeda (−55% / −25% di sini, −58% / −18% di sana) — kesimpulannya sama.
 
 ## Kolom Status
 

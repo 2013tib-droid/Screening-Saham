@@ -21,12 +21,6 @@ on:
       seed:
         description: "Jumlah urutan acak pengisian slot portofolio"
         default: "20"
-  # SEMENTARA: workflow_dispatch baru bisa dipicu setelah berkas ini ada di
-  # branch default. Pemicu ini menjalankan uji ulang sekali di branch fitur
-  # supaya hasilnya ikut di-review; dihapus sebelum merge.
-  push:
-    branches: [claude/test-tren-vs-swing-9asfy0]
-    paths: [.github/workflows/uji-ulang-tren.yml, uji_ulang_tren.py]
 
 permissions:
   contents: write
