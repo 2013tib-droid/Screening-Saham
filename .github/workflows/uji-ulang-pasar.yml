@@ -1,0 +1,101 @@
+name: Uji Ulang Filter Pasar
+
+# Uji ulang uji_ulang_pasar.py: apakah follow-through day, distribution day,
+# atau breadth memperbaiki aturan IHSG > MA50 untuk daftar swing. Butuh Yahoo
+# (±420 emiten + ^JKSE dengan volumenya), jadi dijalankan di sini.
+#
+# Sengaja TIDAK terjadwal, sama dengan uji-ulang-tren.yml: jalankan manual
+# lewat tab Actions -> "Uji Ulang Filter Pasar" -> Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      mulai:
+        description: "Tanggal sinyal pertama (YYYY-MM-DD)"
+        default: "2024-04-01"
+      seed:
+        description: "Jumlah urutan acak pengisian slot portofolio"
+        default: "20"
+  # SEMENTARA: workflow_dispatch baru bisa dipicu setelah berkas ini ada di
+  # branch default. Pemicu ini menjalankan uji ulang di branch fitur supaya
+  # hasilnya ikut di-review; dihapus sebelum merge.
+  push:
+    branches: [claude/position-sizer-distribution-ftd-k65qqg]
+    paths: [.github/workflows/uji-ulang-pasar.yml, uji_ulang_pasar.py]
+
+permissions:
+  contents: write
+
+# Grup yang sama dengan workflow lain yang commit dan push ke repo ini.
+concurrency:
+  group: tulis-repo
+  cancel-in-progress: false
+
+jobs:
+  uji-ulang:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependensi
+        run: pip install -r requirements.txt
+
+      # Matematikanya diuji dulu (offline, harga buatan). Kalau gagal, angka
+      # dari Yahoo tidak ada artinya dan tidak boleh sampai di-commit.
+      - name: Uji offline
+        run: |
+          python scripts/uji_winrate.py
+          python scripts/uji_ulang_tren.py
+          python scripts/uji_pasar.py
+
+      # uji_ulang_pasar.py berhenti dengan kode 1 bila volume ^JKSE tidak
+      # terisi — DD/FTD tidak diganti proksi diam-diam.
+      - name: Uji ulang
+        run: >
+          python uji_ulang_pasar.py
+          --mulai ${{ inputs.mulai || '2024-04-01' }}
+          --seed ${{ inputs.seed || '20' }}
+          --simpan-harga "$RUNNER_TEMP/harga-uji-ulang-pasar.csv"
+
+      - name: Simpan harga sebagai artifact
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: harga-uji-ulang-pasar
+          path: ${{ runner.temp }}/harga-uji-ulang-pasar.csv
+          if-no-files-found: ignore
+          retention-days: 30
+
+      # Penyelarasan saat push ditolak sama dengan uji-ulang-tren.yml.
+      - name: Commit hasil
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add hasil/uji_ulang_pasar*
+          if git diff --cached --quiet; then
+            echo "Hasilnya sama persis — tidak ada yang di-commit."
+            exit 0
+          fi
+          pesan="Uji ulang filter pasar $(TZ=Asia/Jakarta date '+%Y-%m-%d %H:%M WIB')"
+          git commit -m "$pesan"
+          simpan="$(mktemp -d)"
+          cp hasil/uji_ulang_pasar* "$simpan/"
+          for percobaan in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            git fetch origin "$GITHUB_REF_NAME"
+            git reset --hard FETCH_HEAD
+            cp "$simpan"/* hasil/
+            git add hasil/uji_ulang_pasar*
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "$pesan"
+          done
+          echo "Push tetap gagal setelah 3 percobaan." >&2
+          exit 1

@@ -545,6 +545,7 @@
       <div class="judul" id="pasar-judul"></div>
       <div class="ket" id="pasar-ket"></div>
       <div class="ket" id="pasar-breadth" hidden></div>
+      <div class="ket" id="pasar-oneil" hidden></div>
     </div>
   </div>
 
@@ -633,6 +634,17 @@
       breadth menunjukkan apakah kenaikan atau penurunannya memang luas. Angka 20 hari bursa lalu
       ikut ditampilkan supaya arahnya terbaca. Ini konteks, <strong>belum</strong> aturan beli —
       belum diuji ulang seperti aturan IHSG &gt; MA50.</dd>
+      <dt>Distribution day &amp; FTD</dt><dd>Baris ketiga bilah kondisi pasar, metode William
+      O'Neil yang membaca IHSG dari harga <strong>dan volume</strong>.
+      <strong>Distribution day</strong> = IHSG turun ≥ 0,2% dengan volume lebih tinggi dari hari
+      sebelumnya — tanda institusi menjual. Dihitung aktif selama 25 sesi, atau sampai IHSG
+      menutup 5% di atas penutupan hari itu; lima atau lebih yang aktif dianggap tekanan jual berat.
+      <strong>Follow-through day</strong> = sesudah titik terendah baru (Low di bawah Low terendah
+      25 sesi sebelumnya), hari ke-4 sampai ke-7 percobaan rally yang naik ≥ 1,25% dengan volume
+      lebih tinggi dari hari sebelumnya; hari ke-1 adalah naik pertama sesudah titik terendah, dan
+      rally batal bila titik terendahnya ditembus. Sesudah FTD keadaannya "naik" sampai ada titik
+      terendah baru. Ini <strong>konteks, bukan aturan beli</strong>: uji ulangnya tidak
+      memperbaiki aturan IHSG &gt; MA50 — angkanya di README.</dd>
       <dt>Grup</dt><dd>Daftar asal saham: LQ45, grup konglomerasi (Prajogo/Barito, Bakrie,
       Salim, Hapsoro), atau tema (Logam). Satu saham bisa masuk dua daftar, mis. "LQ45/Salim".
       <strong>Kosong</strong> berarti saham itu masuk dari universe pasar — seluruh emiten IDX
@@ -814,6 +826,20 @@
       <dt>RR</dt><dd><em>Risk/reward</em> — jarak ke target dibanding jarak ke stop, dihitung dari
       <strong>tengah zona entri</strong>, bukan dari harga sekarang. RR 3 berarti kalau benar
       untungnya 3× lebih besar daripada ruginya kalau salah. Ambang 2 dipakai sebagai batas SIAP.</dd>
+      <dt>Lot / Nilai posisi / Porsi modal% / Risiko Rp</dt><dd>Jawaban untuk "beli berapa".
+      Dihitung dengan <strong>risiko tetap</strong>: kalau stop kena, ruginya sekitar 1% modal,
+      berapa pun harga dan lebar stop sahamnya —
+      <code>lot = floor((modal × 1%) / ((entri atas − stop) × 100))</code>. Modalnya Rp10 juta,
+      sama dengan halaman Uji Winrate. Yang dipakai <strong>entri atas</strong>, bukan tengah zona:
+      order di zona bisa terisi di mana saja di dalamnya, dan yang termahal adalah skenario terburuk.
+      Satu posisi dibatasi paling banyak <strong>25% modal</strong> — stop yang sangat rapat
+      membuat rumusnya meminta posisi raksasa, dan satu gap pembukaan bisa melompati stop mana
+      pun; kalau atap ini yang memotong, Risiko Rp-nya jadi di bawah 1% dan Catatan menyebutnya.
+      <strong>0 lot</strong> berarti satu lot pun sudah melebihi jatah risiko atau atap porsi —
+      sengaja tidak dibulatkan naik ke 1 lot; alasannya di Catatan. Biaya transaksi dan gap
+      melewati stop tidak dihitung, jadi rugi nyata saat stop kena bisa sedikit di atas Risiko Rp.
+      Modal, risiko, dan atapnya bisa diubah lewat <code>analisa_smc.py --modal --risiko
+      --maks-posisi</code>.</dd>
       <dt>Jarak entri%</dt><dd>Berapa persen harga harus turun dulu sebelum menyentuh zona. Angka
       besar berarti masih lama menunggu — bukan alasan untuk masuk lebih awal.</dd>
       <dt>Kode saham berwarna</dt><dd>Kode yang tampil <span style="color:var(--rencana-fg);
@@ -925,6 +951,12 @@ const KOLOM_SMC = [
   { k: "Stop",        label: "Stop",       angka: true },
   { k: "Target",      label: "Target",     angka: true },
   { k: "RR",          label: "RR",         angka: true, desimal: 2 },
+  // Ukuran posisi dari analisa_smc.py: risiko tetap per transaksi, dihitung
+  // dari entri ATAS zona (pengisian termahal) sampai stop.
+  { k: "Lot",         label: "Lot",        angka: true },
+  { k: "NilaiPosisi", label: "Nilai posisi", angka: true },
+  { k: "PorsiModal%", label: "Porsi modal%", angka: true, desimal: 1 },
+  { k: "RisikoRp",    label: "Risiko Rp",  angka: true },
   { k: "JarakEntri%", label: "Jarak entri%", angka: true, desimal: 1 },
   { k: "Catatan",     label: "Catatan",    kiri: true },
 ];
@@ -971,7 +1003,7 @@ const KELOMPOK = {
 };
 
 function kolomTampil() {
-  // Tab SMC cuma 15 kolom dan semuanya dibaca bersama, jadi tidak ikut
+  // Tab SMC cuma 19 kolom dan semuanya dibaca bersama, jadi tidak ikut
   // pemotongan kelompok.
   if (KOLOM_KHUSUS[state.tab]) return KOLOM_KHUSUS[state.tab];
   const daftar = KELOMPOK[state.kelompok];
@@ -1557,6 +1589,31 @@ function tampilkanPasar(pasar, meta) {
   wadah.hidden = false;
 }
 
+// Baris distribution day / follow-through day dari hasil/pasar.json (kunci
+// "distribusi" dan "ftd", ditulis screener.py). Berkas lama tanpa kunci itu
+// cukup menyembunyikan barisnya.
+function tampilkanOneil(pasar) {
+  const el = document.getElementById("pasar-oneil");
+  const d = pasar && pasar.distribusi, f = pasar && pasar.ftd;
+  if (!d || !f) { el.hidden = true; return; }
+  const tgl = s => new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", timeZone: "UTC" })
+    .format(new Date(`${s}T00:00:00Z`));
+  const bagian = [`Distribution day aktif: ${d.aktif} dalam ${d.umurSesi} sesi`
+    + (d.aktif >= d.batas ? ` (≥ ${d.batas}: tekanan jual berat)` : "")];
+  if (f.keadaan === "NAIK" && f.tanggal) {
+    bagian.push(`follow-through day ${tgl(f.tanggal)}`
+      + (f.titikRendah ? ` sesudah titik terendah ${tgl(f.titikRendah)}` : ""));
+  } else if (f.keadaan === "RALLY") {
+    bagian.push(`percobaan rally hari ke-${f.hariRally} dari titik terendah ${tgl(f.titikRendah)}`
+      + " — belum ada follow-through day (hari ke-4–7)");
+  } else {
+    bagian.push("koreksi, belum ada follow-through day"
+      + (f.titikRendah ? ` (titik terendah terakhir ${tgl(f.titikRendah)})` : ""));
+  }
+  el.textContent = bagian.join(" · ") + ". Konteks, bukan aturan beli.";
+  el.hidden = false;
+}
+
 // Baris breadth dari hasil/breadth.csv (screener.py --output-breadth).
 // Ditampilkan di dalam bilah kondisi pasar, jadi ikut tersembunyi bila
 // bilahnya tidak muncul.
@@ -1598,6 +1655,7 @@ async function muat() {
       fetch(`hasil/breadth.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
     ]);
     tampilkanPasar(pasar, meta);
+    tampilkanOneil(pasar);
     tampilkanBreadth(breadth ? parseCSV(breadth, KOLOM_BREADTH) : []);
     state.data.semua = parseCSV(semua);
     state.data.swing = parseCSV(swing);

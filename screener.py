@@ -922,6 +922,149 @@ def kondisi_pasar(close: pd.Series) -> dict | None:
     }
 
 
+# ------------------------------------------------- distribution & follow-through
+# Metode William O'Neil (IBD) untuk membaca IHSG dari harga DAN volume. Ini
+# konteks di bilah kondisi pasar, bukan aturan beli: uji ulangnya
+# (uji_ulang_pasar.py, README "Distribution Day & Follow-Through Day") tidak
+# menunjukkan perbaikan yang jelas atas aturan IHSG > MA50.
+#
+# Volume ^JKSE dari Yahoo diperiksa dulu sebelum fitur ini ditulis (16 Nov
+# 2026): 745 bar sejak Okt 2023, tidak ada yang kosong atau nol selain bar
+# hari berjalan yang belum ditutup, dan rasio volume hari ini/kemarin di
+# kuantil 1%-99% cuma 0,53-1,86. Satuannya tampaknya lot (130-550 juta per
+# hari), tapi untuk aturan ini yang penting hanya konsisten antar-hari.
+DD_TURUN_PCT = 0.2        # turun sekurangnya sekian % ...
+DD_UMUR_SESI = 25         # ... dihitung selama 25 sesi (hari DD itu sesi ke-1)
+DD_HAPUS_NAIK_PCT = 5.0   # ... atau sampai IHSG menutup 5% di atas penutupan hari DD
+DD_BATAS = 5              # jumlah DD aktif yang dianggap "tekanan jual berat"
+FTD_NAIK_PCT = 1.25
+FTD_HARI_MIN, FTD_HARI_MAKS = 4, 7
+# "Titik terendah baru" = Low di bawah Low terendah 25 sesi sebelumnya. Tanpa
+# definisi ini, O'Neil cuma bilang "pasar dalam koreksi" — yang sendirian
+# tidak bisa dihitung mesin. 25 sesi dipilih sama dengan umur DD (± sebulan).
+JENDELA_RENDAH = 25
+
+
+def hitung_dd_ftd(bar: pd.DataFrame) -> pd.DataFrame:
+    """Distribution day dan follow-through day IHSG, per hari bursa.
+
+    `bar` berindeks tanggal, kolom Close, Low, Volume, urut naik, tanpa bar
+    kosong (Close NaN atau Volume ≤ 0 harus sudah dibuang — Yahoo mengirim
+    bar seperti itu untuk sesi berjalan). Tiap baris hanya memakai bar sampai
+    tanggal itu.
+
+    Distribution day (DD): Close turun ≥ DD_TURUN_PCT% dari penutupan
+    sebelumnya DAN Volume lebih tinggi dari hari sebelumnya. Ia dihitung aktif
+    selama DD_UMUR_SESI sesi (hari DD itu sendiri sesi ke-1), dan gugur lebih
+    awal begitu ada penutupan ≥ DD_HAPUS_NAIK_PCT% di atas penutupan hari DD.
+    Yang gugur tidak hidup lagi meski IHSG turun kembali.
+
+    Follow-through day (FTD), mesin keadaannya:
+      - Low di bawah Low terendah JENDELA_RENDAH sesi sebelumnya = titik
+        terendah baru. Keadaan jadi KOREKSI dan hitungan rally diulang dari
+        nol, dari keadaan apa pun (termasuk NAIK). Ini sekaligus aturan
+        "rally batal bila titik terendahnya ditembus": menembus titik
+        terendah rally selalu juga titik terendah 25 sesi yang baru.
+      - Hari ke-1 rally = sesi pertama sesudah titik terendah yang menutup
+        di atas penutupan sebelumnya. Sesudah itu tiap sesi menambah satu.
+      - FTD = hari ke-4 s.d. ke-7 dengan Close naik ≥ FTD_NAIK_PCT% DAN
+        Volume lebih tinggi dari hari sebelumnya. Keadaan jadi NAIK sampai
+        ada titik terendah baru.
+      - Lewat hari ke-7 tanpa FTD: percobaan rally habis, keadaan KOREKSI
+        menunggu titik terendah baru untuk percobaan berikutnya.
+
+    Kolom keluaran: DD (bool), DDAktif (int), Keadaan (KOREKSI/RALLY/NAIK),
+    HariRally (0 bila tidak sedang rally), FTD (bool), TitikRendah (tanggal
+    titik terendah yang sedang dihitung, atau tanggal titik terendah sebelum
+    FTD saat NAIK), TanggalFTD (FTD terakhir yang keadaannya masih NAIK).
+    """
+    c = bar["Close"].to_numpy(dtype=float)
+    lo = bar["Low"].to_numpy(dtype=float)
+    v = bar["Volume"].to_numpy(dtype=float)
+    idx = list(bar.index)
+    n = len(c)
+    dd_hidup: list[int] = []
+    keadaan, hari, menunggu = "KOREKSI", 0, False
+    titik, ftd_terakhir = None, None
+    baris = []
+    for i in range(n):
+        naik = c[i] / c[i - 1] - 1 if i else 0.0
+        vol_naik = bool(i) and v[i] > v[i - 1]
+
+        # DD lama gugur dulu (umur, lalu kenaikan 5%), baru DD hari ini masuk.
+        dd_hidup = [j for j in dd_hidup if i - j < DD_UMUR_SESI
+                    and c[i] < c[j] * (1 + DD_HAPUS_NAIK_PCT / 100)]
+        dd = bool(i) and naik <= -DD_TURUN_PCT / 100 and vol_naik
+        if dd:
+            dd_hidup.append(i)
+
+        ftd = False
+        rendah_baru = i >= JENDELA_RENDAH and lo[i] < lo[i - JENDELA_RENDAH:i].min()
+        if rendah_baru:
+            keadaan, hari, menunggu, titik, ftd_terakhir = "KOREKSI", 0, True, i, None
+        elif menunggu:
+            if hari == 0:
+                if c[i] > c[i - 1]:
+                    hari, keadaan = 1, "RALLY"
+            else:
+                hari += 1
+                if (FTD_HARI_MIN <= hari <= FTD_HARI_MAKS
+                        and naik >= FTD_NAIK_PCT / 100 and vol_naik):
+                    ftd, keadaan, menunggu, ftd_terakhir = True, "NAIK", False, i
+                elif hari > FTD_HARI_MAKS:
+                    keadaan, hari, menunggu = "KOREKSI", 0, False
+        baris.append({
+            "DD": dd,
+            "DDAktif": len(dd_hidup),
+            "DDTanggal": [idx[j] for j in dd_hidup],
+            "Keadaan": keadaan,
+            "HariRally": hari if keadaan == "RALLY" or ftd else 0,
+            "FTD": ftd,
+            "TitikRendah": idx[titik] if titik is not None else pd.NaT,
+            "TanggalFTD": idx[ftd_terakhir] if ftd_terakhir is not None else pd.NaT,
+        })
+    return pd.DataFrame(baris, index=bar.index)
+
+
+def bar_ihsg_bersih(hist: pd.DataFrame) -> pd.DataFrame:
+    """Close/Low/Volume IHSG berindeks tanggal polos, tanpa bar kosong.
+
+    Yahoo mengirim bar sesi berjalan dengan Close NaN dan Volume 0 — bahkan
+    sesudah bursa tutup (terlihat 17 Nov 2026 05:09 WIB untuk bar 16 Nov).
+    Dibiarkan, bar itu tercatat sebagai "volume turun" dan memalsukan DD/FTD.
+    """
+    h = hist[["Close", "Low", "Volume"]].copy()
+    h["Volume"] = pd.to_numeric(h["Volume"], errors="coerce")
+    h = h[h["Close"].notna() & h["Low"].notna() & (h["Volume"] > 0)]
+    idx = pd.DatetimeIndex(h.index)
+    if idx.tz is not None:
+        idx = idx.tz_localize(None)
+    h.index = idx.normalize()
+    return h[~h.index.duplicated(keep="last")].sort_index()
+
+
+def ringkas_dd_ftd(bar: pd.DataFrame) -> dict | None:
+    """Keadaan DD/FTD pada bar terakhir, untuk hasil/pasar.json."""
+    if len(bar) <= JENDELA_RENDAH + 1:
+        return None
+    t = hitung_dd_ftd(bar).iloc[-1]
+    tgl = lambda x: None if pd.isna(x) else pd.Timestamp(x).date().isoformat()  # noqa: E731
+    return {
+        "distribusi": {
+            "aktif": int(t["DDAktif"]),
+            "tanggal": [tgl(x) for x in t["DDTanggal"]],
+            "batas": DD_BATAS,
+            "umurSesi": DD_UMUR_SESI,
+        },
+        "ftd": {
+            "keadaan": t["Keadaan"],
+            "hariRally": int(t["HariRally"]),
+            "titikRendah": tgl(t["TitikRendah"]),
+            "tanggal": tgl(t["TanggalFTD"]),
+        },
+    }
+
+
 def tulis_kondisi_pasar(path: str) -> None:
     """Tarik histori IHSG, lalu tulis kondisi_pasar() sebagai JSON.
 
@@ -940,6 +1083,15 @@ def tulis_kondisi_pasar(path: str) -> None:
         if bar_terakhir_belum_final(hist):
             hist = hist.iloc[:-1]
         kondisi = kondisi_pasar(hist["Close"]) if not hist.empty else None
+        if kondisi is not None:
+            # DD/FTD gagal tidak boleh menghanguskan MA50 yang sudah jadi.
+            try:
+                tambahan = ringkas_dd_ftd(bar_ihsg_bersih(hist))
+                if tambahan:
+                    kondisi.update(tambahan)
+            except Exception as e:
+                print(f"Distribution/follow-through day gagal dihitung ({e}).",
+                      file=sys.stderr)
     except Exception as e:
         print(f"Kondisi pasar gagal diambil ({e}) — {path} tidak diperbarui.",
               file=sys.stderr)
@@ -952,6 +1104,13 @@ def tulis_kondisi_pasar(path: str) -> None:
     print(f"Kondisi pasar: IHSG {kondisi['ihsg']:.0f} "
           f"{'di atas' if kondisi['diAtasMA50'] else 'di bawah'} MA{MA_PASAR} "
           f"({kondisi['ma50']:.0f}) sejak {kondisi['sejak']} -> {path}", file=sys.stderr)
+    if "distribusi" in kondisi:
+        f = kondisi["ftd"]
+        print(f"  Distribution day aktif: {kondisi['distribusi']['aktif']}; "
+              f"keadaan {f['keadaan']}"
+              + (f", FTD {f['tanggal']}" if f["tanggal"] else "")
+              + (f", hari ke-{f['hariRally']} rally" if f["keadaan"] == "RALLY" else ""),
+              file=sys.stderr)
 
 
 def baca_daftar_syariah(path: str) -> tuple[set[str] | None, str]:

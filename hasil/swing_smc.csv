@@ -1,3 +1,3 @@
-Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-LSIP,PP London Sumatra Indonesia ,92,BUY,1585,up,PREMIUM,75,CHoCH bull,up,up,FVG D1,1565,1525,1375,1790,1.44,1.3,3.6,BSL raid @ 1510,TUNGGU,harga di premium — tunggu pullback ke zona
-PKPK,Paragon Karya Perkasa Tbk.,67,BUY,6775,down,PREMIUM,83,CHoCH bear,up,up,,,,,,,,7.9,BSL raid @ 6350,HINDARI,struktur D1 masih bearish
+Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,Lot,NilaiPosisi,PorsiModal%,RisikoRp,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
+LSIP,PP London Sumatra Indonesia ,92,BUY,1585,up,PREMIUM,75,CHoCH bull,up,up,FVG D1,1565,1525,1375,1790,1.44,5,782500,7.8,95000,1.3,3.6,BSL raid @ 1510,TUNGGU,harga di premium — tunggu pullback ke zona
+PKPK,Paragon Karya Perkasa Tbk.,67,BUY,6775,down,PREMIUM,83,CHoCH bear,up,up,,,,,,,,,,,,7.9,BSL raid @ 6350,HINDARI,struktur D1 masih bearish

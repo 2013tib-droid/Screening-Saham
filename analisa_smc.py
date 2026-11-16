@@ -116,10 +116,26 @@ MAKS_LEBAR_ZONA_ATR = 1.5
 # "gerakan sehari yang wajar" untuk saham yang bersangkutan.
 MIN_FVG_ATR = 0.3
 
+# --------------------------------------------------------------- ukuran posisi
+# Rencana entri menjawab "di harga berapa"; ini menjawab "berapa lot". Risiko
+# tetap per transaksi: kalau stop kena, kerugiannya sekitar RISIKO_PCT dari
+# modal, berapa pun harga dan lebar stop sahamnya. Modal default disamakan
+# dengan MODAL_DEFAULT di uji_winrate.py supaya dua halaman dashboard bicara
+# tentang dompet yang sama.
+MODAL_DEFAULT = 10_000_000
+RISIKO_PCT_DEFAULT = 1.0
+# Stop yang sangat rapat membuat rumus risiko tetap meminta posisi raksasa —
+# risiko 1% dengan stop 2% di bawah entri berarti setengah modal di satu
+# saham. Atap ini memotongnya: lebih baik risikonya jadi di bawah 1% daripada
+# satu gap pembukaan menghapus seperempat modal.
+MAKS_POSISI_PCT_DEFAULT = 25.0
+LEMBAR_PER_LOT = 100
+
 KOLOM = [
     "Ticker", "Nama", "Skor", "StatusScreener", "Harga",
     "TrenD1", "ZonaD1", "PosisiD1%", "EventD1", "TrenSesi", "TrenH1",
     "TipeEntri", "EntriAtas", "EntriBawah", "Stop", "Target", "RR",
+    "Lot", "NilaiPosisi", "PorsiModal%", "RisikoRp",
     "JarakEntri%", "ATR_D1%", "SweepTerakhir", "Sinyal", "Catatan",
 ]
 
@@ -321,6 +337,71 @@ def susun_rencana(hasil: dict[str, dict], harga: float) -> dict:
     return r
 
 
+def rupiah(n: float) -> str:
+    """Rp1.234.567 — pemisah ribuan titik, seperti tulisan rupiah sehari-hari."""
+    return "Rp" + f"{n:,.0f}".replace(",", ".")
+
+
+def persen_id(x: float) -> str:
+    """0.905 -> '0,91%' — koma desimal, seperti angka lain di Catatan."""
+    return f"{x:.2f}%".replace(".", ",")
+
+
+def ukuran_posisi(entri: float, stop: float, modal: float = MODAL_DEFAULT,
+                  risiko_pct: float = RISIKO_PCT_DEFAULT,
+                  maks_posisi_pct: float = MAKS_POSISI_PCT_DEFAULT) -> dict:
+    """Jumlah lot berbasis risiko tetap, dibatasi porsi maksimum per posisi.
+
+        lot = floor((modal x risiko%) / ((entri - stop) x 100))
+
+    `entri` semestinya batas ATAS zona: order beli di zona bisa terisi di mana
+    saja di dalamnya, dan yang paling mahal adalah skenario terburuk untuk
+    risiko. Kedua harga dipaksa ke fraksi IDX dengan arah yang konservatif —
+    entri ke atas, stop ke bawah — jadi angka yang belum dibulatkan pun tidak
+    pernah membuat risikonya terlihat lebih kecil.
+
+    Kalau satu lot pun sudah melebihi jatah risiko atau atap porsi, hasilnya
+    0 lot dengan alasannya; tidak dibulatkan naik ke 1 lot.
+
+    Biaya transaksi dan gap melewati stop tidak dihitung: kerugian nyata saat
+    stop kena bisa sedikit di atas RisikoRp.
+    """
+    entri = smc.bulatkan(entri, +1)
+    stop = smc.bulatkan(stop, -1)
+    hasil = {"lot": 0, "nilai": 0, "porsi": 0.0, "risiko_rp": 0, "catatan": ""}
+    per_lembar = entri - stop
+    if per_lembar <= 0:
+        hasil["catatan"] = "stop tidak di bawah entri — lot tidak dihitung"
+        return hasil
+
+    # Pembulatan ke rupiah utuh dulu, supaya 10 juta x 1% tidak jadi
+    # 99.999,99999 di floating point lalu kehilangan satu lot di floor().
+    jatah_risiko = round(modal * risiko_pct / 100, 2)
+    jatah_posisi = round(modal * maks_posisi_pct / 100, 2)
+    risiko_lot = per_lembar * LEMBAR_PER_LOT
+    harga_lot = entri * LEMBAR_PER_LOT
+    lot_risiko = int((jatah_risiko + 1e-6) // risiko_lot)
+    lot_atap = int((jatah_posisi + 1e-6) // harga_lot)
+    lot = min(lot_risiko, lot_atap)
+
+    if lot_risiko == 0:
+        hasil["catatan"] = (f"1 lot berisiko {rupiah(risiko_lot)}, di atas jatah risiko "
+                            f"{rupiah(jatah_risiko)} ({risiko_pct:g}% modal) — tidak dibeli")
+        return hasil
+    if lot_atap == 0:
+        hasil["catatan"] = (f"1 lot senilai {rupiah(harga_lot)}, di atas atap "
+                            f"{maks_posisi_pct:g}% modal ({rupiah(jatah_posisi)}) — tidak dibeli")
+        return hasil
+
+    hasil.update(lot=lot, nilai=lot * harga_lot,
+                 porsi=round(lot * harga_lot / modal * 100, 1),
+                 risiko_rp=lot * risiko_lot)
+    if lot_atap < lot_risiko:
+        hasil["catatan"] = (f"lot dibatasi atap {maks_posisi_pct:g}% modal — risiko jadi "
+                            f"{rupiah(hasil['risiko_rp'])} ({persen_id(hasil['risiko_rp'] / modal * 100)} modal)")
+    return hasil
+
+
 def baca_sinyal(hasil: dict[str, dict], rencana: dict) -> tuple[str, str]:
     """Terjemahkan struktur + rencana jadi satu label, plus alasannya."""
     d1 = hasil.get("D1")
@@ -411,7 +492,15 @@ def main() -> None:
     p.add_argument("--output", default="hasil/swing_smc.csv", help="file CSV hasil")
     p.add_argument("--detail", action="store_true",
                    help="cetak laporan struktur lengkap per emiten per timeframe")
+    p.add_argument("--modal", type=float, default=MODAL_DEFAULT,
+                   help="modal total (Rp) untuk menghitung lot")
+    p.add_argument("--risiko", type=float, default=RISIKO_PCT_DEFAULT,
+                   help="risiko per transaksi, %% dari modal (kerugian bila stop kena)")
+    p.add_argument("--maks-posisi", type=float, default=MAKS_POSISI_PCT_DEFAULT,
+                   help="nilai satu posisi paling banyak sekian %% dari modal")
     args = p.parse_args()
+    if args.modal <= 0 or not 0 < args.risiko <= 100 or not 0 < args.maks_posisi <= 100:
+        sys.exit("--modal harus > 0, --risiko dan --maks-posisi di antara 0 dan 100.")
 
     kandidat = muat_kandidat(args)
     print(f"Menganalisa {len(kandidat)} emiten dari "
@@ -445,6 +534,16 @@ def main() -> None:
             "target": None, "rr": None, "jarak": None, "tolak": ""}
         sinyal, alasan = baca_sinyal(hasil, rencana)
 
+        # Lot hanya untuk rencana yang utuh. Baris TUNGGU yang rencananya
+        # utuh (harga di premium) tetap dihitung: itu ukuran posisi bila
+        # harga nanti turun ke zona.
+        posisi = None
+        if rencana["rr"] is not None:
+            posisi = ukuran_posisi(rencana["atas"], rencana["stop"],
+                                   args.modal, args.risiko, args.maks_posisi)
+            if posisi["catatan"]:
+                catatan.insert(0, posisi["catatan"])
+
         sw = hasil.get("D1", {}).get("sweep") or []
         baris.append({
             "Ticker": kode,
@@ -465,6 +564,10 @@ def main() -> None:
             "Stop": rencana["stop"] if rencana["stop"] is not None else "",
             "Target": rencana["target"] if rencana["target"] is not None else "",
             "RR": rencana["rr"] if rencana["rr"] is not None else "",
+            "Lot": posisi["lot"] if posisi else "",
+            "NilaiPosisi": posisi["nilai"] if posisi else "",
+            "PorsiModal%": posisi["porsi"] if posisi else "",
+            "RisikoRp": posisi["risiko_rp"] if posisi else "",
             "JarakEntri%": round(rencana["jarak"], 1) if rencana["jarak"] is not None else "",
             "ATR_D1%": round(d1["atr"] / d1["last"] * 100, 1) if d1 else "",
             "SweepTerakhir": f"{sw[-1]['jenis']} @ {smc.bulatkan(sw[-1]['disapu']):.0f}" if sw else "",
@@ -491,9 +594,11 @@ def main() -> None:
     df.to_csv(keluar, index=False)
 
     ringkas = ["Ticker", "Harga", "TrenD1", "TrenSesi", "ZonaD1", "TipeEntri",
-               "EntriBawah", "EntriAtas", "Stop", "Target", "RR", "Sinyal"]
+               "EntriBawah", "EntriAtas", "Stop", "Target", "RR", "Lot", "Sinyal"]
     print()
     print(df[ringkas].to_string(index=False))
+    print(f"\nLot: modal {rupiah(args.modal)}, risiko {args.risiko:g}% per transaksi "
+          f"(entri atas zona sampai stop), satu posisi maks {args.maks_posisi:g}% modal.")
     print(f"\nTersimpan ke {keluar}")
     print("Pembacaan teknikal, bukan saran investasi.")
 
