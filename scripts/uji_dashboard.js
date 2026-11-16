@@ -113,6 +113,12 @@ function ujiTab(tab) {
   console.log(`\n=== tab "${tab}" ===`);
 
   if (!tabel) { periksa("tabel dirender", false); return; }
+  // Tab yang malam itu memang kosong (mis. Tren saat pasar turun) merender
+  // pesan "kosong", bukan tabel — yang diperiksa cuma bahwa pesannya muncul.
+  if (!(konteks.__state.data[tab] || []).length) {
+    periksa("tab kosong menampilkan pesan", tabel.includes('class="kosong"'));
+    return;
+  }
 
   const kolomTabel = [...tabel.matchAll(/<th data-kolom="([^"]+)"/g)].map(m => m[1]);
   const baris = tabel.split("<tr>").length - 2;   // dikurangi baris header
@@ -228,7 +234,7 @@ console.log(`Kolom yang dideklarasikan (${KOLOM.length}): ` +
 
 // Pemuatan data berjalan asinkron lewat fetch tiruan; beri kesempatan selesai.
 setTimeout(() => {
-  const tiles = ["semua", "swing", "value", "tumbuh", "smc"];
+  const tiles = ["semua", "swing", "value", "tumbuh", "tren", "smc"];
   console.log("\n=== pemuatan ===");
   tiles.forEach(t => periksa(`data ${t} termuat`,
     Array.isArray(konteks.__state.data[t]) && konteks.__state.data[t].length >= 0,

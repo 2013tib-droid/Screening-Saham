@@ -30,7 +30,7 @@ KOLOM = [
     "PER", "PBV", "PERvsSektor", "PBVvsSektor", "ROE%",
     "LabaYoY%", "OmzetYoY%", "Dividen%", "DER",
     "MarketCap(T)", "Vol20(jt)", "Nilai(M)", "VolSpike",
-    "RSI14", "MA50", "MA200",
+    "RSI14", "MA50", "MA200", "RS", "TT",
 ]
 
 # Kolom fundamental yang ikut dibawa dari cache ke CSV hasil tapi tidak
@@ -41,6 +41,10 @@ KOLOM_EKSTRA = [
     # Net beli asing dari stock.arjum.com (lihat arjum.py), miliar rupiah.
     # Kosong bila ARJUM_API_KEY tidak diset — sumber utamanya tetap Yahoo.
     "NetAsing1H(M)", "NetAsing5H(M)", "NetAsing20H(M)", "TglAsing",
+    # Bahan Trend Template dan RS (lihat metrik_tren). Disimpan supaya TT bisa
+    # dihitung ulang dari CSV lewat --dari-csv, sama seperti Status.
+    "MA150", "MA200Lalu", "Tinggi52", "Rendah52",
+    "Naik3B%", "Naik6B%", "Naik12B%", "RSMentah",
     "MarginKotor%", "MarginOperasi%", "MarginBersih%", "ROA%",
     "UtangBersih/EBITDA", "CurrentRatio", "QuickRatio", "InterestCoverage",
     "EV/EBITDA", "OCF/Laba", "FCFYield%", "Payout%", "Capex/OCF",
@@ -556,7 +560,8 @@ def hitung_rsi(close: pd.Series, periode: int = 14) -> float | None:
     return round(100 - 100 / (1 + rs), 1)
 
 
-def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None) -> pd.DataFrame:
+def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None,
+                  seri: dict[str, pd.DataFrame] | None = None) -> pd.DataFrame:
     """Ambil kolom yang memang berubah tiap hari: harga, volume, MA, RSI.
 
     Sengaja tidak menyentuh `.info` lagi. Dulu fungsi ini menariknya untuk
@@ -564,6 +569,11 @@ def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None) -> pd.
     laporan keuangan yang cuma berubah empat kali setahun, jadi 400-an request
     tiap malam dipakai mengambil angka yang sama persis seperti kemarin.
     Sekarang angka-angka itu datang dari cache fundamental.
+
+    Bila `seri` diberikan, deret Close/Volume tiap emiten (sesudah bar yang
+    belum final dan bar tanpa harga dibuang) ikut disimpan ke situ dengan
+    kunci kode tanpa .JK — bahan hitung_breadth, supaya breadth tidak perlu
+    menarik ulang histori yang sama.
     """
     import yfinance as yf
 
@@ -573,7 +583,10 @@ def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None) -> pd.
         print(f"  [{i}/{len(tickers)}] {tkr} ...", file=sys.stderr)
         try:
             saham = yf.Ticker(tkr)
-            hist = saham.history(period="1y")
+            # Dua tahun, bukan satu: RS butuh kenaikan 12 bulan penuh, dan
+            # "MA200 naik" butuh MA200 sebulan lalu — 222 bar, sementara
+            # setahun IDX cuma ±240 hari bursa. Jumlah request-nya sama.
+            hist = saham.history(period="2y")
 
             # Bar hari ini dibuang selama sesi masih berjalan, supaya seluruh
             # tabel konsisten berisi angka penutupan terakhir — sesuai yang
@@ -610,6 +623,8 @@ def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None) -> pd.
             layak = close.notna()
             close = close[layak]
             vol = vol[layak]
+            if seri is not None and len(close):
+                seri[tkr.removesuffix(".JK")] = pd.DataFrame({"Close": close, "Volume": vol})
 
             harga = round(close.iloc[-1]) if len(close) else None
             vol20 = vol.tail(20).mean() if len(vol) >= 20 else None
@@ -628,6 +643,7 @@ def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None) -> pd.
                 "RSI14": hitung_rsi(close),
                 "MA50": round(close.tail(50).mean()) if len(close) >= 50 else None,
                 "MA200": round(close.tail(200).mean()) if len(close) >= 200 else None,
+                **metrik_tren(close),
             })
         except Exception as e:
             print(f"      gagal: {e}", file=sys.stderr)
@@ -635,6 +651,232 @@ def ambil_histori(tickers: list[str], grup: dict[str, str] | None = None) -> pd.
     if gagal:
         print(f"{gagal} dari {len(tickers)} emiten gagal diambil.", file=sys.stderr)
     return pd.DataFrame(baris_data)
+
+
+# Trend Template ala Mark Minervini + Relative Strength ala IBD.
+#
+# Daftar swing di atas terbukti tidak lebih pintar dari saham likuid acak
+# (README, "Uji Winrate"): syaratnya cuma "di atas MA200, RSI belum tinggi,
+# volume masuk" — itu menjaring separuh pasar saat pasar naik. Trend Template
+# bertanya hal yang lain: apakah sahamnya sedang dalam tren naik yang tertata
+# (MA50 > MA150 > MA200, MA200 ikut naik, dekat puncak setahunnya) DAN termasuk
+# yang paling kuat dibanding seluruh universe (RS). Ini hipotesis, bukan bukti:
+# kolomnya dipasang supaya bisa diuji lewat uji_winrate.py dengan pick nyata.
+#
+# Jendela waktu memakai hari KALENDER (3/6/9/12 bulan, 52 minggu), bukan
+# jumlah bar: Yahoo sesekali menyelipkan bar libur, dan setahun IDX bukan
+# persis 252 hari bursa seperti bursa AS.
+HARI_MA200_NAIK = 22      # "MA200 naik setidaknya sebulan": dibanding MA200 22 bar lalu
+MIN_RS_TT = 70            # syarat RS Minervini
+# RS mentah = kenaikan tertimbang, kuartal terakhir dihitung dobel. Ini
+# pendekatan publik yang lazim untuk RS Rating IBD (rumus aslinya tertutup).
+BOBOT_RS = ((91, 0.4), (182, 0.2), (273, 0.2), (365, 0.2))
+# Peringkat persentil RS tidak berarti di universe yang terlalu kecil
+# (mis. --tickers satu daftar grup berisi 8 emiten).
+MIN_EMITEN_RS = 30
+
+
+def _naik_sejak(close: pd.Series, hari: int) -> float | None:
+    """Kenaikan (%) dari penutupan terakhir pada/sebelum `hari` kalender lalu.
+
+    None bila histori belum menjangkau tanggal itu (emiten baru IPO): lebih
+    jujur kosong daripada mengukur dari bar pertama yang kebetulan ada.
+    """
+    if close.empty:
+        return None
+    batas = close.index[-1] - pd.Timedelta(days=hari)
+    lalu = close[close.index <= batas]
+    if lalu.empty or lalu.iloc[-1] <= 0:
+        return None
+    return (close.iloc[-1] / lalu.iloc[-1] - 1) * 100
+
+
+def metrik_tren(close: pd.Series) -> dict:
+    """Bahan Trend Template & RS dari deret penutupan ber-indeks tanggal."""
+    kosong = {k: None for k in ("MA150", "MA200Lalu", "Tinggi52", "Rendah52",
+                                "Naik3B%", "Naik6B%", "Naik12B%", "RSMentah")}
+    close = close.dropna()
+    if close.empty:
+        return kosong
+    hasil = dict(kosong)
+    if len(close) >= 150:
+        hasil["MA150"] = round(close.tail(150).mean())
+    if len(close) >= 200 + HARI_MA200_NAIK:
+        hasil["MA200Lalu"] = round(close.iloc[:-HARI_MA200_NAIK].tail(200).mean())
+    # 52 minggu hanya dihitung bila historinya memang setahun penuh; untuk
+    # emiten yang baru IPO, "tertinggi 52 minggu" cuma tertinggi sejak IPO.
+    akhir = close.index[-1]
+    if close.index[0] <= akhir - pd.Timedelta(days=358):
+        setahun = close[close.index > akhir - pd.Timedelta(days=365)]
+        hasil["Tinggi52"] = round(setahun.max())
+        hasil["Rendah52"] = round(setahun.min())
+    naik = {hari: _naik_sejak(close, hari) for hari, _ in BOBOT_RS}
+    for hari, kolom in ((91, "Naik3B%"), (182, "Naik6B%"), (365, "Naik12B%")):
+        hasil[kolom] = round(naik[hari], 1) if naik[hari] is not None else None
+    if all(v is not None for v in naik.values()):
+        hasil["RSMentah"] = round(sum(b * naik[h] for h, b in BOBOT_RS), 2)
+    return hasil
+
+
+def hitung_rs(df: pd.DataFrame) -> pd.Series:
+    """RS 1-99: persentil RSMentah terhadap seluruh emiten yang punya nilainya.
+
+    99 = lebih kuat dari 99% universe. Dihitung sekali saat menarik data,
+    terhadap universe penuh — BUKAN ulang di --dari-csv, karena di sana
+    tabelnya bisa saja sudah tersaring dan persentilnya jadi relatif terhadap
+    segelintir saham.
+    """
+    mentah = pd.to_numeric(df.get("RSMentah"), errors="coerce") \
+        if "RSMentah" in df.columns else pd.Series([None] * len(df), dtype=float)
+    if mentah.notna().sum() < MIN_EMITEN_RS:
+        return pd.Series([pd.NA] * len(df), index=df.index, dtype="Int64")
+    return (mentah.rank(pct=True) * 99).round().clip(1, 99).astype("Int64")
+
+
+# Delapan syarat Trend Template, diurut seperti aslinya. Kode pendeknya
+# dipakai di README dan dashboard.
+KRITERIA_TT = [
+    ("H>MA150&MA200", "harga di atas MA150 dan MA200",
+     lambda r: r["Harga"] > r["MA150"] and r["Harga"] > r["MA200"]),
+    ("MA150>MA200", "MA150 di atas MA200",
+     lambda r: r["MA150"] > r["MA200"]),
+    ("MA200 naik", f"MA200 lebih tinggi dari {HARI_MA200_NAIK} hari bursa lalu",
+     lambda r: r["MA200"] > r["MA200Lalu"]),
+    ("MA50>MA150&MA200", "MA50 di atas MA150 dan MA200",
+     lambda r: r["MA50"] > r["MA150"] and r["MA50"] > r["MA200"]),
+    ("H>MA50", "harga di atas MA50",
+     lambda r: r["Harga"] > r["MA50"]),
+    ("≥30% dari bawah", "harga minimal 30% di atas terendah 52 minggu",
+     lambda r: r["Harga"] >= 1.30 * r["Rendah52"]),
+    ("≤25% dari puncak", "harga paling jauh 25% di bawah tertinggi 52 minggu",
+     lambda r: r["Harga"] >= 0.75 * r["Tinggi52"]),
+    (f"RS≥{MIN_RS_TT}", f"RS minimal {MIN_RS_TT}",
+     lambda r: r["RS"] >= MIN_RS_TT),
+]
+_BAHAN_TT = ("Harga", "MA50", "MA150", "MA200", "MA200Lalu", "Tinggi52", "Rendah52", "RS")
+
+
+def hitung_tt(r) -> int | None:
+    """Jumlah syarat Trend Template yang terpenuhi, 0-8; None bila bahan kurang.
+
+    Sengaja hitungan, bukan ya/tidak: 7 dari 8 (biasanya cuma RS yang kurang,
+    atau baru saja turun dari puncak) layak masuk daftar pantau, dan tabelnya
+    tetap bisa disaring ketat dengan --min-tt 8.
+    """
+    nilai = {}
+    for k in _BAHAN_TT:
+        v = pd.to_numeric(r.get(k), errors="coerce")
+        if v is None or pd.isna(v):
+            return None
+        nilai[k] = float(v)
+    return sum(bool(uji(nilai)) for _, _, uji in KRITERIA_TT)
+
+
+# Breadth = seberapa luas partisipasi pasar, dihitung dari universe kita
+# sendiri. IHSG tertimbang kapitalisasi dan didominasi segelintir bank dan
+# saham raksasa, jadi "IHSG di atas MA50" bisa terjadi sementara mayoritas
+# saham masih turun — atau sebaliknya. Breadth menjawab yang tidak dijawab
+# IHSG: berapa persen saham likuid yang trennya sedang naik.
+#
+# Hanya saham likuid yang dihitung (nilai transaksi 20 hari ≥ Rp5 miliar
+# PADA TANGGAL ITU, sama dengan syarat daftar swing dan pembanding saham acak
+# di uji_winrate.py), supaya ratusan saham tidur tidak menenggelamkan angkanya.
+MIN_NILAI_BREADTH = 5.0   # miliar Rp
+MIN_EMITEN_BREADTH = 30   # di bawah ini persentasenya terlalu berisik untuk dibaca
+KOLOM_BREADTH = ["Tanggal", "Emiten", "DiAtasMA50%", "DiAtasMA200%",
+                 "TinggiBaru", "RendahBaru"]
+
+
+def hitung_breadth(seri: dict[str, pd.DataFrame]) -> pd.DataFrame:
+    """Deret breadth harian dari histori Close/Volume tiap emiten.
+
+    Bar ber-volume 0 dibuang dulu: itu bar "libur" yang Yahoo selipkan untuk
+    sebagian emiten (lihat uji_winrate.py). Tanggal yang emiten likuidnya
+    kurang dari MIN_EMITEN_BREADTH — biasanya justru tanggal libur itu —
+    tidak ditulis sama sekali.
+    """
+    potongan = []
+    for kode, h in seri.items():
+        if h is None or h.empty or "Close" not in h or "Volume" not in h:
+            continue
+        h = h[h["Close"].notna() & (pd.to_numeric(h["Volume"], errors="coerce") > 0)]
+        if len(h) < 20:
+            continue
+        idx = pd.DatetimeIndex(h.index)
+        if idx.tz is not None:
+            idx = idx.tz_localize(None)
+        idx = idx.normalize()
+        c = pd.Series(h["Close"].to_numpy(dtype=float), index=idx)
+        v = pd.Series(h["Volume"].to_numpy(dtype=float), index=idx)
+        jaga = ~c.index.duplicated(keep="last")
+        c, v = c[jaga].sort_index(), v[jaga].sort_index()
+
+        likuid = (c * v).rolling(20).mean() >= MIN_NILAI_BREADTH * 1e9
+        ma50, ma200 = c.rolling(50).mean(), c.rolling(200).mean()
+        setahun = (c.index - c.index[0]) >= pd.Timedelta(days=358)
+        tinggi, rendah = c.rolling("365D").max(), c.rolling("365D").min()
+        ada50 = likuid & ma50.notna()
+        ada200 = likuid & ma200.notna()
+        ada52 = likuid & setahun
+        potongan.append(pd.DataFrame({
+            "Emiten": likuid,
+            "n50": ada50, "atas50": ada50 & (c > ma50),
+            "n200": ada200, "atas200": ada200 & (c > ma200),
+            "TinggiBaru": ada52 & (c >= tinggi),
+            "RendahBaru": ada52 & (c <= rendah),
+        }).astype(int))
+    if not potongan:
+        return pd.DataFrame(columns=KOLOM_BREADTH)
+    j = pd.concat(potongan).groupby(level=0).sum().sort_index()
+    j = j[j["Emiten"] >= MIN_EMITEN_BREADTH]
+
+    def persen(atas, n):
+        return (100 * j[atas] / j[n]).where(j[n] >= MIN_EMITEN_BREADTH).round(1)
+
+    hasil = pd.DataFrame({
+        "Tanggal": [t.date().isoformat() for t in j.index],
+        "Emiten": j["Emiten"].to_numpy(),
+        "DiAtasMA50%": persen("atas50", "n50").to_numpy(),
+        "DiAtasMA200%": persen("atas200", "n200").to_numpy(),
+        "TinggiBaru": j["TinggiBaru"].to_numpy(),
+        "RendahBaru": j["RendahBaru"].to_numpy(),
+    })
+    return hasil[KOLOM_BREADTH]
+
+
+def tulis_breadth(path: str, seri: dict[str, pd.DataFrame]) -> None:
+    """Hitung breadth lalu gabungkan dengan berkas lama.
+
+    Tanggal yang tercakup histori malam ini ditimpa (universe-nya bisa
+    berubah, angka terbaru yang dipakai); tanggal yang lebih tua dari jangkauan
+    histori dibiarkan, supaya catatannya terus memanjang melewati dua tahun.
+    Kegagalan tidak menggagalkan screening — sama dengan kondisi pasar.
+    """
+    try:
+        baru = hitung_breadth(seri)
+    except Exception as e:
+        print(f"Breadth gagal dihitung ({e}) — {path} tidak diperbarui.", file=sys.stderr)
+        return
+    if baru.empty:
+        print(f"Breadth kosong (emiten likuid < {MIN_EMITEN_BREADTH}) — "
+              f"{path} tidak diperbarui.", file=sys.stderr)
+        return
+    lama_path = Path(path)
+    if lama_path.exists():
+        try:
+            lama = pd.read_csv(lama_path, dtype={"Tanggal": str})
+            lama = lama[lama["Tanggal"] < baru["Tanggal"].iloc[0]]
+            baru = pd.concat([lama.reindex(columns=KOLOM_BREADTH), baru], ignore_index=True)
+        except Exception as e:
+            print(f"Breadth lama ({path}) tidak terbaca ({e}) — ditulis ulang.",
+                  file=sys.stderr)
+    lama_path.parent.mkdir(parents=True, exist_ok=True)
+    baru.to_csv(lama_path, index=False)
+    t = baru.iloc[-1]
+    print(f"Breadth {t['Tanggal']}: {t['DiAtasMA50%']}% dari {t['Emiten']} saham likuid "
+          f"di atas MA50, {t['DiAtasMA200%']}% di atas MA200, "
+          f"{t['TinggiBaru']} tertinggi / {t['RendahBaru']} terendah 52 minggu -> {path}",
+          file=sys.stderr)
 
 
 # Kondisi pasar = IHSG di atas atau di bawah MA50-nya. Satu-satunya aturan
@@ -963,6 +1205,10 @@ def terapkan_filter(df: pd.DataFrame, args) -> pd.DataFrame:
         saring(df["Harga"] > df["MA50"])
     if args.di_atas_ma200:
         saring(df["Harga"] > df["MA200"])
+    if args.min_rs is not None:
+        saring(pd.to_numeric(df["RS"], errors="coerce") >= args.min_rs)
+    if args.min_tt is not None:
+        saring(pd.to_numeric(df["TT"], errors="coerce") >= args.min_tt)
     return df
 
 
@@ -982,6 +1228,9 @@ def main():
     p.add_argument("--output-pasar", metavar="FILE",
                    help="tulis kondisi IHSG (vs MA50/MA200) ke JSON ini; "
                         "hanya saat menarik data baru, bukan dengan --dari-csv/--demo")
+    p.add_argument("--output-breadth", metavar="FILE",
+                   help="tulis breadth harian (persentase saham likuid di atas MA50/MA200, "
+                        "tertinggi/terendah 52 minggu) ke CSV ini; hanya saat menarik data baru")
     p.add_argument("--urut", default="PER",
                    # argparse memformat help dengan %-formatting, jadi '%' pada
                    # nama kolom (ROE%, Dividen%) harus di-escape jadi '%%'
@@ -1048,6 +1297,10 @@ def main():
     t.add_argument("--min-rsi", type=float, help="RSI-14 minimal")
     t.add_argument("--di-atas-ma50", action="store_true", help="harga di atas MA50")
     t.add_argument("--di-atas-ma200", action="store_true", help="harga di atas MA200")
+    t.add_argument("--min-rs", type=float, metavar="1-99",
+                   help="Relative Strength minimal (mis. 70 = lebih kuat dari 70%% universe)")
+    t.add_argument("--min-tt", type=int, metavar="0-8",
+                   help="jumlah syarat Trend Template minimal (8 = lolos semua)")
     args = p.parse_args()
 
     if args.demo:
@@ -1064,7 +1317,10 @@ def main():
         fund = baca_cache_fundamental(args.cache_fundamental)
         print(f"Mengambil histori harga {len(tickers)} saham dari Yahoo Finance ...",
               file=sys.stderr)
-        df = ambil_histori(tickers, grup)
+        seri = {} if args.output_breadth else None
+        df = ambil_histori(tickers, grup, seri)
+        if not df.empty:
+            df["RS"] = hitung_rs(df)
         # Panen yang anjlok harus MENGGAGALKAN run, bukan menghasilkan tabel
         # kecil yang tampak sah. Tiga run malam (27, 28, 31 Agu 2026) berstatus
         # "success" sambil menerbitkan dashboard berisi 4 dari 402 emiten,
@@ -1088,6 +1344,9 @@ def main():
         # sempat memperbarui penanda pasar sementara tabelnya tetap yang lama.
         if args.output_pasar:
             tulis_kondisi_pasar(args.output_pasar)
+        if args.output_breadth:
+            tulis_breadth(args.output_breadth, seri)
+            del seri
         if not df.empty:
             df = gabung_fundamental(df, fund)
             # Bar hari ini dibuang selama sesi belum tuntas, dengan aturan
@@ -1137,6 +1396,7 @@ def main():
     # Status selalu dihitung ulang, bukan dibaca dari CSV: aturannya bisa
     # berubah, dan hasilnya harus selalu cocok dengan kolom-kolom di sebelahnya.
     df["Status"] = df.apply(hitung_status, axis=1)
+    df["TT"] = df.apply(hitung_tt, axis=1).astype("Int64")
     # Skor juga selalu dihitung ulang dari kolom fundamental, dengan alasan
     # yang sama seperti Status: bobotnya bisa berubah sewaktu-waktu.
     # Int64 (nullable), bukan int biasa: skor boleh kosong, dan tanpa ini
