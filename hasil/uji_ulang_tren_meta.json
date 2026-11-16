@@ -1,0 +1,25 @@
+{
+  "diperbarui": "2026-11-16T00:19:32Z",
+  "mulai": "2024-04-01",
+  "sampai": null,
+  "sinyalPertama": "2024-04-01",
+  "sinyalTerakhir": "2026-11-13",
+  "hariBursa": 623,
+  "universe": 402,
+  "emitenDenganHarga": 402,
+  "modal": 10000000,
+  "hari": 21,
+  "feeBeli": 0.15,
+  "feeJual": 0.25,
+  "slot": 10,
+  "seed": 20,
+  "nilaiMin": 5.0,
+  "maPasar": 50,
+  "ihsg": {
+    "Total%": -26.68,
+    "MaxDD%": -46.31,
+    "Puncak": "2026-01-20",
+    "Lembah": "2026-11-03"
+  },
+  "biasSurvivorship": "Universe = daftar emiten hari ini; emiten yang delisting, mengecil, atau keluar dari 400 terbesar tidak ada di data."
+}

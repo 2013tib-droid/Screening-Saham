@@ -1,0 +1,49 @@
+Aturan,Filter,Semester,Posisi,RataLaba%,RataAcak%,Selisih%
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",Tanpa filter,2024-S1,128,-0.87,-0.45,-0.41
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",Tanpa filter,2024-S2,379,0.47,0.53,-0.06
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",Tanpa filter,2025-S1,233,-1.38,1.16,-2.54
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",Tanpa filter,2025-S2,513,6.9,7.54,-0.64
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",Tanpa filter,2026-S1,440,-9.75,-9.0,-0.74
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",Tanpa filter,2026-S2,146,-2.57,-5.47,2.91
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",IHSG > MA50,2024-S1,39,-1.85,-3.52,1.68
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",IHSG > MA50,2024-S2,291,1.8,1.04,0.76
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",IHSG > MA50,2025-S1,134,-0.42,2.43,-2.85
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",IHSG > MA50,2025-S2,506,6.96,7.5,-0.55
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",IHSG > MA50,2026-S1,116,-10.0,-9.35,-0.65
+"Swing lama (RSI ≤ 65, > MA200, VolSpike ≥ 1,2)",IHSG > MA50,2026-S2,103,1.64,-2.23,3.87
+TT = 8,Tanpa filter,2024-S1,59,-2.43,0.2,-2.63
+TT = 8,Tanpa filter,2024-S2,220,3.35,0.18,3.17
+TT = 8,Tanpa filter,2025-S1,125,2.74,1.04,1.7
+TT = 8,Tanpa filter,2025-S2,339,14.92,6.59,8.33
+TT = 8,Tanpa filter,2026-S1,203,-12.37,-8.93,-3.44
+TT = 8,Tanpa filter,2026-S2,83,-1.08,-7.32,6.24
+TT = 8,IHSG > MA50,2024-S1,27,-3.64,-1.36,-2.28
+TT = 8,IHSG > MA50,2024-S2,186,3.29,0.61,2.69
+TT = 8,IHSG > MA50,2025-S1,72,6.3,1.72,4.59
+TT = 8,IHSG > MA50,2025-S2,340,14.86,6.57,8.29
+TT = 8,IHSG > MA50,2026-S1,56,-14.74,-9.39,-5.36
+TT = 8,IHSG > MA50,2026-S2,55,3.59,-3.93,7.52
+TT ≥ 7,Tanpa filter,2024-S1,115,-1.81,-0.44,-1.37
+TT ≥ 7,Tanpa filter,2024-S2,312,2.1,0.43,1.67
+TT ≥ 7,Tanpa filter,2025-S1,188,1.51,0.74,0.77
+TT ≥ 7,Tanpa filter,2025-S2,508,11.84,7.03,4.81
+TT ≥ 7,Tanpa filter,2026-S1,317,-9.57,-9.23,-0.34
+TT ≥ 7,Tanpa filter,2026-S2,131,-0.3,-6.57,6.27
+TT ≥ 7,IHSG > MA50,2024-S1,73,-3.73,-2.18,-1.56
+TT ≥ 7,IHSG > MA50,2024-S2,263,2.41,0.62,1.79
+TT ≥ 7,IHSG > MA50,2025-S1,118,4.29,1.44,2.85
+TT ≥ 7,IHSG > MA50,2025-S2,513,11.4,6.98,4.43
+TT ≥ 7,IHSG > MA50,2026-S1,88,-9.0,-9.76,0.76
+TT ≥ 7,IHSG > MA50,2026-S2,86,4.71,-2.78,7.49
+RS ≥ 80 saja,Tanpa filter,2024-S1,137,0.09,-0.23,0.32
+RS ≥ 80 saja,Tanpa filter,2024-S2,255,2.91,0.58,2.33
+RS ≥ 80 saja,Tanpa filter,2025-S1,193,4.07,1.36,2.71
+RS ≥ 80 saja,Tanpa filter,2025-S2,338,17.39,7.46,9.93
+RS ≥ 80 saja,Tanpa filter,2026-S1,308,-9.55,-7.41,-2.15
+RS ≥ 80 saja,Tanpa filter,2026-S2,178,-2.14,-4.99,2.84
+RS ≥ 80 saja,IHSG > MA50,2024-S1,79,-3.17,-2.45,-0.73
+RS ≥ 80 saja,IHSG > MA50,2024-S2,224,3.76,1.01,2.75
+RS ≥ 80 saja,IHSG > MA50,2025-S1,121,6.47,1.93,4.53
+RS ≥ 80 saja,IHSG > MA50,2025-S2,343,17.11,7.45,9.66
+RS ≥ 80 saja,IHSG > MA50,2026-S1,56,-16.44,-9.4,-7.05
+RS ≥ 80 saja,IHSG > MA50,2026-S2,124,5.69,-1.4,7.08
