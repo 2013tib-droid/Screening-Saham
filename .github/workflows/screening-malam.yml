@@ -69,7 +69,9 @@ jobs:
       # sesudah broker summary (lihat "Net beli asing" di bawah), supaya
       # kuota harian API tidak habis sebelum broker kebagian.
       - name: Ambil data & simpan tabel lengkap
-        run: python screener.py --output hasil/semua.csv --output-pasar hasil/pasar.json
+        run: >
+          python screener.py --output hasil/semua.csv --output-pasar hasil/pasar.json
+          --output-breadth hasil/breadth.csv
 
       # RSI dibatasi 65, bukan 50. Alasannya: --max-rsi dan --min-volspike
       # saling menggerus. Volume yang masuk hari ini justru yang mengangkat
@@ -118,6 +120,12 @@ jobs:
       # rewel, seluruh tabel fundamental yang sudah jadi tidak boleh ikut hangus
       # — dashboard menangani hasil/swing_smc.csv yang hilang dengan tab kosong,
       # bukan dengan gagal memuat.
+      - name: Screening tren (Trend Template 8/8 termasuk RS >= 70)
+        run: >
+          python screener.py --dari-csv hasil/semua.csv
+          --min-tt 8 --min-nilai 5 --urut Ticker
+          --output hasil/tren.csv
+
       - name: Analisa struktur SMC untuk kandidat swing
         continue-on-error: true
         run: python analisa_smc.py --dari-csv hasil/swing.csv --output hasil/swing_smc.csv

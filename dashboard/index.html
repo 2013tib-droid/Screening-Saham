@@ -112,7 +112,7 @@
   /* ---- Kartu ringkasan ---- */
   .tiles {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
     margin: 20px 0;
   }
@@ -163,6 +163,7 @@
   .tile[data-tab="semua"]  { --pita: #7a6ce0; }
   .tile[data-tab="smc"]    { --pita: #0f766e; }
   .tile[data-tab="broker"] { --pita: #b4466b; }
+  .tile[data-tab="tren"]   { --pita: #4d7c0f; }
 
   /* ---- Kendali ---- */
   .controls {
@@ -543,6 +544,7 @@
     <div>
       <div class="judul" id="pasar-judul"></div>
       <div class="ket" id="pasar-ket"></div>
+      <div class="ket" id="pasar-breadth" hidden></div>
     </div>
   </div>
 
@@ -550,6 +552,7 @@
     <button type="button" class="tile aktif" data-tab="swing"><div class="label">Lolos filter swing</div><div class="value" id="t-swing">–</div><div class="sub">RSI ≤ 65, di atas MA200, vol spike ≥ 1,2×</div></button>
     <button type="button" class="tile" data-tab="value"><div class="label">Lolos filter value</div><div class="value" id="t-value">–</div><div class="sub">PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%</div></button>
     <button type="button" class="tile" data-tab="tumbuh"><div class="label">Lolos filter tumbuh</div><div class="value" id="t-tumbuh">–</div><div class="sub">Laba YoY ≥ 20%, ROE ≥ 10%, PER ≤ 25</div></button>
+    <button type="button" class="tile" data-tab="tren"><div class="label">Lolos Trend Template</div><div class="value" id="t-tren">–</div><div class="sub">8/8 syarat Minervini termasuk RS ≥ 70, nilai ≥ 5 M</div></button>
     <button type="button" class="tile" data-tab="semua"><div class="label">Saham dipantau</div><div class="value" id="t-semua">–</div><div class="sub">Seluruh emiten IDX di atas 1 T, plus daftar kurasi</div></button>
     <button type="button" class="tile" data-tab="smc"><div class="label">Zona &amp; target lengkap</div><div class="value" id="t-smc">–</div><div class="sub">Rencana SMC utuh — kelayakannya dibaca di kolom Sinyal</div></button>
     <button type="button" class="tile" data-tab="broker"><div class="label">Diakumulasi broker</div><div class="value" id="t-broker">–</div><div class="sub">Kandidat swing yang top-3 pembelinya dominan (≥ 60%), 5 hari bursa</div></button>
@@ -560,13 +563,14 @@
       <button data-tab="swing" class="active">Swing</button>
       <button data-tab="value">Value</button>
       <button data-tab="tumbuh">Tumbuh</button>
+      <button data-tab="tren">Tren</button>
       <button data-tab="semua">Semua</button>
       <button data-tab="smc">SMC</button>
       <button data-tab="broker">Broker</button>
     </div>
     <div class="pisah"></div>
     <select id="kelompok" aria-label="Pilih kelompok kolom">
-      <option value="">Semua kolom (27)</option>
+      <option value="">Semua kolom (29)</option>
       <option value="ringkas">Ringkas</option>
       <option value="valuasi">Valuasi</option>
       <option value="fundamental">Fundamental</option>
@@ -622,6 +626,13 @@
       Januari–Juni 2026 (IHSG 9.135 → 5.342). MA200 ditampilkan sebagai konteks saja:
       di atas MA50 tapi di bawah MA200 berarti pemulihan, belum tren naik jangka panjang.
       Hasil masa lalu, <strong>bukan rekomendasi</strong>.</dd>
+      <dt>Breadth</dt><dd>Baris kedua bilah kondisi pasar: berapa persen <strong>saham likuid</strong>
+      (nilai transaksi 20 hari ≥ Rp5 miliar, biasanya 150–200 emiten) yang harganya di atas MA50 dan
+      MA200, berapa yang mencetak penutupan tertinggi 52 minggu baru, dan berapa yang mencetak
+      terendah baru. IHSG tertimbang kapitalisasi dan didominasi segelintir bank dan saham raksasa;
+      breadth menunjukkan apakah kenaikan atau penurunannya memang luas. Angka 20 hari bursa lalu
+      ikut ditampilkan supaya arahnya terbaca. Ini konteks, <strong>belum</strong> aturan beli —
+      belum diuji ulang seperti aturan IHSG &gt; MA50.</dd>
       <dt>Grup</dt><dd>Daftar asal saham: LQ45, grup konglomerasi (Prajogo/Barito, Bakrie,
       Salim, Hapsoro), atau tema (Logam). Satu saham bisa masuk dua daftar, mis. "LQ45/Salim".
       <strong>Kosong</strong> berarti saham itu masuk dari universe pasar — seluruh emiten IDX
@@ -645,7 +656,7 @@
           <li><span class="status s-tipis">TIPIS</span> nilai transaksi &lt; 1 miliar/hari — sinyal teknikal tidak berlaku, susah masuk-keluar.</li>
         </ul>
       </dd>
-      <dt>Kelompok kolom</dt><dd>Tabelnya 27 kolom dan tidak muat di layar mana pun sekaligus.
+      <dt>Kelompok kolom</dt><dd>Tabelnya 29 kolom dan tidak muat di layar mana pun sekaligus.
       Dropdown <strong>Semua kolom / Ringkas / Valuasi / Fundamental / Teknikal</strong> memotongnya
       jadi sekumpulan kolom yang memang dibaca bersamaan; Ticker, Nama, Status, dan Skor selalu ikut
       supaya barisnya tetap bisa dikenali. Kalau tetap ingin melihat semuanya, tombol
@@ -717,6 +728,18 @@
       <span class="nilai n-dingin">≤ 30</span> oversold (sudah jauh turun). Di antara keduanya
       dibiarkan polos — kalau setiap angka diwarnai, tidak ada satu pun yang menonjol.</dd>
       <dt>MA50 / MA200</dt><dd>Rata-rata harga 50 / 200 hari terakhir.</dd>
+      <dt>RS</dt><dd>Relative Strength <strong>1–99</strong>: kenaikan harga 12 bulan terakhir
+      (kuartal terbaru dihitung dobel) dibanding seluruh emiten yang dipantau. RS 85 berarti lebih
+      kuat dari 85% universe. Mulai <span class="nilai n-spike">80</span> ditandai biru. Ini
+      peringkat, bukan ramalan — saham ber-RS tinggi bisa saja sudah di ujung kenaikannya.</dd>
+      <dt>TT</dt><dd>Jumlah syarat <strong>Trend Template</strong> (Mark Minervini) yang terpenuhi,
+      dari 8: harga di atas MA150 &amp; MA200; MA150 di atas MA200; MA200 naik dibanding sebulan
+      lalu; MA50 di atas MA150 &amp; MA200; harga di atas MA50; harga ≥ 30% di atas terendah
+      52 minggu; harga paling jauh 25% di bawah tertinggi 52 minggu; RS ≥ 70.
+      <span class="nilai n-spike">8</span> berarti tren naik yang tertata dan termasuk saham
+      terkuat — itu isi tab <strong>Tren</strong>. 7 biasanya kurang satu langkah (sering RS-nya),
+      layak dipantau. Kosong untuk emiten yang historinya belum setahun.
+      Ini <strong>hipotesis yang sedang diuji</strong>, bukan aturan yang sudah terbukti.</dd>
       <dt>Asing 5H / 20H (M)</dt><dd>Net beli investor asing 5 / 20 hari bursa terakhir, dalam
       miliar rupiah (sumber: stock.arjum.com). Positif (+) berarti asing lebih banyak membeli
       daripada menjual; negatif berarti net jual. Kosong bila datanya tidak tersedia.</dd>
@@ -874,6 +897,9 @@ const KOLOM = [
   { k: "Nilai(M)",     label: "Nilai (M)", angka: true, desimal: 1 },
   { k: "VolSpike",     label: "VolSpike",  angka: true, desimal: 2 },
   { k: "RSI14",        label: "RSI14",     angka: true, desimal: 1 },
+  // Relative Strength 1-99 dan jumlah syarat Trend Template 0-8 (screener.py).
+  { k: "RS",           label: "RS",        angka: true },
+  { k: "TT",           label: "TT",        angka: true },
   // Net beli asing 5 dan 20 hari bursa terakhir, miliar rupiah (arjum.py).
   // Kolom 1 hari tetap ada di CSV tapi tidak ditampilkan: satu hari terlalu
   // berisik untuk horizon swing.
@@ -940,7 +966,7 @@ const KELOMPOK = {
                 "ROE%", "DER", "Dividen%", "MarketCap(T)"],
   fundamental: ["Sektor", "Flag", "ROE%", "DER", "LabaYoY%", "OmzetYoY%",
                 "Dividen%", "MarketCap(T)"],
-  teknikal:    ["Harga", "MA50", "MA200", "RSI14", "VolSpike", "Vol20(jt)", "Nilai(M)",
+  teknikal:    ["Harga", "MA50", "MA200", "RSI14", "RS", "TT", "VolSpike", "Vol20(jt)", "Nilai(M)",
                 "NetAsing5H(M)", "NetAsing20H(M)"],
 };
 
@@ -1008,7 +1034,7 @@ const state = {
   // 0 berarti tanpa pagination (pilihan "Semua").
   perHal: 10,
   hal: 1,
-  data: { swing: null, value: null, tumbuh: null, semua: null, smc: null, broker: null },
+  data: { swing: null, value: null, tumbuh: null, tren: null, semua: null, smc: null, broker: null },
   urut: { kolom: null, naik: true },
   gagal: false,
   // Sekali saja per kunjungan: lihat pilihTab.
@@ -1083,6 +1109,9 @@ function render() {
       : state.tab === "broker"
       ? "Belum ada broker summary untuk malam ini — kandidat swing kosong, "
         + "atau langkah broker pada run terakhir tidak selesai."
+      : state.tab === "tren"
+      ? "Tidak ada saham yang lolos seluruh 8 syarat Trend Template malam ini — "
+        + "wajar saat pasar sedang turun. Saham yang kurang satu syarat ada di tab Semua (kolom TT = 7)."
       : "Tidak ada saham yang lolos filter ini malam ini.";
     wadah.innerHTML = '<div class="kosong">' + sebab + "</div>";
     sembunyikanPager();
@@ -1203,6 +1232,17 @@ function render() {
         const v = r[k.k];
         if (v === null || v === undefined || v === "") return `<td class="${kelas}">–</td>`;
         return `<td class="${kelas}">${v > 0 ? "+" : ""}${isi}</td>`;
+      }
+      // RS 80+ dan TT 8/8 ditandai — sama dengan VolSpike, hanya ujung atas
+      // yang berwarna supaya yang menonjol memang sedikit.
+      if (k.k === "RS" || k.k === "TT") {
+        const v = r[k.k];
+        if (v === null || v === undefined || v === "") return `<td class="${kelas}">–</td>`;
+        const kuat = k.k === "RS" ? v >= 80 : v >= 8;
+        if (!kuat) return `<td class="${kelas}">${isi}</td>`;
+        const ket = k.k === "RS" ? `Lebih kuat dari ${v}% emiten yang dipantau`
+                                 : "Lolos seluruh 8 syarat Trend Template";
+        return `<td class="${kelas}"><span class="nilai n-spike" title="${ket}">${isi}</span></td>`;
       }
       // Lonjakan volume: 1,5× rata-rata 20 hari ke atas.
       if (k.k === "VolSpike") {
@@ -1517,10 +1557,33 @@ function tampilkanPasar(pasar, meta) {
   wadah.hidden = false;
 }
 
+// Baris breadth dari hasil/breadth.csv (screener.py --output-breadth).
+// Ditampilkan di dalam bilah kondisi pasar, jadi ikut tersembunyi bila
+// bilahnya tidak muncul.
+const KOLOM_BREADTH = ["Emiten", "DiAtasMA50%", "DiAtasMA200%", "TinggiBaru", "RendahBaru"]
+  .map(k => ({ k, angka: true }));
+function tampilkanBreadth(baris) {
+  const el = document.getElementById("pasar-breadth");
+  const sah = (baris || []).filter(r => r["DiAtasMA50%"] !== null && r["DiAtasMA50%"] !== undefined);
+  if (!sah.length) { el.hidden = true; return; }
+  const kini = sah[sah.length - 1];
+  // 20 baris = 20 hari bursa: berkasnya hanya memuat tanggal bursa (bar
+  // libur sudah dibuang di screener).
+  const lalu = sah.length > 20 ? sah[sah.length - 21] : null;
+  const pct = v => v === null || v === undefined ? "–" : `${angka(v, 0)}%`;
+  const bagian = [`Breadth: ${pct(kini["DiAtasMA50%"])} dari ${angka(kini.Emiten)} saham likuid di atas MA50`
+    + (lalu ? ` (20 hari bursa lalu ${pct(lalu["DiAtasMA50%"])})` : "")];
+  if (kini["DiAtasMA200%"] !== null && kini["DiAtasMA200%"] !== undefined)
+    bagian.push(`${pct(kini["DiAtasMA200%"])} di atas MA200`);
+  bagian.push(`52 minggu: ${angka(kini.TinggiBaru)} tertinggi baru, ${angka(kini.RendahBaru)} terendah baru`);
+  el.textContent = bagian.join(" · ") + ".";
+  el.hidden = false;
+}
+
 async function muat() {
   const t = Date.now();
   try {
-    const [semua, swing, value, tumbuh, smc, broker, meta, pasar] = await Promise.all([
+    const [semua, swing, value, tumbuh, smc, broker, meta, pasar, tren, breadth] = await Promise.all([
       fetch(`hasil/semua.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       fetch(`hasil/swing.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
       fetch(`hasil/value.csv?t=${t}`).then(r => { if (!r.ok) throw 0; return r.text(); }),
@@ -1531,12 +1594,16 @@ async function muat() {
       fetch(`hasil/swing_broker.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
       fetch(`hasil/meta.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch(`hasil/pasar.json?t=${t}`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`hasil/tren.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
+      fetch(`hasil/breadth.csv?t=${t}`).then(r => r.ok ? r.text() : "").catch(() => ""),
     ]);
     tampilkanPasar(pasar, meta);
+    tampilkanBreadth(breadth ? parseCSV(breadth, KOLOM_BREADTH) : []);
     state.data.semua = parseCSV(semua);
     state.data.swing = parseCSV(swing);
     state.data.value = parseCSV(value);
     state.data.tumbuh = tumbuh ? parseCSV(tumbuh) : [];
+    state.data.tren = tren ? parseCSV(tren) : [];
     state.data.smc = smc ? parseCSV(smc, KOLOM_SMC) : [];
     state.data.broker = broker ? parseCSV(broker, KOLOM_BROKER) : [];
 
@@ -1546,6 +1613,7 @@ async function muat() {
     document.getElementById("t-swing").textContent = state.data.swing.length;
     document.getElementById("t-value").textContent = state.data.value.length;
     document.getElementById("t-tumbuh").textContent = state.data.tumbuh.length;
+    document.getElementById("t-tren").textContent = tren ? state.data.tren.length : "–";
     document.getElementById("t-semua").textContent = state.data.semua.length;
     // Angka di kartu SMC adalah yang punya rencana utuh (zona + stop +
     // target), bukan jumlah baris — baris yang ditolak tetap ditampilkan

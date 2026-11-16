@@ -47,6 +47,12 @@ python screener.py --max-rsi 50 --di-atas-ma200
 # Swing + konfirmasi volume: uptrend, belum overbought, dan volume mulai masuk
 python screener.py --max-rsi 65 --di-atas-ma200 --min-volspike 1.2 --min-nilai 5
 
+# Trend Template Minervini lengkap (8/8, termasuk RS ≥ 70) dan likuid
+python screener.py --min-tt 8 --min-nilai 5
+
+# Saham paling kuat dibanding pasar: RS ≥ 90
+python screener.py --min-rs 90 --min-nilai 5 --urut RS
+
 # Pakai satu daftar saja, atau gabungan beberapa daftar
 python screener.py --tickers tickers/lq45.txt
 python screener.py --tickers tickers/bakrie.txt tickers/salim.txt
@@ -97,6 +103,8 @@ Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
 | `--min-volspike N` | Volume terakhir minimal N× rata-rata 20 hari (mis. 1.5 = ada lonjakan minat) |
 | `--max-rsi N` / `--min-rsi N` | Batas RSI-14 (≤30 oversold, ≥70 overbought) |
 | `--di-atas-ma50` / `--di-atas-ma200` | Harga di atas moving average 50/200 hari |
+| `--min-rs N` | Relative Strength minimal (1–99), lihat [Trend Template & RS](#trend-template--relative-strength-rs) |
+| `--min-tt N` | Jumlah syarat Trend Template minimal (0–8; 8 = lolos semua) |
 | `--syariah` / `--non-syariah` | Hanya saham yang masuk / tidak masuk [Daftar Efek Syariah](#saham-syariah-des) |
 | `--grup NAMA…` | Hanya saham dari grup tertentu (mis. `--grup Salim Bakrie`) |
 | `--status STATUS…` | Hanya saham dengan status tertentu (mis. `--status BUY BOW`) |
@@ -250,6 +258,47 @@ Angkanya ditulis `screener.py --output-pasar hasil/pasar.json` di langkah pertam
 
 Uji ulang itu punya batas yang perlu diingat: universe-nya daftar emiten **hari ini**, jadi emiten yang dulu kecil lalu naik kencang ikut terhitung (bias survivorship) — angka absolutnya terlalu bagus, perbandingan antar-aturannya lebih bisa dipegang. Aturan ini juga baru diuji di satu siklus pasar. Halaman winrate punya filter "Dipilih saat IHSG > / < MA50" untuk memeriksanya terus dengan pick yang benar-benar terjadi.
 
+## Breadth Pasar
+
+Baris kedua bilah kondisi pasar di dashboard menjawab yang tidak dijawab IHSG: **berapa persen saham yang trennya ikut naik**. IHSG tertimbang kapitalisasi dan didominasi segelintir bank dan saham raksasa — IHSG bisa di atas MA50 sementara mayoritas saham masih turun, atau sebaliknya.
+
+| Angka | Arti |
+|---|---|
+| `DiAtasMA50%` / `DiAtasMA200%` | Persentase saham likuid yang penutupannya di atas MA50 / MA200-nya sendiri |
+| `TinggiBaru` / `RendahBaru` | Jumlah saham likuid yang mencetak penutupan tertinggi / terendah 52 minggu hari itu |
+| `Emiten` | Jumlah saham likuid hari itu — penyebut persentasenya |
+
+"Likuid" = nilai transaksi rata-rata 20 hari ≥ Rp5 miliar **pada tanggal itu** (bukan hari ini), syarat yang sama dengan daftar swing dan pembanding saham acak di uji winrate; biasanya 150–200 emiten. Saham tidur sengaja tidak dihitung: ratusan saham yang tidak bergerak akan menenggelamkan angkanya.
+
+Dihitung `screener.py --output-breadth hasil/breadth.csv` dari histori 2 tahun yang memang sudah ditarik untuk screening — tidak ada request tambahan. Berkasnya berisi satu baris per hari bursa; tiap malam tanggal yang masih tercakup histori dihitung ulang, tanggal yang lebih tua dibiarkan, jadi catatannya terus memanjang. Bar "libur" dari Yahoo (volume 0) dibuang, dan tanggal dengan kurang dari 30 emiten likuid tidak ditulis. Dashboard menampilkan angka terakhir plus `DiAtasMA50%` 20 hari bursa sebelumnya supaya arahnya terbaca.
+
+Batasnya sama dengan uji ulang filter IHSG: universe-nya daftar emiten **hari ini**, jadi angka masa lalu ikut terkena bias survivorship. Dan ini **belum aturan beli** — baru konteks. Untuk menjadikannya aturan (mis. "beli hanya saat > 50% saham di atas MA50"), ia perlu diuji ulang dulu seperti aturan IHSG > MA50.
+
+## Trend Template & Relative Strength (RS)
+
+Uji winrate menunjukkan daftar swing tidak lebih baik dari saham likuid acak: "di atas MA200, RSI belum tinggi, volume masuk" menjaring separuh pasar saat pasar naik. Dua kolom ini mengajukan pertanyaan yang lain — apakah sahamnya sedang dalam tren naik yang tertata, **dan** termasuk yang paling kuat dibanding seluruh universe.
+
+**RS (1–99)** — peringkat persentil kenaikan harga tertimbang terhadap seluruh emiten yang dipantau: `0,4 × naik 3 bulan + 0,2 × naik 6 bulan + 0,2 × naik 9 bulan + 0,2 × naik 12 bulan`. Kuartal terakhir dihitung dobel; ini pendekatan publik yang lazim untuk RS Rating IBD (rumus aslinya tertutup). RS 85 = lebih kuat dari 85% universe. Dihitung sekali saat menarik data, terhadap universe penuh — `--dari-csv` memakai angka dari CSV, bukan menghitung ulang terhadap tabel yang mungkin sudah tersaring. Kosong untuk emiten yang historinya belum setahun, atau bila universe kurang dari 30 emiten.
+
+**TT (0–8)** — jumlah syarat Trend Template Mark Minervini yang terpenuhi:
+
+| # | Syarat |
+|---|---|
+| 1 | Harga di atas MA150 dan MA200 |
+| 2 | MA150 di atas MA200 |
+| 3 | MA200 naik — lebih tinggi dari MA200 22 hari bursa lalu |
+| 4 | MA50 di atas MA150 dan MA200 |
+| 5 | Harga di atas MA50 |
+| 6 | Harga minimal 30% di atas penutupan terendah 52 minggu |
+| 7 | Harga paling jauh 25% di bawah penutupan tertinggi 52 minggu |
+| 8 | RS ≥ 70 |
+
+TT ditulis sebagai hitungan, bukan ya/tidak: 7 dari 8 (sering cuma RS yang kurang, atau baru turun dari puncak) layak masuk daftar pantau. Seperti Status, TT dihitung ulang tiap run dari kolom-kolom bahannya (`MA150`, `MA200Lalu`, `Tinggi52`, `Rendah52`, `RS`) yang ikut disimpan di CSV. Tinggi/rendah 52 minggu memakai **harga penutupan**, bukan high/low intraday, dan jendela waktunya hari kalender (3/6/9/12 bulan, 365 hari) — setahun IDX bukan persis 252 hari bursa. Karena itu histori yang ditarik sekarang 2 tahun, bukan 1.
+
+Run malam menulis `hasil/tren.csv` (TT = 8 dan nilai transaksi ≥ Rp5 miliar) dan dashboard menampilkannya di tab **Tren**. Saat pasar sedang turun, tab ini wajar kosong — memang hampir tidak ada saham yang trennya tertata.
+
+⚠️ **Ini hipotesis, belum terbukti.** Trend Template dan RS populer di pasar AS; di IDX belum pernah diuji di repo ini. Daftar swing tetap memakai aturan lamanya; langkah berikutnya adalah menguji `tren.csv` dengan cara yang sama seperti `swing.csv` di [Uji Winrate](#uji-winrate-daftar-swing-uji_winratepy) — terutama selisihnya terhadap saham acak. Matematikanya diuji terhadap harga buatan: `python scripts/uji_tren.py`.
+
 ## Kolom Status
 
 Tiap saham dapat satu label ringkas yang merangkum posisi harganya terhadap tren:
@@ -379,7 +428,7 @@ Pemisahan di atas gampang disalahpahami jadi "kolom teknikal harian, kolom funda
 
 | Kelompok | Kolom | Berubah |
 |---|---|---|
-| **Murni harga** | `Harga`, `Vol20(jt)`, `Nilai(M)`, `VolSpike`, `RSI14`, `MA50`, `MA200`, `Status`, `NetAsing*` | Tiap hari bursa |
+| **Murni harga** | `Harga`, `Vol20(jt)`, `Nilai(M)`, `VolSpike`, `RSI14`, `MA50`, `MA150`, `MA200`, `RS`, `TT`, `Naik3B%`–`Naik12B%`, `Tinggi52`, `Rendah52`, `Status`, `NetAsing*` | Tiap hari bursa |
 | **Rasio harga ÷ lapkeu** | `PER`, `PBV`, `PERvsSektor`, `PBVvsSektor`, `Dividen%`, `MarketCap(T)`, `EV/EBITDA`, `FCFYield%`, `SkorValuasi` | **Tiap hari bursa** |
 | **Murni lapkeu** | `ROE%`, `ROA%`, `LabaYoY%`, `OmzetYoY%`, `DER`, semua margin, `CurrentRatio`, `QuickRatio`, `InterestCoverage`, `OCF/Laba`, `Payout%`, CAGR, `EPS`, `BVPS`, dan seluruh pos laporan keuangan | Per kuartal |
 
@@ -479,10 +528,11 @@ Workflow [`.github/workflows/screening-malam.yml`](.github/workflows/screening-m
 Setiap malam workflow:
 
 1. Menyusun ulang universe pasar (`tickers/idx.txt`) lewat `scripts/perbarui_universe.py`, supaya emiten baru atau yang naik kelas ikut ter-screening tanpa disebut manual. Kalau langkah ini gagal, universe versi commit terakhir dipakai dan run tetap lanjut.
-2. Mengambil data seluruh daftar default (universe IDX + daftar kurasi) dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter), sekaligus kondisi IHSG terhadap MA50/MA200 ke `hasil/pasar.json`.
+2. Mengambil data seluruh daftar default (universe IDX + daftar kurasi) dari Yahoo Finance **satu kali**, disimpan ke `hasil/semua.csv` (tabel lengkap tanpa filter), sekaligus kondisi IHSG terhadap MA50/MA200 ke `hasil/pasar.json` dan [breadth pasar](#breadth-pasar) ke `hasil/breadth.csv`.
 3. Memfilter ulang dari CSV itu (tanpa fetch ulang, pakai `--dari-csv`) menjadi tiga daftar siap pakai:
    - `hasil/swing.csv` — masih uptrend dan belum overbought, **dengan konfirmasi volume** (RSI ≤ 65, harga di atas MA200, volume terakhir ≥ 1,2× rata-rata 20 hari, nilai transaksi ≥ 5 miliar Rp). Ambang RSI sengaja tidak dipatok 50: `--max-rsi` dan `--min-volspike` saling menggerus, karena volume yang masuk hari ini justru yang mengangkat RSI. Menuntut "harga lagi lemah" sekaligus "volume lagi ramai" menghasilkan tabel kosong hampir tiap malam — bukan sinyal yang lebih tajam, cuma daftar yang tidak pernah terisi.
    - `hasil/value.csv` — value stock profil **medium risk** (PER ≤ 15, PBV ≤ 3,5, ROE ≥ 15%). PBV dipatok 3,5 (bukan 2) supaya blue chip berkualitas yang memang selalu dihargai premium — BBCA, SIDO — tidak otomatis tersaring keluar.
+   - `hasil/tren.csv` — lolos seluruh 8 syarat [Trend Template](#trend-template--relative-strength-rs) (termasuk RS ≥ 70) dan nilai transaksi ≥ 5 miliar Rp.
    - `hasil/tumbuh.csv` — **lapkeu terakhir bagus**: laba kuartalan naik ≥ 20% YoY, ROE ≥ 10%, PER ≤ 25, dan nilai transaksi ≥ 1 miliar Rp. Murni saringan fundamental, tanpa syarat teknikal.
 4. Menjalankan `analisa_smc.py` atas `hasil/swing.csv` menjadi `hasil/swing_smc.csv` — zona entri, stop, target, dan risk/reward untuk tiap kandidat. Sengaja hanya atas `swing.csv`: `value.csv` dan `tumbuh.csv` adalah saringan fundamental tanpa syarat teknikal, jadi isinya banyak yang strukturnya sedang jelek dan hasilnya cuma deretan "HINDARI". Langkah ini `continue-on-error` karena menarik data intraday — jalur Yahoo yang berbeda dari harga harian — dan kalau jalur itu rewel, tabel fundamental yang sudah jadi tidak boleh ikut hangus.
 5. Meng-commit hasilnya ke repo (termasuk `tickers/idx.txt` yang dipakai malam itu), jadi tiap pagi tinggal buka file-file di folder `hasil/`. Riwayat screening malam-malam sebelumnya tersimpan otomatis di git history.
@@ -511,13 +561,14 @@ Hasil screening bisa dilihat lewat dashboard di:
 
 Fitur dashboard:
 
-- Lima tab: **Swing**, **Value**, **Tumbuh**, **Semua** (tabel lengkap seluruh saham yang dipantau), dan **SMC**, plus ringkasan jumlah saham yang lolos tiap filter.
+- Tab: **Swing**, **Value**, **Tumbuh**, **Tren** (Trend Template 8/8), **Semua** (tabel lengkap seluruh saham yang dipantau), **SMC**, dan **Broker**, plus ringkasan jumlah saham yang lolos tiap filter.
 - Tab **SMC** menampilkan rencana entri kandidat swing: tren D1 dan tren sesi, zona premium/discount, dasar zona (order block atau FVG), batas entri, stop, target, dan risk/reward. Kolom **Sinyal** berwarna dan diurut menurut kesiapan (SIAP → HINDARI), bukan abjad. Angka pada kartunya menghitung yang punya rencana utuh, bukan jumlah baris.
 - Kolom **Grup** dan dropdown **filter grup** — bisa lihat khusus saham grup Prajogo, Bakrie, Salim, Hapsoro, atau LQ45 saja.
 - Kolom **Status** berwarna (BUY / BOW / HOLD / WSE / JUAL / TIPIS) plus dropdown filter status; klik judul kolomnya untuk mengurutkan dari paling positif ke paling negatif.
 - Kolom **Skor** berwarna (hijau ≥ 70, kuning 40–69, merah < 40) — kesimpulan fundamental 1–100; klik judulnya untuk mengurutkan dari fundamental terkuat.
 - Klik judul kolom untuk mengurutkan (misalnya urutkan per RSI atau dividen), kotak pencarian untuk mencari ticker/nama.
-- Bilah **kondisi pasar** di bawah judul: IHSG di atas / di bawah MA50, sejak kapan, dan MA200 sebagai konteks — lihat [Kondisi Pasar](#kondisi-pasar-ihsg-vs-ma50).
+- Bilah **kondisi pasar** di bawah judul: IHSG di atas / di bawah MA50, sejak kapan, dan MA200 sebagai konteks — lihat [Kondisi Pasar](#kondisi-pasar-ihsg-vs-ma50) — plus satu baris [breadth](#breadth-pasar): persentase saham likuid di atas MA50/MA200 dan jumlah tertinggi/terendah 52 minggu baru.
+- Kolom **RS** dan **TT** — kekuatan relatif 1–99 dan jumlah syarat Trend Template 0–8; RS ≥ 80 dan TT = 8 ditandai biru.
 - Halaman **Uji Winrate** (tautan di kanan atas): hasil daftar swing kalau benar-benar dibeli — winrate dan rata-rata laba per hari ke-N sesudah masuk, **dibandingkan IHSG dan saham acak** yang dibeli di sesi yang sama, ditambah tabel tiap posisi dengan modal, lot, laba/rugi rupiahnya, dan selisihnya terhadap saham acak. Aturan simulasinya di bagian [Uji Winrate Daftar Swing](#uji-winrate-daftar-swing-uji_winratepy).
 - Nyaman dibuka di HP, mendukung mode gelap, dan menampilkan waktu pembaruan terakhir (WIB).
 
