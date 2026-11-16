@@ -1,3 +1,3 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-LSIP,PP London Sumatra Indonesia ,92,BUY,1585,up,PREMIUM,75,CHoCH bull,up,up,FVG D1,1565,1525,1375,1790,1.44,1.3,3.6,BSL raid @ 1510,TUNGGU,harga di premium — tunggu pullback ke zona
-PKPK,Paragon Karya Perkasa Tbk.,67,BUY,6775,down,PREMIUM,83,CHoCH bear,up,up,,,,,,,,7.9,BSL raid @ 6350,HINDARI,struktur D1 masih bearish
+DKFT,Central Omega Resources Tbk.,86,BUY,740,up,PREMIUM,80,BOS bull,up,up,OB D1,735,705,545,,,0.7,5.3,BSL raid @ 765,TUNGGU,stop struktural terlalu lebar (24% dari harga)
+AUTO,Astra Otoparts Tbk,82,BOW,3240,down,PREMIUM,84,BOS bear,down,down,FVG SESI,3180,3120,2850,3340,0.63,1.9,3.1,SSL raid @ 3150,HINDARI,struktur D1 masih bearish
