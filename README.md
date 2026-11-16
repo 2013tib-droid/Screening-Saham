@@ -77,6 +77,10 @@ python screener.py --demo --max-per 15 --min-roe 15
 
 # Uji winrate: kalau daftar swing dibeli apa adanya, hasilnya bagaimana?
 python uji_winrate.py
+python uji_winrate.py --daftar tren      # sama, untuk daftar Tren (TT 8/8)
+
+# Uji ulang historis: Tren / RS vs swing sejak April 2024 (butuh Yahoo)
+python uji_ulang_tren.py
 ```
 
 Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
@@ -187,9 +191,14 @@ python uji_winrate.py --dari-git               # ikut bongkar riwayat commit swi
 python uji_winrate.py --modal 5000000 --hari 40
 python uji_winrate.py --harga-csv contoh.csv   # dari berkas harga, tanpa Yahoo
 python uji_winrate.py --tanpa-pembanding       # cepat: tanpa IHSG & saham acak
+python uji_winrate.py --daftar tren            # daftar Tren, berkas terpisah
 ```
 
 Keluarannya lima berkas di `hasil/`: `riwayat_swing.csv` (arsip pick harian), `winrate.csv` (satu baris per posisi plus kolom `Hari0%`–`Hari21%`), `winrate_ringkas.csv` (winrate, rata-rata laba, dan selisih terhadap pembanding per hari ke-N), `winrate_pembanding.csv` (IHSG dan saham acak per tanggal beli), dan `winrate_meta.json` (parameter simulasinya). Tampilannya ada di halaman **[Uji Winrate](dashboard/winrate.html)** di dashboard.
+
+**Daftar Tren.** `--daftar tren` menguji `hasil/tren.csv` (Trend Template 8/8, nilai transaksi ≥ Rp5 miliar) dengan aturan simulasi, biaya, kalender bursa, pembanding IHSG/saham acak, dan penanganan pick ulang yang **sama persis** — yang beda cuma berkasnya: arsip `hasil/riwayat_tren.csv` (append-only, seperti `riwayat_swing.csv`) dan keluaran `hasil/winrate_tren.csv`, `winrate_tren_ringkas.csv`, `winrate_tren_pembanding.csv`, `winrate_tren_meta.json`. Hasil swing tidak pernah tertimpa. Run malam menjalankannya sesudah langkah swing dan memakai ulang harga yang sudah ditarik. Di halaman winrate ada pilihan **Daftar Swing / Daftar Tren** (`winrate.html?daftar=tren`).
+
+⚠️ `tren.csv` baru ditulis sejak 16 November 2026, jadi sampelnya masih kecil dan seluruhnya berasal dari satu periode pasar — halaman winrate menuliskan itu di atas kartu angka. Sampai sampelnya tebal (ratusan posisi yang genap 21 hari), jawaban sementara datang dari [uji ulang historis](#uji-ulang-tren-vs-swing-uji_ulang_trenpy).
 
 ### Aturan simulasinya
 
@@ -297,7 +306,7 @@ TT ditulis sebagai hitungan, bukan ya/tidak: 7 dari 8 (sering cuma RS yang kuran
 
 Run malam menulis `hasil/tren.csv` (TT = 8 dan nilai transaksi ≥ Rp5 miliar) dan dashboard menampilkannya di tab **Tren**. Saat pasar sedang turun, tab ini wajar kosong — memang hampir tidak ada saham yang trennya tertata.
 
-⚠️ **Ini hipotesis, belum terbukti.** Trend Template dan RS populer di pasar AS; di IDX belum pernah diuji di repo ini. Daftar swing tetap memakai aturan lamanya; langkah berikutnya adalah menguji `tren.csv` dengan cara yang sama seperti `swing.csv` di [Uji Winrate](#uji-winrate-daftar-swing-uji_winratepy) — terutama selisihnya terhadap saham acak. Matematikanya diuji terhadap harga buatan: `python scripts/uji_tren.py`.
+⚠️ **Ini hipotesis, belum terbukti dengan pick nyata.** Trend Template dan RS populer di pasar AS. Di IDX ia diuji dua cara: dengan pick nyata lewat `uji_winrate.py --daftar tren` (sampelnya baru mulai terkumpul), dan dengan [uji ulang historis](#uji-ulang-tren-vs-swing-uji_ulang_trenpy) April 2024 – sekarang. Daftar swing tetap memakai aturan lamanya. Matematikanya diuji terhadap harga buatan: `python scripts/uji_tren.py`.
 
 ## Kolom Status
 

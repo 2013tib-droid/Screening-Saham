@@ -360,7 +360,9 @@ def penyumbang(posisi: pd.DataFrame, banding: pd.DataFrame, n: int, jumlah: int 
     total = float(sel.sum())
     t = pd.DataFrame({"Posisi": g.size(), "JumlahSelisih%": g.sum().round(1),
                       "RataSelisih%": g.mean().round(2)})
-    t["PorsiDariTotal%"] = (t["JumlahSelisih%"] / total * 100).round(1) if total else None
+    # Porsi hanya bermakna bila total selisihnya positif: "37% dari total"
+    # sebuah angka negatif terbaca terbalik.
+    t["PorsiDariTotal%"] = (t["JumlahSelisih%"] / total * 100).round(1) if total > 0 else None
     return t.nlargest(jumlah, "JumlahSelisih%").reset_index(names="Ticker")
 
 
