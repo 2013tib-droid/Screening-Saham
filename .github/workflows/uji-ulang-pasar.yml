@@ -15,12 +15,6 @@ on:
       seed:
         description: "Jumlah urutan acak pengisian slot portofolio"
         default: "20"
-  # SEMENTARA: workflow_dispatch baru bisa dipicu setelah berkas ini ada di
-  # branch default. Pemicu ini menjalankan uji ulang di branch fitur supaya
-  # hasilnya ikut di-review; dihapus sebelum merge.
-  push:
-    branches: [claude/position-sizer-distribution-ftd-k65qqg]
-    paths: [.github/workflows/uji-ulang-pasar.yml, uji_ulang_pasar.py]
 
 permissions:
   contents: write

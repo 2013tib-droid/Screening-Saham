@@ -52,8 +52,8 @@ IHSG beli-dan-tahan: total −26,7%, drawdown terdalam −46,3% (2026-01-20 → 
 ## Keadaan pasar di periode uji
 
 - Follow-through day: 6 kali (2024-06-28, 2024-11-25, 2025-02-17, 2026-04-01, 2026-06-12, 2026-11-12).
-- Hari bursa berkeadaan NAIK (sejak FTD): 20.5%; DD aktif ≥ 5: 39.0% hari; distribution day: 116.
-- IHSG > MA50: 49.1% hari; breadth > 50%: 53.6% hari.
+- Hari bursa berkeadaan NAIK (sejak FTD): 20,5%; DD aktif ≥ 5: 39,0% hari; distribution day: 116.
+- IHSG > MA50: 49,1% hari; breadth > 50%: 53,6% hari.
 
-Breadth hitungan ulang vs `hasil/breadth.csv` (423 tanggal, 2025-02-05 – 2026-11-13): rata-rata selisih 0.06 poin, maks 2.8; sisi terhadap 50% sama di 100.0% tanggal.
+Breadth hitungan ulang vs `hasil/breadth.csv` (423 tanggal, 2025-02-05 – 2026-11-13): rata-rata selisih 0,06 poin, maks 2,8; sisi terhadap 50% sama di 100,0% tanggal.
 

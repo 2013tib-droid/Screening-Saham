@@ -81,6 +81,9 @@ python uji_winrate.py --daftar tren      # sama, untuk daftar Tren (TT 8/8)
 
 # Uji ulang historis: Tren / RS vs swing sejak April 2024 (butuh Yahoo)
 python uji_ulang_tren.py
+
+# Uji ulang filter pasar: MA50 vs FTD / distribution day / breadth (butuh Yahoo)
+python uji_ulang_pasar.py
 ```
 
 Hasil ditampilkan di terminal dan disimpan ke `hasil_screening.csv`.
@@ -181,6 +184,35 @@ Baris yang ditolak **tetap muncul** di tabel lengkap dengan alasannya di kolom `
 
 Angka mentah keluar seperti 7.183,4 dan tidak bisa dipasang jadi order. Semua level dibulatkan ke fraksi yang sah (Rp 1 di bawah 200, Rp 2 sampai 500, Rp 5 sampai 2.000, Rp 10 sampai 5.000, Rp 25 di atasnya). Arah pembulatannya selalu yang membuat risk/reward **lebih konservatif**, tidak pernah lebih optimis.
 
+### Ukuran posisi: beli berapa lot
+
+Rencana entri menjawab "di harga berapa"; empat kolom berikutnya menjawab **"berapa lot"**, dengan risiko tetap per transaksi — kalau stop kena, ruginya kira-kira sama berapa pun harga dan lebar stop sahamnya:
+
+```
+lot = floor((modal × risiko%) / ((entri atas − stop) × 100))
+```
+
+| Kolom | Isi |
+|---|---|
+| `Lot` | Jumlah lot (1 lot = 100 lembar) |
+| `NilaiPosisi` | `Lot × 100 × entri atas`, rupiah |
+| `PorsiModal%` | Nilai posisi dibagi modal |
+| `RisikoRp` | Rugi bila stop kena: `Lot × 100 × (entri atas − stop)` |
+
+```bash
+python analisa_smc.py                                      # modal Rp10 juta, risiko 1%, atap 25%
+python analisa_smc.py --modal 50000000 --risiko 0.5 --maks-posisi 20
+```
+
+- **Entri atas, bukan tengah zona.** Order beli di zona bisa terisi di mana saja di dalamnya; yang termahal adalah skenario terburuk untuk risiko. (RR tetap dihitung dari tengah zona seperti sebelumnya.)
+- **Fraksi harga IDX.** Entri dibulatkan ke atas dan stop ke bawah ke fraksi yang sah (`smc.bulatkan`), jadi pembulatan tidak pernah membuat risikonya terlihat lebih kecil. Level dari `susun_rencana` sudah sah, jadi biasanya tidak ada yang bergeser.
+- **Atap 25% modal per posisi.** Stop yang sangat rapat membuat rumus risiko tetap meminta posisi raksasa — risiko 1% dengan stop 2% di bawah entri berarti setengah modal di satu saham, dan satu gap pembukaan bisa melompati stop mana pun. Kalau atap ini yang memotong, `RisikoRp` jadi di bawah jatahnya dan `Catatan` menyebutnya ("lot dibatasi atap 25% modal — risiko jadi Rp45.500 (0,91% modal)").
+- **Tidak dipaksa ke 1 lot.** Kalau satu lot pun sudah melebihi jatah risiko (mis. entri 9.000, stop 7.900: Rp110.000 per lot > Rp100.000) atau melebihi atap porsi, `Lot` = 0 dan alasannya ditulis di `Catatan`.
+- **Hanya untuk rencana utuh.** Baris tanpa RR (rencana ditolak, HINDARI karena tidak ada zona) tidak punya lot. Baris TUNGGU/HINDARI yang rencananya utuh tetap dihitung — itu ukuran posisi *bila* sinyalnya nanti berubah, bukan ajakan membeli sekarang.
+- **Yang tidak dihitung:** biaya transaksi (0,15% + 0,25%) dan gap yang melompati stop. Rugi nyata saat stop kena bisa sedikit di atas `RisikoRp`.
+
+Modal default Rp10 juta disamakan dengan uji winrate. Matematikanya diuji terhadap kasus yang jawabannya sudah diketahui: `python scripts/uji_pasar.py`.
+
 ## Uji Winrate Daftar Swing (`uji_winrate.py`)
 
 Screening menjawab "saham apa yang lolos filter". Berkas ini menjawab pertanyaan yang tidak pernah dijawab siapa pun sesudahnya: **kalau daftar itu benar-benar dibeli, hasilnya bagaimana sebulan kemudian?**
@@ -254,7 +286,7 @@ Workflow **Uji Winrate Swing** (`.github/workflows/uji-winrate.yml`) menghitung 
 
 Dashboard utama punya satu bilah di bawah judul: **IHSG di atas atau di bawah MA50-nya**, per penutupan terakhir. Aturannya mekanis — posisi swing baru hanya dibuka saat IHSG di atas MA50; posisi yang sudah dipegang tidak ikut disuruh keluar.
 
-Ini satu-satunya aturan yang dalam uji ulang April 2024 – September 2026 konsisten memperbaiki hasil daftar swing. Uji ulangnya menerapkan aturan `swing.csv` (RSI ≤ 65, di atas MA200, VolSpike ≥ 1,2, nilai transaksi ≥ Rp5 miliar) ke histori harga universe hari ini:
+Ini satu-satunya aturan yang dalam uji ulang April 2024 – September 2026 konsisten memperbaiki hasil daftar swing. Alternatifnya — follow-through day, distribution day, dan breadth — sudah diuji ulang dengan cara yang sama dan tidak ada yang jelas lebih baik ([angkanya](#uji-ulang-filter-pasar-uji_ulang_pasarpy)). Uji ulangnya menerapkan aturan `swing.csv` (RSI ≤ 65, di atas MA200, VolSpike ≥ 1,2, nilai transaksi ≥ Rp5 miliar) ke histori harga universe hari ini:
 
 | | Tanpa filter pasar | Hanya beli saat IHSG > MA50 |
 |---|---|---|
@@ -281,7 +313,85 @@ Baris kedua bilah kondisi pasar di dashboard menjawab yang tidak dijawab IHSG: *
 
 Dihitung `screener.py --output-breadth hasil/breadth.csv` dari histori 2 tahun yang memang sudah ditarik untuk screening — tidak ada request tambahan. Berkasnya berisi satu baris per hari bursa; tiap malam tanggal yang masih tercakup histori dihitung ulang, tanggal yang lebih tua dibiarkan, jadi catatannya terus memanjang. Bar "libur" dari Yahoo (volume 0) dibuang, dan tanggal dengan kurang dari 30 emiten likuid tidak ditulis. Dashboard menampilkan angka terakhir plus `DiAtasMA50%` 20 hari bursa sebelumnya supaya arahnya terbaca.
 
-Batasnya sama dengan uji ulang filter IHSG: universe-nya daftar emiten **hari ini**, jadi angka masa lalu ikut terkena bias survivorship. Dan ini **belum aturan beli** — baru konteks. Untuk menjadikannya aturan (mis. "beli hanya saat > 50% saham di atas MA50"), ia perlu diuji ulang dulu seperti aturan IHSG > MA50.
+Batasnya sama dengan uji ulang filter IHSG: universe-nya daftar emiten **hari ini**, jadi angka masa lalu ikut terkena bias survivorship. Dan ini **bukan aturan beli** — konteks. "Beli hanya saat > 50% saham likuid di atas MA50" sudah [diuji ulang](#uji-ulang-filter-pasar-uji_ulang_pasarpy): sebagai pengganti MA50 hasilnya jauh lebih buruk, sebagai pelengkap perbaikannya masih di dalam derau.
+
+## Distribution Day & Follow-Through Day
+
+Baris ketiga bilah kondisi pasar membaca IHSG dengan metode William O'Neil — dari harga **dan volume**. Angkanya ditulis `screener.py` ke `hasil/pasar.json` (kunci `distribusi` dan `ftd`) di langkah yang sama dengan MA50; logikanya di `hitung_dd_ftd()`.
+
+| | Aturan |
+|---|---|
+| Distribution day (DD) | IHSG menutup turun ≥ 0,2% dengan volume lebih tinggi dari hari sebelumnya |
+| DD gugur | Sesudah 25 sesi (hari DD = sesi ke-1), atau begitu IHSG **menutup** ≥ 5% di atas penutupan hari DD. Yang gugur tidak hidup lagi |
+| Tekanan jual berat | ≥ 5 DD aktif |
+| Titik terendah baru | Low di bawah Low terendah 25 sesi sebelumnya. Keadaan jadi KOREKSI dan hitungan rally diulang |
+| Hari ke-1 rally | Sesi pertama sesudah titik terendah yang menutup di atas penutupan sebelumnya |
+| Follow-through day (FTD) | Hari ke-4 s.d. ke-7 rally, IHSG naik ≥ 1,25% dengan volume lebih tinggi dari hari sebelumnya. Keadaan jadi NAIK sampai ada titik terendah baru |
+| Rally batal | Titik terendahnya ditembus — itu sendiri titik terendah baru, jadi hitungannya mulai lagi dari sana |
+| Lewat hari ke-7 tanpa FTD | Percobaan habis; menunggu titik terendah baru |
+
+O'Neil sendiri tidak mendefinisikan "titik terendah baru" atau "pasar dalam koreksi" secara mekanis; jendela 25 sesi di sini adalah pilihan, disamakan dengan umur DD.
+
+**Volume ^JKSE diperiksa dulu** sebelum fitur ini ditulis (Actions, 16 Nov 2026): 745 bar harian sejak Oktober 2023, tidak ada yang kosong atau nol kecuali bar sesi berjalan (Close kosong, volume 0 — Yahoo mengirimnya bahkan sesudah bursa tutup, jadi dibuang eksplisit). Median volume per bulan 130–555 juta, rasio volume hari ini/kemarin di kuantil 1%–99% cuma 0,53–1,86, tanpa lompatan satuan. Besarnya tampaknya dalam lot, bukan lembar; untuk aturan ini yang penting hanya konsisten antar-hari. `uji_ulang_pasar.py` berhenti dengan galat bila volume IHSG kurang dari 95% terisi — tidak diganti proksi.
+
+Keadaan per 13 Nov 2026 di data uji ulang: FTD 12 November (hari ke-6 rally dari titik terendah 4 November), 5 DD masih aktif. Ini **konteks, bukan aturan beli** — lihat uji ulangnya di bawah.
+
+## Uji Ulang Filter Pasar (`uji_ulang_pasar.py`)
+
+Pertanyaannya: **apakah "boleh beli sejak FTD", "tahan bila DD ≥ 5", atau breadth memperbaiki aturan IHSG > MA50 untuk daftar swing?** Aturan sinyal, simulasi per sinyal, dan portofolio 10 posisi sama persis dengan [uji ulang Tren vs Swing](#uji-ulang-tren-vs-swing-uji_ulang_trenpy) (fungsinya dipakai ulang); yang diganti hanya filter pasarnya, dibaca pada penutupan malam sinyal. Periode sinyal 1 April 2024 – 16 November 2026 (623 hari bursa), 402 emiten, 20 urutan acak per portofolio.
+
+```bash
+python uji_ulang_pasar.py                         # tarik harga dari Yahoo
+python uji_ulang_pasar.py --harga-csv harga.csv   # tanpa jaringan
+python scripts/uji_pasar.py                       # uji offline, data buatan
+```
+
+Dijalankan di **Actions → Uji Ulang Filter Pasar → Run workflow** (`.github/workflows/uji-ulang-pasar.yml`); hasilnya di [`hasil/uji_ulang_pasar.md`](hasil/uji_ulang_pasar.md) dan `hasil/uji_ulang_pasar_*.{csv,json}`. Breadth dihitung ulang dengan `hitung_breadth()` dari harga yang sama, karena `hasil/breadth.csv` baru terisi MA50-nya Februari 2025; di 423 tanggal yang tumpang tindih selisihnya rata-rata 0,06 poin dan sisinya terhadap 50% sama di semua tanggal.
+
+**Kriteria "jelas lebih baik dari MA50"**, ditetapkan sebelum melihat angka: drawdown median lebih dangkal dengan rentang antar-urutan yang tidak tumpang tindih, **dan** total hasil tidak lebih rendah. Filter yang lebih sering menahan beli hampir pasti memangkas drawdown — karena itu kolom `HariBoleh%` dan baris saham acak ikut dibaca.
+
+### Portofolio 10 posisi, tahan 21 hari bursa
+
+| Filter | Hari boleh beli | Swing: drawdown | Swing: total | Acak: drawdown | Acak: total |
+|---|---|---|---|---|---|
+| Tanpa filter | 100% | −52,5% (−61 … −44) | −2% | −49,0% | −11% |
+| **IHSG > MA50** (aturan sekarang) | 49% | **−23,4%** (−30 … −15) | **+111%** (+63 … +184) | −21,8% | +41% |
+| Sejak FTD | 21% | −33,5% (−39 … −27) | −25% | −32,8% | −22% |
+| IHSG > MA50 & sejak FTD | 11% | −7,5% (−9 … −6) | +33% (+21 … +40) | −8,5% | +6% |
+| DD aktif < 5 | 61% | −45,5% (−57 … −34) | −33% | −39,6% | −8% |
+| IHSG > MA50 & DD < 5 | 39% | −25,2% (−40 … −18) | +22% (−5 … +39) | −21,1% | +46% |
+| Breadth > 50% | 54% | −41,2% (−53 … −33) | +22% | −52,0% | −5% |
+| IHSG > MA50 & breadth > 50% | 48% | −18,9% (−24 … −12) | +107% (+55 … +214) | −20,5% | +57% |
+
+Median 20 urutan acak, rentang min–maks dalam kurung. IHSG beli-dan-tahan: −26,7%, drawdown −46,3%.
+
+### Per sinyal, hari bursa ke-21 (selisih vs saham likuid acak)
+
+| Filter | Posisi | Selisih | ± SE | Median selisih | Mengalahkan acak |
+|---|---|---|---|---|---|
+| Tanpa filter | 1.831 | −0,54% | 0,55 | −2,93% | 39% |
+| IHSG > MA50 | 1.184 | −0,15% | 0,68 | −3,46% | 37% |
+| Sejak FTD | 368 | +0,71% | 1,42 | −0,81% | 46% |
+| IHSG > MA50 & sejak FTD | 175 | +2,44% | 1,95 | −0,06% | 50% |
+| DD aktif < 5 | 1.367 | −0,24% | 0,70 | −3,16% | 38% |
+| IHSG > MA50 & DD < 5 | 948 | −0,10% | 0,85 | −3,45% | 37% |
+| Breadth > 50% | 1.299 | −0,51% | 0,76 | −3,64% | 37% |
+| IHSG > MA50 & breadth > 50% | 1.128 | −0,08% | 0,70 | −3,51% | 37% |
+
+### Cara membacanya
+
+1. **Tidak ada yang jelas lebih baik dari MA50.** Tidak satu pun lolos kriteria di atas. MA50 tetap aturan beli; DD, FTD, dan breadth hanya ditampilkan sebagai konteks.
+2. **Sebagai pengganti MA50, ketiganya lebih buruk.** FTD sendirian (−33,5%, total −25%), DD < 5 sendirian (−45,5%, −33%), breadth sendirian (−41,2%, +22%) — semuanya drawdown lebih dalam *dan* hasil lebih rendah.
+3. **"Tahan bila DD ≥ 5" di atas MA50 justru memperburuk:** drawdown sedikit lebih dalam (−25,2% vs −23,4%), total turun dari +111% ke +22%. DD ≥ 5 terjadi di 39% hari bursa — terlalu sering untuk jadi penanda bahaya di IHSG; ia juga menahan beli di reli.
+4. **MA50 + FTD memangkas drawdown ke −7,5%, tapi dengan cara yang murah:** beli hanya diizinkan di 11% hari bursa, total hasil turun ke +33% (CAGR 11,5% vs 32,9%), dan portofolio saham acak dengan filter yang sama juga turun ke −8,5%. Itu efek "jarang di pasar", bukan pembacaan yang lebih tajam. Selisih per sinyalnya +2,44% ± 1,95 — sekitar 1,25 SE, 175 posisi dari 56 tanggal beli, belum bisa dibedakan dari nol. Drawdown per satuan hasil (CAGR/drawdown 1,53 vs 1,41) kira-kira setara.
+5. **MA50 + breadth > 50% paling mendekati:** drawdown −18,9% vs −23,4% dengan total hampir sama (+107% vs +111%), dan beli diizinkan di 48% vs 49% hari. Tapi rentang antar-urutannya tumpang tindih lebar (−24…−12 vs −30…−15), dan pada saham acak perbaikannya cuma −20,5% vs −21,8%. Arahnya menarik, besarnya masih di dalam derau satu siklus pasar.
+6. **Tidak ada filter yang membuat pemilihan sahamnya lebih pintar.** Median selisih per sinyal tetap negatif di semua filter; temuan lama (daftar swing ≈ saham acak) tidak berubah.
+
+### Kelemahan FTD versi ini — penting dibaca
+
+Dengan aturan "FTD hanya di hari ke-4–7, sesudah itu tunggu titik terendah baru", IHSG cuma berkeadaan NAIK 20,5% dari periode uji, dalam enam blok: 28 Jun – 2 Agu 2024, 25–28 Nov 2024, 17–26 Feb 2025, 1–29 Apr 2026, 12 Jun – 21 Sep 2026, dan sejak 12 Nov 2026. **Seluruh reli Mei 2025 – Januari 2026 (IHSG ±6.500 → 9.135) terlewat**: percobaan rally sesudah titik terendah awal April 2025 habis di hari ke-7 (21 April) tanpa hari yang naik ≥ 1,25% bervolume lebih tinggi; satu percobaan lagi (24 Juni – 3 Juli 2025) juga habis tanpa FTD; sesudah itu IHSG naik sampai puncaknya 20 Januari 2026 tanpa mencetak titik terendah 25 sesi yang baru — jadi tidak ada percobaan rally untuk dihitung. Praktik IBD sendiri masih mengakui FTD sesudah hari ke-7; versi itu belum diuji di sini karena di luar definisi yang diminta. Angka "sejak FTD" di atas karena itu adalah hasil definisi ini, bukan vonis atas metode O'Neil secara umum.
+
+Batas lain sama dengan uji ulang Tren vs Swing: bias survivorship (universe hari ini), satu siklus pasar, portofolio tanpa pembulatan lot. Matematikanya — DD, umur 25 sesi, gugur 5%, hari rally, FTD, tembus titik terendah, tanpa look-ahead, dan filter gabungan = irisan — diuji terhadap deret buatan di `scripts/uji_pasar.py`.
 
 ## Trend Template & Relative Strength (RS)
 
@@ -643,12 +753,12 @@ Hasil screening bisa dilihat lewat dashboard di:
 Fitur dashboard:
 
 - Tab: **Swing**, **Value**, **Tumbuh**, **Tren** (Trend Template 8/8), **Semua** (tabel lengkap seluruh saham yang dipantau), **SMC**, dan **Broker**, plus ringkasan jumlah saham yang lolos tiap filter.
-- Tab **SMC** menampilkan rencana entri kandidat swing: tren D1 dan tren sesi, zona premium/discount, dasar zona (order block atau FVG), batas entri, stop, target, dan risk/reward. Kolom **Sinyal** berwarna dan diurut menurut kesiapan (SIAP → HINDARI), bukan abjad. Angka pada kartunya menghitung yang punya rencana utuh, bukan jumlah baris.
+- Tab **SMC** menampilkan rencana entri kandidat swing: tren D1 dan tren sesi, zona premium/discount, dasar zona (order block atau FVG), batas entri, stop, target, risk/reward, dan [ukuran posisi](#ukuran-posisi-beli-berapa-lot) (lot, nilai, porsi modal, risiko rupiah). Kolom **Sinyal** berwarna dan diurut menurut kesiapan (SIAP → HINDARI), bukan abjad. Angka pada kartunya menghitung yang punya rencana utuh, bukan jumlah baris.
 - Kolom **Grup** dan dropdown **filter grup** — bisa lihat khusus saham grup Prajogo, Bakrie, Salim, Hapsoro, atau LQ45 saja.
 - Kolom **Status** berwarna (BUY / BOW / HOLD / WSE / JUAL / TIPIS) plus dropdown filter status; klik judul kolomnya untuk mengurutkan dari paling positif ke paling negatif.
 - Kolom **Skor** berwarna (hijau ≥ 70, kuning 40–69, merah < 40) — kesimpulan fundamental 1–100; klik judulnya untuk mengurutkan dari fundamental terkuat.
 - Klik judul kolom untuk mengurutkan (misalnya urutkan per RSI atau dividen), kotak pencarian untuk mencari ticker/nama.
-- Bilah **kondisi pasar** di bawah judul: IHSG di atas / di bawah MA50, sejak kapan, dan MA200 sebagai konteks — lihat [Kondisi Pasar](#kondisi-pasar-ihsg-vs-ma50) — plus satu baris [breadth](#breadth-pasar): persentase saham likuid di atas MA50/MA200 dan jumlah tertinggi/terendah 52 minggu baru.
+- Bilah **kondisi pasar** di bawah judul: IHSG di atas / di bawah MA50, sejak kapan, dan MA200 sebagai konteks — lihat [Kondisi Pasar](#kondisi-pasar-ihsg-vs-ma50) — plus satu baris [breadth](#breadth-pasar): persentase saham likuid di atas MA50/MA200 dan jumlah tertinggi/terendah 52 minggu baru, dan satu baris [distribution day & follow-through day](#distribution-day--follow-through-day).
 - Kolom **RS** dan **TT** — kekuatan relatif 1–99 dan jumlah syarat Trend Template 0–8; RS ≥ 80 dan TT = 8 ditandai biru.
 - Halaman **Uji Winrate** (tautan di kanan atas): hasil daftar swing kalau benar-benar dibeli — winrate dan rata-rata laba per hari ke-N sesudah masuk, **dibandingkan IHSG dan saham acak** yang dibeli di sesi yang sama, ditambah tabel tiap posisi dengan modal, lot, laba/rugi rupiahnya, dan selisihnya terhadap saham acak. Aturan simulasinya di bagian [Uji Winrate Daftar Swing](#uji-winrate-daftar-swing-uji_winratepy).
 - Nyaman dibuka di HP, mendukung mode gelap, dan menampilkan waktu pembaruan terakhir (WIB).

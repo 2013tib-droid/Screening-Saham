@@ -197,16 +197,19 @@ def tulis_md(path: Path, meta: dict, sinyal_df: pd.DataFrame, porto_df: pd.DataF
     k = meta["keadaan"]
     baris += ["## Keadaan pasar di periode uji", "",
               f"- Follow-through day: {k['jumlahFTD']} kali ({', '.join(k['tanggalFTD']) or '–'}).",
-              f"- Hari bursa berkeadaan NAIK (sejak FTD): {k['hariNaik%']}%; "
-              f"DD aktif ≥ {DD_BATAS}: {k['hariDD5%']}% hari; distribution day: {k['jumlahDD']}.",
-              f"- IHSG > MA50: {k['hariMA50%']}% hari; breadth > {BREADTH_MIN:g}%: {k['hariBreadth%']}% hari.",
+              f"- Hari bursa berkeadaan NAIK (sejak FTD): {_angka_id(k['hariNaik%'], 1, False)}%; "
+              f"DD aktif ≥ {DD_BATAS}: {_angka_id(k['hariDD5%'], 1, False)}% hari; "
+              f"distribution day: {k['jumlahDD']}.",
+              f"- IHSG > MA50: {_angka_id(k['hariMA50%'], 1, False)}% hari; breadth > {BREADTH_MIN:g}%: "
+              f"{_angka_id(k['hariBreadth%'], 1, False)}% hari.",
               ""]
     if meta.get("cekBreadth"):
         c = meta["cekBreadth"]
         baris += [f"Breadth hitungan ulang vs `hasil/breadth.csv` ({c['tanggal']} tanggal, "
-                  f"{c['dari']} – {c['sampai']}): rata-rata selisih {c['rataSelisihPoin']} poin, "
-                  f"maks {c['maksSelisihPoin']}; sisi terhadap {BREADTH_MIN:g}% sama di "
-                  f"{c['sisiSamaTerhadap50%']}% tanggal.", ""]
+                  f"{c['dari']} – {c['sampai']}): rata-rata selisih "
+                  f"{_angka_id(c['rataSelisihPoin'], 2, False)} poin, maks "
+                  f"{_angka_id(c['maksSelisihPoin'], 1, False)}; sisi terhadap {BREADTH_MIN:g}% sama di "
+                  f"{_angka_id(c['sisiSamaTerhadap50%'], 1, False)}% tanggal.", ""]
     path.write_text("\n".join(baris) + "\n")
 
 
