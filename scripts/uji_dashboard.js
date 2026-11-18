@@ -87,12 +87,18 @@ vm.runInContext(
   js + "\nglobalThis.__KOLOM = KOLOM;" +
        "\nglobalThis.__state = state;" +
        "\nglobalThis.__render = render;" +
-       "\nglobalThis.__kolomSet = kolomSet;",
+       "\nglobalThis.__kolomSet = kolomSet;" +
+       "\nglobalThis.__htmlRincian = htmlRincian;",
   konteks);
 const KOLOM = konteks.__KOLOM;
 const kolomSet = konteks.__kolomSet;
 
 // ---- Pemeriksaan ------------------------------------------------------------
+// Baris isi tabel membawa atribut (data-ticker untuk panel rincian), jadi
+// yang dihitung "<tr " — baris header tetap "<tr>" polos dan tidak ikut.
+function hitungBaris(tabel) {
+  return (tabel.match(/<tr\s/g) || []).length;
+}
 let gagal = 0;
 function periksa(nama, lulus, keterangan = "") {
   console.log(`  ${lulus ? "OK  " : "GAGAL"} ${nama}${keterangan ? " — " + keterangan : ""}`);
@@ -121,7 +127,7 @@ function ujiTab(tab) {
   }
 
   const kolomTabel = [...tabel.matchAll(/<th data-kolom="([^"]+)"/g)].map(m => m[1]);
-  const baris = tabel.split("<tr>").length - 2;   // dikurangi baris header
+  const baris = hitungBaris(tabel);
   const data = konteks.__state.data[tab] || [];
   // Tab SMC memakai daftar kolomnya sendiri. Memakai KOLOM untuk semua tab
   // membuat pemeriksaan di bawah menuduh kolom hilang padahal memang beda set.
@@ -184,7 +190,7 @@ function ujiTab(tab) {
 }
 
 function barisTabel() {
-  return (simpan["tabel"] || "").split("<tr>").length - 2;   // dikurangi header
+  return hitungBaris(simpan["tabel"] || "");
 }
 
 // Pagination baris: dibatasi supaya tab "semua" (402 emiten) tidak jadi halaman
@@ -228,6 +234,39 @@ function ujiPagination() {
           `${barisTabel()} baris`);
 }
 
+// Panel rincian: dirender untuk SETIAP emiten, dengan dan tanpa
+// hasil/analisa.json, dan tidak boleh ada nilai mentah yang bocor. Ini yang
+// menangkap kolom CSV yang salah eja (muncul sebagai "–" di mana-mana tidak
+// tertangkap, tapi undefined/NaN tertangkap) dan JSON yang bentuknya berubah.
+function ujiRincian() {
+  console.log("\n=== panel rincian ===");
+  const semua = konteks.__state.data.semua || [];
+  const berkas = path.join(REPO, "hasil/analisa.json");
+  const analisa = fs.existsSync(berkas) ? JSON.parse(fs.readFileSync(berkas, "utf8")).emiten : null;
+  periksa("hasil/analisa.json ada", Boolean(analisa));
+  if (analisa) {
+    const tanpa = semua.filter(r => !analisa[r.Ticker]).map(r => r.Ticker);
+    periksa("setiap emiten punya ringkasan analisa", tanpa.length === 0,
+            tanpa.length ? `tidak ada: ${tanpa.slice(0, 5).join(", ")}` : `${semua.length} emiten`);
+  }
+  const bocor = /undefined|NaN|\bnull\b|\[object/;
+  let rusak = [], smc = 0, broker = 0;
+  for (const r of semua) {
+    for (const a of [analisa ? analisa[r.Ticker] : undefined, null]) {
+      const h = konteks.__htmlRincian(r.Ticker, a);
+      if (!h || bocor.test(h.kepala + h.isi)) { rusak.push(r.Ticker); break; }
+      if (a && h.isi.includes("Rencana entri (SMC)")) smc++;
+      if (a && h.isi.includes("Broker summary")) broker++;
+    }
+  }
+  periksa("panel terender tanpa nilai mentah bocor", rusak.length === 0,
+          rusak.length ? `bermasalah: ${rusak.slice(0, 5).join(", ")}` : `${semua.length} emiten × 2 keadaan`);
+  const nSmc = (konteks.__state.data.smc || []).length;
+  const nBroker = (konteks.__state.data.broker || []).length;
+  periksa("bagian SMC muncul untuk setiap baris swing_smc.csv", smc === nSmc, `${smc} dari ${nSmc}`);
+  periksa("bagian broker muncul untuk setiap baris swing_broker.csv", broker === nBroker, `${broker} dari ${nBroker}`);
+}
+
 console.log(`Menguji ${path.relative(REPO, BERKAS)} terhadap CSV di hasil/`);
 console.log(`Kolom yang dideklarasikan (${KOLOM.length}): ` +
             KOLOM.map(k => k.k).join(", "));
@@ -244,6 +283,7 @@ setTimeout(() => {
 
   tiles.forEach(ujiTab);
   ujiPagination();
+  ujiRincian();
 
   console.log(gagal ? `\n${gagal} pemeriksaan GAGAL.` : "\nSemua pemeriksaan lolos.");
   console.log("Catatan: ini tidak memeriksa tampilan sama sekali — lebar kolom, " +

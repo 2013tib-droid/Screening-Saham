@@ -39,11 +39,20 @@ wajar di 360px, jadi dibiarkan.
 Yang **belum** dilihat: perangkat sungguhan (sentuhan, geser dengan jari,
 keyboard virtual yang menutupi kotak cari). Mode gelap di 360px sudah dicek lewat screenshot dan terbaca baik.
 
-Kandidat fitur berikutnya masih sama seperti sebelumnya: `analisa.py TICKER`
-menghasilkan laporan Markdown lengkap satu emiten dan belum punya antarmuka
-apa pun di dashboard. Tombol "analisa" per baris, atau panel rincian saat
-baris diklik, adalah pemakaian paling menjanjikan untuk 41 kolom CSV yang
-sekarang terbawa tapi tidak ditampilkan.
+**Panel rincian per emiten sudah ada (18 November 2026).** Klik/Enter pada
+baris membuka `<dialog id="rincian">`; isinya disusun `htmlRincian()` dari
+baris `semua.csv`, `hasil/analisa.json` (ditulis `analisa.py --semua-json`
+di run malam, diambil malas saat panel pertama dibuka), `swing_smc.csv`, dan
+`swing_broker.csv`. Dibuka lewat hash (`#BBCA`) supaya tombol Kembali di
+ponsel menutupnya dan tautannya bisa dibagikan. Di ≤ 640px dialognya layar
+penuh. Diperiksa lewat screenshot di 1280px dan 360px, terang dan gelap;
+`uji_dashboard.js` merender panel untuk ke-402 emiten (dengan dan tanpa
+analisa.json) dan memeriksa tidak ada `undefined`/`NaN`/`null` yang bocor.
+
+Yang belum: teks asumsi nilai wajar dan pengurang keyakinan masih berformat
+angka Inggris (`2,307.19`, `12.1x`) karena kalimatnya disusun Python dan
+juga dipakai laporan Markdown. Ada di dalam `<details>` yang tertutup, jadi
+jarang terlihat.
 
 ---
 
@@ -58,6 +67,7 @@ sekarang terbawa tapi tidak ditampilkan.
 | `hasil/winrate.csv` | Satu baris per posisi uji winrate, plus kolom `Hari0%`–`Hari21%`. |
 | `hasil/winrate_meta.json` | Parameter simulasi winrate (modal, biaya, panjang jendela). |
 | `hasil/winrate_pembanding.csv` | IHSG dan saham acak per **tanggal beli** (`IHSG0%`–`IHSG21%`, `Acak0%`–`Acak21%`, `IHSGdiAtasMA50`). `winrate.html` menyambungkannya ke tiap posisi lewat `TanggalBeli` saat memuat; berkasnya opsional — tanpa itu kartu selisih menulis "pembanding belum tersedia" dan grafik cuma bergaris satu. |
+| `hasil/analisa.json` | Ringkasan `analisa.py` per emiten (skor kategori, nilai wajar, kekuatan/kelemahan, flag, keyakinan, rekomendasi) untuk panel rincian. Diambil saat panel pertama dibuka. Opsional: tidak ada = panel tetap tampil dengan angka dari CSV saja. |
 | `hasil/pasar.json` | IHSG vs MA50/MA200 untuk bilah kondisi pasar di `index.html`. Opsional: tidak ada = bilah tersembunyi. Tanggalnya dibandingkan dengan `meta.json`; tertinggal > 4 hari = bilah netral "belum diperbarui". |
 | `hasil/meta.json` | Stempel waktu pembaruan. |
 | `scripts/uji_dashboard.js` | Uji dashboard tanpa browser (lihat di bawah). Hanya `index.html`. |
@@ -258,8 +268,9 @@ emoji aman.
 - **`screener.py`** — tiap malam hanya mengambil histori harga, lalu
   menggabungkannya dengan cache fundamental. Skor fundamental disusun dari lima
   kategori berbobot dengan penyesuaian per sektor, plus kolom `Flag`.
-- **`analisa.py TICKER`** — laporan Markdown lengkap satu emiten. Belum punya
-  antarmuka apa pun di dashboard.
+- **`analisa.py TICKER`** — laporan Markdown lengkap satu emiten.
+  `analisa.py --semua-json hasil/analisa.json` menulis ringkasannya untuk
+  seluruh emiten, yang dibaca panel rincian dashboard.
 
 Penjelasan lengkap tiap kolom ada di `README.md` bagian *Kolom Skor* dan
 *Cache Fundamental*, dan juga di dalam dashboard sendiri pada bagian

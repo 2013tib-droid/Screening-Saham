@@ -158,6 +158,17 @@ jobs:
           ARJUM_API_KEY: ${{ secrets.ARJUM_API_KEY }}
         run: python arjum.py
 
+      # Ringkasan analisa.py untuk SELURUH emiten (skor per kategori, nilai
+      # wajar, kekuatan/kelemahan, red flag, keyakinan, rekomendasi) — dibaca
+      # panel rincian dashboard saat sebuah baris diklik. Hanya dari
+      # hasil/semua.csv, tanpa request jaringan; beberapa detik saja.
+      #
+      # continue-on-error: panel ini pelengkap. Kalau gagal, berkas lama
+      # dibiarkan dan dashboard tetap menampilkan angka dari CSV.
+      - name: Ringkasan analisa per emiten
+        continue-on-error: true
+        run: python analisa.py --semua-json hasil/analisa.json
+
       - name: Catat waktu pembaruan
         run: |
           printf '{"diperbarui": "%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > hasil/meta.json
