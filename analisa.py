@@ -21,9 +21,11 @@ Pemakaian:
     python analisa.py BBCA
     python analisa.py ANTM --dari-csv hasil/semua.csv
     python analisa.py TLKM --output analisa_TLKM.md
+    python analisa.py --semua-json hasil/analisa.json   # semua emiten, untuk dashboard
 """
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -305,10 +307,7 @@ def baris_komponen(r, kategori: str, sektor: str) -> list[str]:
         if nilai is None:
             baris.append(f"| {kolom} | - | - | data tidak tersedia |")
             continue
-        from screener import _interpolasi
-        skor = (0.0 if kolom in ("PER", "PBV", "PERvsSektor", "PBVvsSektor",
-                                 "EV/EBITDA") and nilai <= 0
-                else _interpolasi(nilai, titik))
+        skor = _skor_komponen(kolom, nilai, titik)
         bobot = f"{bobot_dasar * faktor:.0f}"
         if faktor != 1.0:
             bobot += f" (×{faktor:g})"
@@ -317,7 +316,20 @@ def baris_komponen(r, kategori: str, sektor: str) -> list[str]:
     return baris
 
 
-def susun_laporan(r, df: pd.DataFrame) -> str:
+def _skor_komponen(kolom: str, nilai: float, titik) -> float:
+    """Skor 0-100 satu komponen, sama persis dengan yang dipakai screener."""
+    from screener import _interpolasi
+    if kolom in ("PER", "PBV", "PERvsSektor", "PBVvsSektor", "EV/EBITDA") and nilai <= 0:
+        return 0.0
+    return _interpolasi(nilai, titik)
+
+
+def hitung_analisa(r, df: pd.DataFrame) -> dict:
+    """Seluruh angka dan kesimpulan laporan untuk satu emiten, tanpa format.
+
+    Dipakai bersama oleh susun_laporan (Markdown) dan semua_json (panel
+    rincian di dashboard), supaya keduanya tidak pernah berbeda pendapat.
+    """
     sektor = _teks(r, "Sektor")
     harga = _angka(r, "Harga")
     skor = hitung_skor(r)
@@ -335,28 +347,59 @@ def susun_laporan(r, df: pd.DataFrame) -> str:
     else:
         status_valuasi = "Tidak dapat ditentukan"
 
+
     # Kekuatan dan kelemahan diambil dari komponen yang skornya ekstrem, jadi
-    # daftarnya selalu konsisten dengan tabel di atasnya.
-    from screener import _interpolasi
+    # daftarnya selalu konsisten dengan tabel skor.
     kuat, lemah = [], []
     penyesuaian = PENYESUAIAN_SEKTOR.get(sektor, {})
-    for kategori, komponen in KOMPONEN_SKOR.items():
-        for kolom, (bobot_dasar, titik) in komponen.items():
+    for komponen in KOMPONEN_SKOR.values():
+        for kolom, (_, titik) in komponen.items():
             if penyesuaian.get(kolom, 1.0) <= 0:
                 continue
             nilai = _angka(r, kolom)
             if nilai is None:
                 continue
-            s = (0.0 if kolom in ("PER", "PBV", "PERvsSektor", "PBVvsSektor",
-                                  "EV/EBITDA") and nilai <= 0
-                 else _interpolasi(nilai, titik))
-            teks = f"**{kolom}** {format_nilai(kolom, nilai)}"
+            s = _skor_komponen(kolom, nilai, titik)
             if s >= SKOR_KUAT:
-                kuat.append((s, teks))
+                kuat.append((s, kolom, nilai))
             elif s <= SKOR_LEMAH:
-                lemah.append((s, teks))
+                lemah.append((s, kolom, nilai))
     kuat.sort(reverse=True)
     lemah.sort()
+
+    kategori = []
+    for nama, bobot in BOBOT_KATEGORI.items():
+        s, cakupan = skor_kategori(r, nama, sektor)
+        cukup = s is not None and cakupan >= MIN_CAKUPAN_KATEGORI
+        kategori.append({"nama": nama, "judul": KATEGORI_JUDUL[nama],
+                         "bobot": bobot, "skor": round(s) if cukup else None})
+
+    kecuali = FLAG_TIDAK_BERLAKU.get(sektor, set())
+    daftar_flag = ([(kode, penjelasan) for kode, uji, penjelasan in RED_FLAG
+                    if kode not in kecuali and uji(r)] if flag else [])
+
+    return {
+        "sektor": sektor, "harga": harga, "skor": skor, "flag": flag,
+        "fv": fv, "mos": mos, "status_valuasi": status_valuasi,
+        "asumsi": asumsi, "catatan_fv": catatan_fv,
+        "keyakinan": keyakinan, "alasan_keyakinan": alasan_keyakinan,
+        "aksi": aksi, "alasan_aksi": alasan_aksi,
+        "kuat": kuat, "lemah": lemah, "kategori": kategori,
+        "daftar_flag": daftar_flag,
+        "med_per": median_sektor(df, sektor, "PER"),
+        "med_pbv": median_sektor(df, sektor, "PBV"),
+    }
+
+
+def susun_laporan(r, df: pd.DataFrame) -> str:
+    h = hitung_analisa(r, df)
+    sektor, harga, skor, flag = h["sektor"], h["harga"], h["skor"], h["flag"]
+    fv, mos, status_valuasi = h["fv"], h["mos"], h["status_valuasi"]
+    asumsi, catatan_fv = h["asumsi"], h["catatan_fv"]
+    keyakinan, alasan_keyakinan = h["keyakinan"], h["alasan_keyakinan"]
+    aksi, alasan_aksi = h["aksi"], h["alasan_aksi"]
+    kuat = [(s, f"**{k}** {format_nilai(k, v)}") for s, k, v in h["kuat"]]
+    lemah = [(s, f"**{k}** {format_nilai(k, v)}") for s, k, v in h["lemah"]]
 
     b = []
     a = b.append
@@ -394,13 +437,12 @@ def susun_laporan(r, df: pd.DataFrame) -> str:
     a("| Faktor | Bobot | Skor |")
     a("|---|---|---|")
     dipakai = 0
-    for kategori, bobot in BOBOT_KATEGORI.items():
-        s, cakupan = skor_kategori(r, kategori, sektor)
-        if s is None or cakupan < MIN_CAKUPAN_KATEGORI:
-            a(f"| {KATEGORI_JUDUL[kategori]} | {bobot} | – (data tidak cukup) |")
+    for k in h["kategori"]:
+        if k["skor"] is None:
+            a(f"| {k['judul']} | {k['bobot']} | – (data tidak cukup) |")
             continue
-        dipakai += bobot
-        a(f"| {KATEGORI_JUDUL[kategori]} | {bobot} | {s:.0f} |")
+        dipakai += k["bobot"]
+        a(f"| {k['judul']} | {k['bobot']} | {k['skor']} |")
     a(f"| **Total Fundamental Score** | 100 | "
       f"**{skor if skor is not None else '-'}/100** |\n")
     if dipakai < 100:
@@ -454,10 +496,8 @@ def susun_laporan(r, df: pd.DataFrame) -> str:
     # 6. Red flags
     a("## 6. Red Flags\n")
     if flag:
-        kecuali = FLAG_TIDAK_BERLAKU.get(sektor, set())
-        for kode, uji, penjelasan in RED_FLAG:
-            if kode not in kecuali and uji(r):
-                a(f"- 🚩 **{kode}** — {penjelasan}")
+        for kode, penjelasan in h["daftar_flag"]:
+            a(f"- 🚩 **{kode}** — {penjelasan}")
     else:
         a("Tidak ada red flag terdeteksi.")
     if sektor in FLAG_TIDAK_BERLAKU:
@@ -476,9 +516,9 @@ def susun_laporan(r, df: pd.DataFrame) -> str:
     if fv and harga:
         a(f"| Harga terhadap nilai wajar | {harga / fv:,.2f}x |")
     a(f"| PER | {format_nilai('PER', _angka(r, 'PER'))} "
-      f"(median sektor {format_nilai('PER', median_sektor(df, sektor, 'PER'))}) |")
+      f"(median sektor {format_nilai('PER', h['med_per'])}) |")
     a(f"| PBV | {format_nilai('PBV', _angka(r, 'PBV'))} "
-      f"(median sektor {format_nilai('PBV', median_sektor(df, sektor, 'PBV'))}) |")
+      f"(median sektor {format_nilai('PBV', h['med_pbv'])}) |")
     a(f"| EV/EBITDA | {format_nilai('EV/EBITDA', _angka(r, 'EV/EBITDA'))} |")
     a("")
     if asumsi:
@@ -564,20 +604,63 @@ def susun_laporan(r, df: pd.DataFrame) -> str:
     return "\n".join(b)
 
 
+def _bulat(x, n=2):
+    return None if x is None or pd.isna(x) else round(float(x), n)
+
+
+def semua_json(df: pd.DataFrame) -> dict:
+    """Ringkasan analisa seluruh emiten untuk panel rincian di dashboard.
+
+    Isinya hanya yang tidak bisa dibaca langsung dari semua.csv: skor per
+    kategori, nilai wajar, kekuatan/kelemahan, red flag beserta artinya,
+    keyakinan, dan rekomendasi. Angka mentah (PER, MA50, OCF, ...) dibaca
+    dashboard dari CSV-nya sendiri supaya berkas ini tetap kecil.
+    """
+    emiten = {}
+    for _, r in df.iterrows():
+        h = hitung_analisa(r, df)
+        emiten[str(r["Ticker"])] = {
+            "skor": h["skor"],
+            "label": kategori_skor(h["skor"]),
+            "kategori": [[k["nama"], k["bobot"], k["skor"]] for k in h["kategori"]],
+            "fv": _bulat(h["fv"], 0),
+            "mos": _bulat(h["mos"], 1),
+            "valuasi": h["status_valuasi"],
+            "medPER": _bulat(h["med_per"]),
+            "medPBV": _bulat(h["med_pbv"]),
+            "asumsi": h["asumsi"],
+            "catatanFV": h["catatan_fv"],
+            # Angka mentah, bukan teks jadi: dashboard memformatnya sendiri
+            # dengan pemisah ribuan/desimal Indonesia.
+            "kuat": [[k, _bulat(v, 4)] for _, k, v in h["kuat"][:6]],
+            "lemah": [[k, _bulat(v, 4)] for _, k, v in h["lemah"][:6]],
+            "flag": [[k, p] for k, p in h["daftar_flag"]],
+            "keyakinan": h["keyakinan"],
+            "alasanKeyakinan": h["alasan_keyakinan"],
+            "aksi": h["aksi"],
+            "alasanAksi": h["alasan_aksi"],
+        }
+    return {"emiten": emiten}
+
+
 def main() -> int:
     p = argparse.ArgumentParser(
         description="Laporan fundamental lengkap satu emiten IDX.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    p.add_argument("ticker", help="kode saham, dengan atau tanpa .JK (mis. BBCA)")
+    p.add_argument("ticker", nargs="?",
+                   help="kode saham, dengan atau tanpa .JK (mis. BBCA)")
     p.add_argument("--dari-csv", default="hasil/semua.csv", metavar="FILE",
                    help="CSV hasil screening; dipakai untuk median sektor")
     p.add_argument("--cache-fundamental", default=CACHE_FUNDAMENTAL, metavar="FILE",
                    help="cache lapkeu, dipakai bila CSV hasil belum ada")
     p.add_argument("--output", metavar="FILE",
                    help="simpan ke file Markdown (default: tampilkan di layar)")
+    p.add_argument("--semua-json", metavar="FILE",
+                   help="tulis ringkasan analisa SELURUH emiten di CSV ke JSON "
+                        "(untuk panel rincian dashboard), tanpa ticker")
     args = p.parse_args()
-
-    kode = args.ticker.upper().removesuffix(".JK")
+    if bool(args.ticker) == bool(args.semua_json):
+        p.error("isi salah satu: TICKER atau --semua-json FILE")
 
     sumber = Path(args.dari_csv)
     if not sumber.exists():
@@ -591,6 +674,18 @@ def main() -> int:
               "Jalankan ulang screener.py.", file=sys.stderr)
         return 1
 
+    if args.semua_json:
+        tujuan = Path(args.semua_json)
+        tujuan.parent.mkdir(parents=True, exist_ok=True)
+        isi = semua_json(df)
+        # ensure_ascii=False: nama dan catatan memuat "—" dan "±"; separators
+        # rapat karena berkas ini dimuat browser, bukan dibaca manusia.
+        tujuan.write_text(json.dumps(isi, ensure_ascii=False, separators=(",", ":")),
+                          encoding="utf-8")
+        print(f"{len(isi['emiten'])} emiten ditulis ke {tujuan}", file=sys.stderr)
+        return 0
+
+    kode = args.ticker.upper().removesuffix(".JK")
     cocok = df[df["Ticker"].astype(str).str.upper() == kode]
     if cocok.empty:
         print(f"{kode} tidak ada di {sumber}.", file=sys.stderr)

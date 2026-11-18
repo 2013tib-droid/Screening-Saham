@@ -143,6 +143,18 @@ Isi laporannya: tabel skor lima kategori, rincian tiap metrik beserta bobot dan 
 
 **Tingkat keyakinan** mengukur seberapa jauh angka di laporan boleh dipercaya — bukan seberapa yakin sahamnya akan naik. Turun bila basisnya laporan tahunan (−25), metrik inti kosong (−6 per metrik), pembanding sektornya kurang dari 3 emiten (−15), likuiditasnya tipis (−10), atau emitennya bank (−10, karena NIM/NPL/CAR/LDR tidak tersedia di sumber gratis ini padahal itu metrik penilai utama sebuah bank).
 
+### Panel rincian di dashboard
+
+Klik (atau Enter) baris mana pun di dashboard untuk membuka **panel rincian** emiten itu: rekomendasi, skor per kategori, valuasi dan nilai wajar, kekuatan/kelemahan, red flag beserta artinya, tren & teknikal (MA, RS, Trend Template, 52 minggu, net asing), ringkasan laporan keuangan, plus rencana entri SMC dan broker summary bila emitennya kandidat swing. Di ponsel panelnya layar penuh dan ditutup dengan tombol Kembali. Tautan `…/#BBCA` langsung membuka panel BBCA, jadi bisa dibagikan.
+
+Angka fundamentalnya datang dari analisa.py yang sama, bukan hitungan ulang di browser. Run malam menjalankan
+
+```bash
+python analisa.py --semua-json hasil/analisa.json
+```
+
+yang menulis ringkasan seluruh emiten di `hasil/semua.csv` (±500 KB, ±50 KB terkompresi). Dashboard baru mengambilnya saat panel pertama kali dibuka. Laporan Markdown dan panel memakai satu fungsi (`hitung_analisa`), jadi keduanya tidak bisa berbeda pendapat. Rincian per metrik dan bahan investment thesis tetap hanya ada di laporan lengkap (`python analisa.py BBCA`).
+
 ## Struktur Harga & Rencana Entri (`analisa_smc.py`)
 
 Screener menjawab *"saham apa"*. `analisa.py` menjawab *"emiten ini bagaimana"*. Pertanyaan ketiga — *"masuk di harga berapa, batal di harga berapa"* — dijawab `analisa_smc.py`, yang membaca struktur harga dengan metode Smart Money Concepts:

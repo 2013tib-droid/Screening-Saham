@@ -520,6 +520,82 @@
   .pasar .judul { font-weight: 650; font-size: .92rem; line-height: 1.35; }
   .pasar .ket { font-size: .8rem; color: var(--text-secondary); line-height: 1.45; margin-top: 2px; font-variant-numeric: tabular-nums; }
 
+  /* ---- Panel rincian satu emiten ---- */
+  tbody tr[data-ticker] { cursor: pointer; }
+  tbody tr[data-ticker]:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  dialog.rincian {
+    width: min(780px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  dialog.rincian[open] { display: flex; flex-direction: column; }
+  dialog.rincian::backdrop { background: rgba(10,10,9,.45); }
+  .rc-kepala {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 16px 18px 12px;
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--border);
+  }
+  .rc-kepala > div { flex: 1; min-width: 0; }
+  .rc-kode { font-size: 1.35rem; font-weight: 720; letter-spacing: .01em; }
+  .rc-nama { color: var(--text-secondary); font-size: .9rem; margin-top: 1px; }
+  .rc-chip { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+  .rc-chip .c { font-size: .74rem; color: var(--text-secondary); background: var(--chip-bg); border-radius: 6px; padding: 2px 8px; }
+  .rc-tutup {
+    flex: none; border: 0; background: var(--chip-bg); color: var(--text-secondary);
+    width: 34px; height: 34px; border-radius: 8px; font-size: 1.1rem; cursor: pointer;
+  }
+  .rc-tutup:hover { color: var(--text-primary); }
+  .rc-isi { overflow-y: auto; padding: 14px 18px 20px; overscroll-behavior: contain; }
+  .rc-bagian {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  .rc-bagian h3 {
+    margin: 0 0 8px; font-size: .74rem; font-weight: 680; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--text-muted);
+  }
+  .rc-bagian p { margin: 6px 0 0; font-size: .86rem; line-height: 1.5; color: var(--text-secondary); }
+  .rc-bagian ul { margin: 4px 0 0; padding-left: 18px; font-size: .85rem; line-height: 1.5; color: var(--text-secondary); }
+  .rc-vonis { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .rc-vonis .aksi { font-size: .95rem; padding: 5px 12px; }
+  .rc-vonis .angka-besar { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .rc-vonis .kecil { font-size: .78rem; color: var(--text-muted); }
+  .aksi.a-accumulate { background: var(--pos-bg);  color: var(--pos-fg); }
+  .aksi.a-hold       { background: var(--info-bg); color: var(--info-fg); }
+  .aksi.a-reduce     { background: var(--warn-bg); color: var(--warn-fg); }
+  .aksi.a-avoid      { background: var(--neg-bg);  color: var(--neg-fg); }
+  /* Kolom label selebar label terpanjang ("Kesehatan keuangan · 20"), bilah
+     mengisi sisanya — di 360px pun labelnya tidak terpotong. */
+  .rc-bar { display: grid; grid-template-columns: max-content minmax(60px, 1fr) 30px; gap: 6px 10px; align-items: center; font-size: .82rem; }
+  .rc-bar .lbl { color: var(--text-secondary); white-space: nowrap; }
+  .rc-bar .lbl small { color: var(--text-muted); }
+  .rc-bar .trek { height: 8px; border-radius: 999px; background: var(--surface-sunken); overflow: hidden; }
+  .rc-bar .trek span { display: block; height: 100%; border-radius: 999px; }
+  .rc-bar .n { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .isi-kuat { background: var(--pos-fg); } .isi-sedang { background: var(--warn-fg); } .isi-lemah { background: var(--neg-fg); }
+  .rc-dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 14px; margin: 0; }
+  .rc-dl div { min-width: 0; }
+  .rc-dl dt { font-size: .72rem; color: var(--text-muted); }
+  .rc-dl dd { margin: 1px 0 0; font-size: .92rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .rc-dl dd .ket { display: block; font-size: .72rem; font-weight: 400; color: var(--text-muted); }
+  .rc-dua { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .rc-dua h4 { margin: 0; font-size: .8rem; }
+  .rc-dua .naik { color: var(--pos-fg); } .rc-dua .turun { color: var(--neg-fg); }
+  .rc-bagian details { margin-top: 8px; font-size: .82rem; }
+  .rc-bagian details summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  .rc-kaki { font-size: .76rem; color: var(--text-muted); line-height: 1.5; margin-top: 4px; }
+  .rc-kaki code { background: var(--chip-bg); padding: 1px 5px; border-radius: 4px; }
+
   @media (max-width: 640px) {
     .controls { gap: 8px; padding: 9px; }
     .pisah { display: none; }
@@ -555,6 +631,17 @@
       letter-spacing: 0;
       color: var(--text-muted);
     }
+
+    /* Panel rincian jadi layar penuh: di ponsel dialog yang mengambang
+       cuma membuang tepi layar. */
+    dialog.rincian {
+      width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh;
+      margin: 0; border: 0; border-radius: 0;
+    }
+    .rc-kepala { padding: 12px 14px 10px; }
+    .rc-isi { padding: 12px 12px 24px; }
+    .rc-dua { grid-template-columns: 1fr; }
+    .rc-dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 </style>
 </head>
@@ -917,6 +1004,14 @@
     dana, bukan bukti ada "bandar". Bukan saran investasi.</p>
   </details>
 
+  <dialog class="rincian" id="rincian" aria-labelledby="rc-judul">
+    <div class="rc-kepala">
+      <div id="rc-kepala"></div>
+      <button type="button" class="rc-tutup" id="rc-tutup" aria-label="Tutup rincian">✕</button>
+    </div>
+    <div class="rc-isi" id="rc-isi"></div>
+  </dialog>
+
   <footer>Bukan rekomendasi investasi — selalu lakukan analisis sendiri sebelum membeli.
   Dibuat dengan <a href="https://github.com/2013tib-droid/Screening-Saham">Screening-Saham</a>.</footer>
 </div>
@@ -1203,7 +1298,7 @@ function render() {
     return `<th data-kolom="${k.k}" class="${kelas}">${k.label}${arah}</th>`;
   }).join("");
   const td = halaman.map(r => {
-    return "<tr>" + kolom.map((k, i) => {
+    return `<tr data-ticker="${esc(r.Ticker)}" tabindex="0">` + kolom.map((k, i) => {
       const kelas = [k.kiri ? "kiri" : "", i === 0 ? "lengket" : ""].filter(Boolean).join(" ");
       if (k.k === "Ticker") {
         // RR hanya ada di tab SMC, dan hanya terisi ketika zona, stop, dan
@@ -1351,6 +1446,22 @@ function render() {
   perbaruiRowPager(rows.length);
 }
 
+// Klik (atau Enter) pada baris membuka panel rincian. Satu pendengar di
+// wadah, bukan per baris: tabelnya dirender ulang tiap filter berubah.
+{
+  const wadah = document.getElementById("tabel");
+  const barisDari = e => (e.target && e.target.closest ? e.target.closest("tr[data-ticker]") : null);
+  wadah.addEventListener("click", e => {
+    const tr = barisDari(e);
+    if (tr) bukaRincian(tr.dataset.ticker);
+  });
+  wadah.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    const tr = barisDari(e);
+    if (tr) bukaRincian(tr.dataset.ticker);
+  });
+}
+
 // ---- Pagination baris -------------------------------------------------------
 
 function jumlahHalaman(total) {
@@ -1390,7 +1501,7 @@ function perbaruiRowPager(total) {
   const halTotal = jumlahHalaman(total);
   const mulai = state.perHal > 0 ? (state.hal - 1) * state.perHal + 1 : 1;
   const akhir = state.perHal > 0 ? Math.min(total, state.hal * state.perHal) : total;
-  info.textContent = `Menampilkan ${mulai}–${akhir} dari ${total} emiten`;
+  info.textContent = `Menampilkan ${mulai}–${akhir} dari ${total} emiten · klik baris untuk rincian`;
 
   if (halTotal <= 1) { nav.innerHTML = ""; return; }
   const tombol = [
@@ -1755,7 +1866,300 @@ async function muat() {
   }
   render();
 }
-muat();
+
+// ---- Panel rincian satu emiten ---------------------------------------------
+// Menjawab "emiten ini bagaimana persisnya" tanpa membuka terminal: ringkasan
+// analisa.py (hasil/analisa.json, ditulis run malam) digabung dengan angka
+// teknikal dari semua.csv, rencana SMC, dan broker summary bila emitennya
+// kandidat swing. analisa.json baru diambil saat panel pertama kali dibuka —
+// ±50 KB terkompresi yang tidak perlu dibayar oleh yang cuma melihat tabel.
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+// Catatan dari analisa.py memakai **tebal** ala Markdown.
+function tebal(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>"); }
+function num(v) {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+function rupiah(v) {
+  const n = num(v);
+  if (n === null) return "–";
+  const a = Math.abs(n), t = n < 0 ? "−" : "";
+  if (a >= 1e12) return `${t}Rp${angka(a / 1e12, 2)} T`;
+  if (a >= 1e9) return `${t}Rp${angka(a / 1e9, 1)} M`;
+  if (a >= 1e6) return `${t}Rp${angka(a / 1e6, 1)} jt`;
+  return `${t}Rp${angka(a, 0)}`;
+}
+function bertanda(v, desimal = 1, akhiran = "") {
+  const n = num(v);
+  if (n === null) return "–";
+  return (n > 0 ? "+" : "") + angka(n, desimal) + akhiran;
+}
+// Jarak harga terhadap satu level, dalam persen: "+4,2% dari MA50".
+function jarak(harga, level) {
+  const h = num(harga), l = num(level);
+  if (h === null || l === null || l === 0) return "";
+  return `${bertanda((h / l - 1) * 100, 1, "%")}`;
+}
+function sel(label, nilai, ket = "") {
+  return `<div><dt>${label}</dt><dd>${nilai}${ket ? `<span class="ket">${ket}</span>` : ""}</dd></div>`;
+}
+function bagian(judul, isi) {
+  return `<section class="rc-bagian"><h3>${judul}</h3>${isi}</section>`;
+}
+
+const analisaJS = { data: undefined, janji: null };   // undefined = belum dimuat
+function muatAnalisa() {
+  if (!analisaJS.janji) {
+    analisaJS.janji = fetch(`hasil/analisa.json?t=${Date.now()}`)
+      .then(r => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then(j => { analisaJS.data = j && j.emiten ? j.emiten : null; });
+  }
+  return analisaJS.janji;
+}
+
+// undefined = analisa.json belum dimuat, null = tidak ada untuk emiten ini.
+function analisaUntuk(ticker) {
+  const d = analisaJS.data;
+  return d === undefined ? undefined : (d && d[ticker]) || null;
+}
+
+// Satuan komponen skor — padanan SATUAN di analisa.py, dengan format Indonesia.
+function nilaiKomponen(kolom, v) {
+  if (v === null || v === undefined) return "–";
+  if (kolom.endsWith("%")) return angka(v, 1) + "%";
+  if (kolom === "TahunLabaNaik") return `${angka(v, 0)} dari 3 tahun`;
+  if (kolom.endsWith("vsSektor")) return angka(v, 2) + "× median";
+  return angka(v, 2) + "×";
+}
+
+// Nama kategori dari analisa.py (BOBOT_KATEGORI) → label panel. Laporan
+// Markdown memakai judul Inggris yang panjang; di ponsel itu terpotong.
+const JUDUL_KATEGORI = {
+  Valuasi: "Valuasi", Profitabilitas: "Profitabilitas", Kesehatan: "Kesehatan keuangan",
+  Pertumbuhan: "Pertumbuhan", ArusKas: "Arus kas",
+};
+
+const KELAS_AKSI = { Accumulate: "a-accumulate", Hold: "a-hold", Reduce: "a-reduce", Avoid: "a-avoid" };
+function bandSkor(s) { return s >= 65 ? "kuat" : s >= 50 ? "sedang" : "lemah"; }
+
+function htmlKepala(r) {
+  const chip = [r.Sektor, r.Grup].filter(Boolean).map(x => `<span class="c">${esc(x)}</span>`);
+  const sy = String(r.Syariah || "").trim().toLowerCase();
+  if (sy) chip.push(`<span class="c">${sy === "ya" ? "Syariah" : "Non-syariah"}</span>`);
+  if (r.Status) chip.push(`<span class="status s-${esc(String(r.Status).toLowerCase())}">${esc(r.Status)}</span>`);
+  return `<div class="rc-kode" id="rc-judul">${esc(r.Ticker)}</div>` +
+    `<div class="rc-nama">${esc(r.Nama || "")}</div>` +
+    `<div class="rc-chip"><strong>${angka(num(r.Harga))}</strong>${chip.join("")}</div>`;
+}
+
+function htmlFundamental(r, a) {
+  if (a === undefined) return bagian("Analisa fundamental", "<p>Memuat analisa …</p>");
+  if (!a) {
+    return bagian("Analisa fundamental",
+      "<p>Ringkasan analisa belum tersedia untuk emiten ini — berkas " +
+      "<code>hasil/analisa.json</code> ditulis run malam berikutnya.</p>");
+  }
+  const skor = a.skor;
+  const vonis =
+    `<div class="rc-vonis">` +
+    `<span class="status aksi ${KELAS_AKSI[a.aksi] || ""}">${esc(a.aksi)}</span>` +
+    `<div><div class="angka-besar">${skor ?? "–"}<span class="kecil">/100</span></div>` +
+    `<div class="kecil">${esc(a.label)}</div></div>` +
+    `<div><div class="angka-besar">${a.keyakinan}%</div><div class="kecil">keyakinan data</div></div>` +
+    `</div><p>${tebal(a.alasanAksi)}.</p>`;
+
+  const bar = a.kategori.map(([nama, bobot, s]) =>
+    `<div class="lbl">${esc(JUDUL_KATEGORI[nama] || nama)} <small>· ${bobot}</small></div>` +
+    (s === null
+      ? `<div class="trek"></div><div class="n" title="Data tidak cukup">–</div>`
+      : `<div class="trek"><span class="isi-${bandSkor(s)}" style="width:${Math.max(2, s)}%"></span></div>` +
+        `<div class="n">${s}</div>`)).join("");
+
+  const harga = num(r.Harga);
+  const mos = a.mos;
+  const valuasi = `<dl class="rc-dl">` +
+    sel("Status", esc(a.valuasi)) +
+    sel("Nilai wajar", a.fv ? angka(a.fv) : "–", harga ? `harga ${angka(harga)}` : "") +
+    sel("Margin of safety", mos === null ? "–" : bertanda(mos, 1, "%"),
+        mos === null ? "" : mos > 0 ? "harga di bawah taksiran" : "harga di atas taksiran") +
+    sel("PER", angka(num(r.PER), 1) + "×", a.medPER ? `median sektor ${angka(a.medPER, 1)}×` : "") +
+    sel("PBV", angka(num(r.PBV), 2) + "×", a.medPBV ? `median sektor ${angka(a.medPBV, 2)}×` : "") +
+    sel("EV/EBITDA", num(r["EV/EBITDA"]) === null ? "–" : angka(num(r["EV/EBITDA"]), 1) + "×") +
+    `</dl>` +
+    ((a.asumsi.length || a.catatanFV.length)
+      ? `<details><summary>Asumsi &amp; keterbatasan taksiran</summary><ul>` +
+        a.asumsi.map(x => `<li>${tebal(x)}</li>`).join("") +
+        a.catatanFV.map(x => `<li>⚠ ${tebal(x)}</li>`).join("") + `</ul></details>`
+      : "");
+
+  const daftar = (xs, kosong) => xs.length
+    ? `<ul>${xs.map(([k, v]) => `<li><strong>${esc(k)}</strong> ${nilaiKomponen(k, v)}</li>`).join("")}</ul>`
+    : `<p>${kosong}</p>`;
+  const kuatLemah = `<div class="rc-dua">` +
+    `<div><h4 class="naik">Kekuatan</h4>${daftar(a.kuat, "Tidak ada metrik yang menonjol kuat.")}</div>` +
+    `<div><h4 class="turun">Kelemahan</h4>${daftar(a.lemah, "Tidak ada metrik yang menonjol lemah.")}</div>` +
+    `</div>`;
+
+  const flag = a.flag.length
+    ? `<ul>${a.flag.map(([k, p]) => `<li><span class="flag">${esc(k)}</span> ${esc(p)}</li>`).join("")}</ul>`
+    : "<p>Tidak ada red flag terdeteksi.</p>";
+
+  const yakin = a.alasanKeyakinan.length
+    ? `<details><summary>Kenapa keyakinannya ${a.keyakinan}%</summary><ul>` +
+      a.alasanKeyakinan.map(x => `<li>${tebal(x)}</li>`).join("") + `</ul></details>`
+    : "";
+
+  return bagian("Kesimpulan fundamental", vonis + yakin) +
+    bagian("Skor per kategori <span style='text-transform:none;letter-spacing:0'>(angka kecil = bobot)</span>",
+           `<div class="rc-bar">${bar}</div>`) +
+    bagian("Valuasi", valuasi) +
+    bagian("Kekuatan &amp; kelemahan", kuatLemah) +
+    bagian("Red flag", flag);
+}
+
+function htmlTeknikal(r) {
+  const h = r.Harga;
+  const tt = num(r.TT);
+  return bagian("Tren &amp; teknikal", `<dl class="rc-dl">` +
+    sel("MA50", angka(num(r.MA50)), jarak(h, r.MA50) && `harga ${jarak(h, r.MA50)}`) +
+    sel("MA150", angka(num(r.MA150)), jarak(h, r.MA150) && `harga ${jarak(h, r.MA150)}`) +
+    sel("MA200", angka(num(r.MA200)), jarak(h, r.MA200) && `harga ${jarak(h, r.MA200)}`) +
+    sel("RSI14", angka(num(r.RSI14), 1), num(r.RSI14) >= 70 ? "overbought" : num(r.RSI14) <= 30 && num(r.RSI14) !== null ? "oversold" : "") +
+    sel("RS", num(r.RS) === null ? "–" : angka(num(r.RS)), "peringkat 1–99 vs universe") +
+    sel("Trend Template", tt === null ? "–" : `${angka(tt)}/8`) +
+    sel("Tertinggi 52 mgg", angka(num(r.Tinggi52)), jarak(h, r.Tinggi52) && `harga ${jarak(h, r.Tinggi52)}`) +
+    sel("Terendah 52 mgg", angka(num(r.Rendah52)), jarak(h, r.Rendah52) && `harga ${jarak(h, r.Rendah52)}`) +
+    sel("Naik 3 / 6 / 12 bln", [r["Naik3B%"], r["Naik6B%"], r["Naik12B%"]].map(v => bertanda(v, 0, "%")).join(" · ")) +
+    sel("VolSpike", num(r.VolSpike) === null ? "–" : angka(num(r.VolSpike), 2) + "×", "volume hari ini ÷ rata-rata 20 hari") +
+    sel("Nilai transaksi", num(r["Nilai(M)"]) === null ? "–" : `Rp${angka(num(r["Nilai(M)"]), 1)} M`, "rata-rata per hari") +
+    sel("Net asing 5H / 20H", `${bertanda(r["NetAsing5H(M)"])} · ${bertanda(r["NetAsing20H(M)"])}`, "miliar rupiah") +
+    `</dl>`);
+}
+
+function htmlSmc(ticker) {
+  const s = (state.data.smc || []).find(x => x.Ticker === ticker);
+  if (!s) return "";
+  const sinyal = String(s.Sinyal || "").trim();
+  const slug = sinyal ? sinyal.split(" ").pop().toLowerCase() : "";
+  const utuh = num(s.RR) !== null;
+  const isi =
+    `<div class="rc-chip" style="margin:0 0 8px">` +
+    (sinyal ? `<span class="status s-${esc(slug)}">${esc(sinyal)}</span>` : "") +
+    `<span class="c">Tren D1 ${s.TrenD1 === "up" ? "▲ naik" : s.TrenD1 === "down" ? "▼ turun" : "–"}</span>` +
+    (s.ZonaD1 ? `<span class="c">${esc(s.ZonaD1)}</span>` : "") + `</div>` +
+    (utuh
+      ? `<dl class="rc-dl">` +
+        sel("Zona entri", `${angka(num(s.EntriBawah))} – ${angka(num(s.EntriAtas))}`, esc(s.TipeEntri || "")) +
+        sel("Stop", angka(num(s.Stop))) +
+        sel("Target", angka(num(s.Target))) +
+        sel("Risk/reward", angka(num(s.RR), 2)) +
+        sel("Lot", num(s.Lot) === null ? "–" : angka(num(s.Lot)), num(s.NilaiPosisi) ? rupiah(s.NilaiPosisi) : "") +
+        sel("Porsi modal", num(s["PorsiModal%"]) === null ? "–" : angka(num(s["PorsiModal%"]), 1) + "%",
+            num(s.RisikoRp) ? `risiko ${rupiah(s.RisikoRp)}` : "") +
+        `</dl>`
+      : "") +
+    (s.Catatan ? `<p>${esc(s.Catatan)}</p>` : "");
+  return bagian("Rencana entri (SMC)", isi);
+}
+
+function htmlBroker(ticker) {
+  const b = (state.data.broker || []).find(x => x.Ticker === ticker);
+  if (!b) return "";
+  if (!b.Bandar) return bagian("Broker summary", `<p>${esc(b.Catatan || "Data broker kosong.")}</p>`);
+  return bagian("Broker summary · 5 hari bursa",
+    `<div class="rc-chip" style="margin:0 0 8px"><span class="status s-${esc(String(b.Bandar).toLowerCase())}">${esc(b.Bandar)}</span>` +
+    `<span class="c">dominasi ${angka(num(b["Dominasi%"]), 1)}%</span></div>` +
+    `<dl class="rc-dl">` +
+    sel("Top pembeli (M)", esc(b.TopBeli || "–")) +
+    sel("Top penjual (M)", esc(b.TopJual || "–")) +
+    sel("Avg beli top-3", angka(num(b.AvgBeliTop3)), b["JarakAvg%"] !== null ? `harga ${bertanda(b["JarakAvg%"], 1, "%")}` : "") +
+    `</dl>`);
+}
+
+function htmlLapkeu(r) {
+  const periode = [r.Periode, r.Basis].filter(Boolean).map(esc).join(" · ");
+  return bagian(`Laporan keuangan${periode ? ` <span style="text-transform:none;letter-spacing:0">(${periode})</span>` : ""}`,
+    `<dl class="rc-dl">` +
+    sel("Omzet", rupiah(r.Omzet), bertanda(r["OmzetYoY%"], 1, "% YoY")) +
+    sel("Laba bersih", rupiah(r.LabaBersih), bertanda(r["LabaYoY%"], 1, "% YoY")) +
+    sel("ROE", num(r["ROE%"]) === null ? "–" : angka(num(r["ROE%"]), 1) + "%") +
+    sel("Margin bersih", num(r["MarginBersih%"]) === null ? "–" : angka(num(r["MarginBersih%"]), 1) + "%") +
+    sel("Arus kas operasi", rupiah(r.OCF)) +
+    sel("Arus kas bebas", rupiah(r.FCF)) +
+    sel("Utang bersih", rupiah(r.UtangBersih),
+        [num(r.UtangBersih) < 0 ? "negatif = kas bersih" : "",
+         num(r.DER) === null ? "" : `DER ${angka(num(r.DER), 2)}×`].filter(Boolean).join(" · ")) +
+    sel("Ekuitas", rupiah(r.Ekuitas)) +
+    sel("Dividen", num(r["Dividen%"]) === null ? "–" : angka(num(r["Dividen%"]), 2) + "%",
+        num(r["Payout%"]) === null ? "" : `payout ${angka(num(r["Payout%"]), 0)}%`) +
+    `</dl>`);
+}
+
+function htmlRincian(ticker, a) {
+  const r = (state.data.semua || []).find(x => x.Ticker === ticker)
+    || (state.data[state.tab] || []).find(x => x.Ticker === ticker);
+  if (!r) return null;
+  return {
+    kepala: htmlKepala(r),
+    isi: htmlFundamental(r, a) + htmlSmc(ticker) + htmlBroker(ticker) + htmlTeknikal(r) +
+      htmlLapkeu(r) +
+      `<p class="rc-kaki">Ringkasan dari <code>analisa.py</code>; laporan lengkap (rincian ` +
+      `tiap metrik dan bahan investment thesis): <code>python analisa.py ${esc(ticker)}</code>. ` +
+      `Bukan rekomendasi investasi.</p>`,
+  };
+}
+
+// Panel dibuka lewat hash URL (#BBCA): tombol Kembali di ponsel menutupnya,
+// dan tautannya bisa dibagikan langsung ke satu emiten.
+const rincianJS = { dorong: false };
+function tampilkanRincian(ticker) {
+  const dlg = document.getElementById("rincian");
+  const isi = htmlRincian(ticker, analisaUntuk(ticker));
+  if (!isi || !dlg.showModal) return;
+  document.getElementById("rc-kepala").innerHTML = isi.kepala;
+  document.getElementById("rc-isi").innerHTML = isi.isi;
+  if (!dlg.open) { dlg.showModal(); document.getElementById("rc-isi").scrollTop = 0; }
+  if (analisaJS.data === undefined) {
+    muatAnalisa().then(() => {
+      if (dlg.open && document.getElementById("rc-judul")?.textContent === ticker) {
+        document.getElementById("rc-isi").innerHTML = htmlRincian(ticker, analisaUntuk(ticker)).isi;
+      }
+    });
+  }
+}
+function bukaRincian(ticker) {
+  if (typeof location === "undefined") return tampilkanRincian(ticker);
+  if (decodeURIComponent(location.hash.slice(1)) === ticker) return tampilkanRincian(ticker);
+  rincianJS.dorong = true;
+  location.hash = encodeURIComponent(ticker);   // memicu hashchange → tampilkanRincian
+}
+function bukaDariHash() {
+  if (typeof location === "undefined") return;
+  const t = decodeURIComponent(location.hash.slice(1)).toUpperCase();
+  const dlg = document.getElementById("rincian");
+  if (t && state.data.semua) tampilkanRincian(t);
+  else if (dlg.open) dlg.close();
+}
+if (typeof addEventListener === "function" && typeof location !== "undefined") {
+  addEventListener("hashchange", bukaDariHash);
+  const dlg = document.getElementById("rincian");
+  document.getElementById("rc-tutup").addEventListener("click", () => dlg.close());
+  // Klik di luar kotak dialog (di backdrop) menutupnya.
+  dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+  dlg.addEventListener("close", () => {
+    if (!location.hash) return;
+    if (rincianJS.dorong) { rincianJS.dorong = false; history.back(); }
+    else history.replaceState(null, "", location.pathname + location.search);
+  });
+}
+
+muat().then(bukaDariHash);
 </script>
 </body>
 </html>
