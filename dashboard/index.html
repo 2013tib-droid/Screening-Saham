@@ -294,6 +294,7 @@
     border-bottom: 1px dotted var(--rencana-fg);
   }
   td .nama { color: var(--text-secondary); }
+  .nama-mini { display: none; }
 
   /* ---- Pagination mendatar ---- */
   .pager {
@@ -528,6 +529,32 @@
     header .lain { margin-left: 0; }
     details dl { grid-template-columns: 1fr; }
     details dt { margin-top: 8px; }
+
+    /* Kartu ringkas: di 360px tujuh kartu lengkap makan ±470px sebelum
+       tabel kelihatan. Kriterianya tetap dijelaskan di "Arti kolom". */
+    .tiles { gap: 8px; margin: 14px 0; }
+    .tile { padding: 9px 12px 10px 14px; }
+    .tile .label { font-size: .66rem; letter-spacing: .04em; }
+    .tile .sub { display: none; }
+
+    /* Dropdown dua per baris, kotak cari selebar penuh. */
+    .controls select { flex: 1 1 calc(50% - 4px); min-width: 0; }
+    #cari { flex: 1 1 100%; min-width: 0; }
+
+    /* Kolom Nama memakan lebih dari separuh layar 360px sehingga Skor,
+       Harga, dan Sinyal terdorong keluar. Namanya pindah ke bawah ticker,
+       di kolom yang lengket. */
+    th.kol-nama, td.kol-nama { display: none; }
+    td.ticker .nama-mini {
+      display: block;
+      max-width: 112px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: .7rem;
+      font-weight: 400;
+      letter-spacing: 0;
+      color: var(--text-muted);
+    }
   }
 </style>
 </head>
@@ -1008,9 +1035,24 @@ function kolomTampil() {
   // pemotongan kelompok.
   if (KOLOM_KHUSUS[state.tab]) return KOLOM_KHUSUS[state.tab];
   const daftar = KELOMPOK[state.kelompok];
-  if (!daftar) return KOLOM;
-  const pilih = new Set(JANGKAR.concat(daftar));
-  return KOLOM.filter(k => pilih.has(k.k));
+  const pilih = daftar ? new Set(JANGKAR.concat(daftar)) : null;
+  const kolom = pilih ? KOLOM.filter(k => pilih.has(k.k)) : KOLOM;
+  return layarSempit() ? geserLabelKeBelakang(kolom) : kolom;
+}
+
+// Di ponsel layar pertama tabel cuma muat 2–3 kolom sesudah ticker. Grup,
+// Sektor, dan Syariah adalah label, bukan angka keputusan, jadi di sana
+// mereka pindah ke belakang Harga supaya Status, Skor, Red flag, dan Harga
+// yang terlihat lebih dulu. Urutan di layar lebar tidak berubah.
+const LABEL_BELAKANG = ["Grup", "Sektor", "Syariah"];
+const MQ_SEMPIT = typeof matchMedia === "function" ? matchMedia("(max-width: 640px)") : null;
+function layarSempit() { return !!(MQ_SEMPIT && MQ_SEMPIT.matches); }
+function geserLabelKeBelakang(kolom) {
+  const label = kolom.filter(k => LABEL_BELAKANG.includes(k.k));
+  const sisa = kolom.filter(k => !LABEL_BELAKANG.includes(k.k));
+  const i = sisa.findIndex(k => k.k === "Harga");
+  if (i < 0) return sisa.concat(label);
+  return sisa.slice(0, i + 1).concat(label, sisa.slice(i + 1));
 }
 
 const fmt = new Map();
@@ -1155,7 +1197,8 @@ function render() {
   const th = kolom.map((k, i) => {
     const aktif = state.urut.kolom === k.k;
     const arah = aktif ? '<span class="arah">' + (state.urut.naik ? " ▲" : " ▼") + "</span>" : "";
-    const kelas = [k.kiri ? "kiri" : "", i === 0 ? "lengket" : "", aktif ? "terurut" : ""]
+    const kelas = [k.kiri ? "kiri" : "", i === 0 ? "lengket" : "", aktif ? "terurut" : "",
+                   k.k === "Nama" ? "kol-nama" : ""]
       .filter(Boolean).join(" ");
     return `<th data-kolom="${k.k}" class="${kelas}">${k.label}${arah}</th>`;
   }).join("");
@@ -1172,9 +1215,12 @@ function render() {
         const judul = utuh
           ? ' title="Zona, stop, dan target lengkap — kelayakannya tetap dibaca di kolom Sinyal"'
           : "";
-        return `<td class="ticker ${utuh ? "ada-rencana " : ""}${kelas}"${judul}>${r.Ticker}</td>`;
+        // nama-mini hanya tampil di layar sempit, menggantikan kolom Nama
+        // yang di sana disembunyikan (lihat @media 640px).
+        const mini = r.Nama ? `<span class="nama-mini">${r.Nama}</span>` : "";
+        return `<td class="ticker ${utuh ? "ada-rencana " : ""}${kelas}"${judul}>${r.Ticker}${mini}</td>`;
       }
-      if (k.k === "Nama") return `<td class="${kelas}"><span class="nama">${r.Nama || "–"}</span></td>`;
+      if (k.k === "Nama") return `<td class="kol-nama ${kelas}"><span class="nama">${r.Nama || "–"}</span></td>`;
       if (k.k === "Grup") return `<td class="${kelas}"><span class="nama">${r.Grup || "–"}</span></td>`;
       if (k.k === "Sektor") return `<td class="${kelas}"><span class="nama">${r.Sektor || "–"}</span></td>`;
       // Kosong berarti daftar DES belum dimuat -- itu "belum tahu", bukan
@@ -1413,6 +1459,9 @@ document.getElementById("ke-kiri").addEventListener("click", () => geser(-1));
 document.getElementById("ke-kanan").addEventListener("click", () => geser(1));
 document.getElementById("tabel").addEventListener("scroll", perbaruiPager);
 if (typeof addEventListener === "function") addEventListener("resize", perbaruiPager);
+// Urutan kolom berbeda di layar sempit (kolomTampil), jadi melewati batas
+// 640px — memutar ponsel, mengubah lebar jendela — perlu render ulang.
+if (MQ_SEMPIT && MQ_SEMPIT.addEventListener) MQ_SEMPIT.addEventListener("change", () => render());
 
 // ---- Kendali ----------------------------------------------------------------
 
