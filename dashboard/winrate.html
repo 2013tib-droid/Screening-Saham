@@ -219,6 +219,7 @@
   .tablewrap.tergulir th.lengket, .tablewrap.tergulir td.lengket { box-shadow: var(--sticky-shadow); }
   td.ticker { font-weight: 680; }
   td .nama { color: var(--text-secondary); }
+  .nama-mini { display: none; }
   .laba { display: inline-block; min-width: 56px; padding: 2px 7px; border-radius: 6px; font-weight: 650; }
   .laba.naik { background: var(--pos-bg); color: var(--pos-fg); }
   .laba.turun { background: var(--neg-bg); color: var(--neg-fg); }
@@ -278,6 +279,24 @@
     header .balik { margin-left: 0; }
     details dl { grid-template-columns: 1fr; }
     details dt { margin-top: 8px; }
+
+    /* Dropdown dua per baris, kotak cari selebar penuh. */
+    .controls select { flex: 1 1 calc(50% - 4px); min-width: 0; }
+    #cari { flex: 1 1 100%; min-width: 0; }
+
+    /* Sama dengan index.html: kolom Nama memenuhi layar 360px, jadi namanya
+       pindah ke bawah ticker yang lengket. */
+    th.kol-nama, td.kol-nama { display: none; }
+    td.ticker .nama-mini {
+      display: block;
+      max-width: 112px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: .7rem;
+      font-weight: 400;
+      letter-spacing: 0;
+      color: var(--text-muted);
+    }
   }
 </style>
 </head>
@@ -996,9 +1015,12 @@ function sel(r, kol) {
   if (kol.k === "Ticker") {
     const ulang = r.Ulang === "Ya"
       ? '<span class="ulang" title="Saham ini masih dipegang dari pick sebelumnya — tidak dihitung sebagai posisi baru">ulang</span>' : "";
-    return `<td class="kiri ticker${kol.lengket ? " lengket" : ""}">${esc(v)}${ulang}</td>`;
+    // nama-mini hanya tampil di layar sempit, menggantikan kolom Nama
+    // yang di sana disembunyikan (lihat @media 640px).
+    const mini = r.Nama ? `<span class="nama-mini">${esc(r.Nama)}</span>` : "";
+    return `<td class="kiri ticker${kol.lengket ? " lengket" : ""}">${esc(v)}${ulang}${mini}</td>`;
   }
-  if (kol.k === "Nama") return `<td class="kiri"><span class="nama">${esc(v)}</span></td>`;
+  if (kol.k === "Nama") return `<td class="kiri kol-nama"><span class="nama">${esc(v)}</span></td>`;
   if (kol.k === "Status") {
     return `<td class="kiri"><span class="status s-${esc(String(v).toLowerCase())}">${esc(v)}</span></td>`;
   }
@@ -1060,7 +1082,7 @@ function render() {
   const halaman = state.perHal ? rows.slice((state.hal - 1) * state.perHal, state.hal * state.perHal) : rows;
   const kepala = kolom.map(k => {
     const aktif = state.urut.kolom === k.k;
-    return `<th class="${k.kiri ? "kiri" : ""}${k.lengket ? " lengket" : ""}${aktif ? " terurut" : ""}"`
+    return `<th class="${k.kiri ? "kiri" : ""}${k.lengket ? " lengket" : ""}${aktif ? " terurut" : ""}${k.k === "Nama" ? " kol-nama" : ""}"`
       + ` data-kolom="${k.k}" title="Klik untuk mengurutkan">${esc(k.label)}`
       + (aktif ? `<span class="arah"> ${state.urut.naik ? "▲" : "▼"}</span>` : "") + "</th>";
   }).join("");

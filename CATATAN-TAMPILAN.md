@@ -4,34 +4,46 @@ Dokumen ini untuk sesi berikutnya yang mengerjakan sisi tampilan. Isinya keadaan
 sekarang, apa yang sudah diverifikasi, dan apa yang belum — supaya tidak perlu
 menyusuri ulang riwayatnya.
 
-Terakhir diperbarui: 11 Agustus 2026, sesudah dashboard dilihat langsung di
-browser untuk pertama kalinya.
+Terakhir diperbarui: 18 November 2026, sesudah tampilan ponsel (360px)
+diperiksa dan dirapikan.
 
 ---
 
 ## Tugas yang tersisa
 
-**Perilaku di layar sempit / ponsel belum pernah dilihat siapa pun.** Itu
-satu-satunya pekerjaan tampilan yang tertinggal, dan memang tidak bisa
-diselesaikan tanpa mata.
+**Tampilan ponsel sudah dilihat (18 November 2026)** lewat screenshot Playwright
+di lebar 360px dan 1280px, untuk `index.html` maupun `winrate.html`. Yang
+ditemukan dan diperbaiki (semuanya di dalam `@media (max-width: 640px)`, jadi
+layar lebar tidak berubah):
 
-Sudah ada breakpoint `@media (max-width: 640px)` yang mengecilkan kartu,
-membuang pemisah di bilah kendali, dan menjadikan daftar keterangan satu kolom.
-Yang belum jelas:
+1. **Kolom Nama memakan lebih dari separuh layar**, sehingga sesudah ticker
+   tidak ada satu pun angka yang terlihat. Di layar sempit kolom itu
+   disembunyikan (`kol-nama`) dan namanya muncul kecil di bawah ticker, di
+   kolom yang lengket (`nama-mini`, terpotong `…` di 112px). Berlaku di kedua
+   halaman.
+2. **Grup, Sektor, dan Syariah mengisi layar pertama tabel** di `index.html`.
+   Di layar sempit `kolomTampil()` memindahkannya ke belakang Harga
+   (`geserLabelKeBelakang`), jadi Status, Skor, Red flag, dan Harga yang
+   terlihat duluan. Melewati batas 640px memicu render ulang lewat
+   `matchMedia`.
+3. **Tujuh kartu angka makan ±470px** sebelum tabel. Di layar sempit kartunya
+   hanya label + angka (`.sub` disembunyikan); kriterianya tetap ada di
+   "Arti kolom". Tinggi halaman turun dari 1996px ke 1692px.
+4. **Dropdown filter bertumpuk tidak rata.** Sekarang dua per baris, kotak
+   cari selebar penuh.
 
-1. Apakah bilah kendali (4 tab + 3 dropdown + kotak cari + penghitung) masih
-   masuk akal saat membungkus jadi tiga baris di layar 360px.
-2. Apakah dua bilah pagination bertumpuk — geser kolom, lalu nomor halaman —
-   terasa berat di layar kecil. Kandidat pertama untuk disederhanakan di
-   ponsel: sembunyikan bilah geser kolom dan andalkan dropdown kelompok kolom.
-3. Apakah kolom Ticker yang lengket masih menyisakan ruang baca yang cukup
-   ketika lebar layar cuma 360px.
+Tidak ada overflow horizontal di 360px pada kedua halaman, dan tidak ada
+galat JS. Dua bilah pagination (geser kolom + nomor halaman) ternyata masih
+wajar di 360px, jadi dibiarkan.
 
-Kalau ada waktu lebih, kandidat fitur berikutnya masih sama seperti sebelumnya:
-`analisa.py TICKER` menghasilkan laporan Markdown lengkap satu emiten dan belum
-punya antarmuka apa pun di dashboard. Tombol "analisa" per baris, atau panel
-rincian saat baris diklik, adalah pemakaian paling menjanjikan untuk 41 kolom
-CSV yang sekarang terbawa tapi tidak ditampilkan.
+Yang **belum** dilihat: perangkat sungguhan (sentuhan, geser dengan jari,
+keyboard virtual yang menutupi kotak cari). Mode gelap di 360px sudah dicek lewat screenshot dan terbaca baik.
+
+Kandidat fitur berikutnya masih sama seperti sebelumnya: `analisa.py TICKER`
+menghasilkan laporan Markdown lengkap satu emiten dan belum punya antarmuka
+apa pun di dashboard. Tombol "analisa" per baris, atau panel rincian saat
+baris diklik, adalah pemakaian paling menjanjikan untuk 41 kolom CSV yang
+sekarang terbawa tapi tidak ditampilkan.
 
 ---
 
