@@ -350,7 +350,7 @@ Keadaan per 13 Nov 2026 di data uji ulang: FTD 12 November (hari ke-6 rally dari
 
 ## Uji Ulang Filter Pasar (`uji_ulang_pasar.py`)
 
-Pertanyaannya: **apakah "boleh beli sejak FTD", "tahan bila DD ≥ 5", atau breadth memperbaiki aturan IHSG > MA50 untuk daftar swing?** Aturan sinyal, simulasi per sinyal, dan portofolio 10 posisi sama persis dengan [uji ulang Tren vs Swing](#uji-ulang-tren-vs-swing-uji_ulang_trenpy) (fungsinya dipakai ulang); yang diganti hanya filter pasarnya, dibaca pada penutupan malam sinyal. Periode sinyal 1 April 2024 – 16 November 2026 (623 hari bursa), 402 emiten, 20 urutan acak per portofolio.
+Pertanyaannya: **apakah "boleh beli sejak FTD", "tahan bila DD ≥ 5", atau breadth memperbaiki aturan IHSG > MA50 untuk daftar swing?** Aturan sinyal, simulasi per sinyal, dan portofolio 10 posisi sama persis dengan [uji ulang Tren vs Swing](#uji-ulang-tren-vs-swing-uji_ulang_trenpy) (fungsinya dipakai ulang); yang diganti hanya filter pasarnya, dibaca pada penutupan malam sinyal. Periode sinyal 1 April 2024 – 18 November 2026 (625 hari bursa), 402 emiten, 20 urutan acak per portofolio.
 
 ```bash
 python uji_ulang_pasar.py                         # tarik harga dari Yahoo
@@ -358,50 +358,59 @@ python uji_ulang_pasar.py --harga-csv harga.csv   # tanpa jaringan
 python scripts/uji_pasar.py                       # uji offline, data buatan
 ```
 
-Dijalankan di **Actions → Uji Ulang Filter Pasar → Run workflow** (`.github/workflows/uji-ulang-pasar.yml`); hasilnya di [`hasil/uji_ulang_pasar.md`](hasil/uji_ulang_pasar.md) dan `hasil/uji_ulang_pasar_*.{csv,json}`. Breadth dihitung ulang dengan `hitung_breadth()` dari harga yang sama, karena `hasil/breadth.csv` baru terisi MA50-nya Februari 2025; di 423 tanggal yang tumpang tindih selisihnya rata-rata 0,06 poin dan sisinya terhadap 50% sama di semua tanggal.
+Dijalankan di **Actions → Uji Ulang Filter Pasar → Run workflow** (`.github/workflows/uji-ulang-pasar.yml`); hasilnya di [`hasil/uji_ulang_pasar.md`](hasil/uji_ulang_pasar.md) dan `hasil/uji_ulang_pasar_*.{csv,json}`. Breadth dihitung ulang dengan `hitung_breadth()` dari harga yang sama, karena `hasil/breadth.csv` baru terisi MA50-nya Februari 2025; di 425 tanggal yang tumpang tindih selisihnya rata-rata 0,04 poin dan sisinya terhadap 50% sama di semua tanggal.
 
 **Kriteria "jelas lebih baik dari MA50"**, ditetapkan sebelum melihat angka: drawdown median lebih dangkal dengan rentang antar-urutan yang tidak tumpang tindih, **dan** total hasil tidak lebih rendah. Filter yang lebih sering menahan beli hampir pasti memangkas drawdown — karena itu kolom `HariBoleh%` dan baris saham acak ikut dibaca.
+
+"FTD tanpa batas" adalah varian yang mengakui FTD di hari ke-4 rally **dan sesudahnya** (praktik IBD), bukan hanya hari ke-4–7; percobaan rally baru habis kalau titik terendahnya ditembus. Lihat [kelemahan FTD versi ini](#kelemahan-ftd-versi-ini--penting-dibaca) untuk alasan varian ini diuji.
 
 ### Portofolio 10 posisi, tahan 21 hari bursa
 
 | Filter | Hari boleh beli | Swing: drawdown | Swing: total | Acak: drawdown | Acak: total |
 |---|---|---|---|---|---|
-| Tanpa filter | 100% | −52,5% (−61 … −44) | −2% | −49,0% | −11% |
-| **IHSG > MA50** (aturan sekarang) | 49% | **−23,4%** (−30 … −15) | **+111%** (+63 … +184) | −21,8% | +41% |
-| Sejak FTD | 21% | −33,5% (−39 … −27) | −25% | −32,8% | −22% |
-| IHSG > MA50 & sejak FTD | 11% | −7,5% (−9 … −6) | +33% (+21 … +40) | −8,5% | +6% |
-| DD aktif < 5 | 61% | −45,5% (−57 … −34) | −33% | −39,6% | −8% |
-| IHSG > MA50 & DD < 5 | 39% | −25,2% (−40 … −18) | +22% (−5 … +39) | −21,1% | +46% |
-| Breadth > 50% | 54% | −41,2% (−53 … −33) | +22% | −52,0% | −5% |
-| IHSG > MA50 & breadth > 50% | 48% | −18,9% (−24 … −12) | +107% (+55 … +214) | −20,5% | +57% |
+| Tanpa filter | 100% | −52,9% (−61 … −46) | −8% | −47,7% | −19% |
+| **IHSG > MA50** (aturan sekarang) | 49% | **−23,4%** (−30 … −15) | **+111%** (+63 … +184) | −22,1% | +41% |
+| Sejak FTD | 21% | −33,5% (−39 … −27) | −25% | −33,5% | −23% |
+| IHSG > MA50 & sejak FTD | 11% | −7,5% (−9 … −6) | +33% (+21 … +40) | −9,0% | +7% |
+| Sejak FTD tanpa batas | 51% | −47,9% (−55 … −38) | −38% | −40,3% | −31% |
+| IHSG > MA50 & FTD tanpa batas | 36% | −24,9% (−29 … −21) | +35% (+11 … +52) | −19,2% | +45% |
+| DD aktif < 5 | 61% | −45,1% (−57 … −34) | −30% | −38,6% | −6% |
+| IHSG > MA50 & DD < 5 | 39% | −25,2% (−40 … −18) | +22% (−5 … +39) | −19,7% | +48% |
+| Breadth > 50% | 53% | −41,2% (−53 … −33) | +22% | −53,0% | +2% |
+| IHSG > MA50 & breadth > 50% | 48% | −18,9% (−24 … −12) | +107% (+55 … +214) | −20,5% | +63% |
 
-Median 20 urutan acak, rentang min–maks dalam kurung. IHSG beli-dan-tahan: −26,7%, drawdown −46,3%.
+Median 20 urutan acak, rentang min–maks dalam kurung. IHSG beli-dan-tahan: −28,0%, drawdown −46,3%.
 
 ### Per sinyal, hari bursa ke-21 (selisih vs saham likuid acak)
 
 | Filter | Posisi | Selisih | ± SE | Median selisih | Mengalahkan acak |
 |---|---|---|---|---|---|
-| Tanpa filter | 1.831 | −0,54% | 0,55 | −2,93% | 39% |
-| IHSG > MA50 | 1.184 | −0,15% | 0,68 | −3,46% | 37% |
+| Tanpa filter | 1.839 | −0,53% | 0,55 | −2,91% | 39% |
+| IHSG > MA50 | 1.186 | −0,15% | 0,68 | −3,44% | 37% |
 | Sejak FTD | 368 | +0,71% | 1,42 | −0,81% | 46% |
 | IHSG > MA50 & sejak FTD | 175 | +2,44% | 1,95 | −0,06% | 50% |
-| DD aktif < 5 | 1.367 | −0,24% | 0,70 | −3,16% | 38% |
-| IHSG > MA50 & DD < 5 | 948 | −0,10% | 0,85 | −3,45% | 37% |
-| Breadth > 50% | 1.299 | −0,51% | 0,76 | −3,64% | 37% |
-| IHSG > MA50 & breadth > 50% | 1.128 | −0,08% | 0,70 | −3,51% | 37% |
+| Sejak FTD tanpa batas | 1.222 | −0,77% | 0,72 | −3,38% | 37% |
+| IHSG > MA50 & FTD tanpa batas | 886 | −0,42% | 0,87 | −4,11% | 36% |
+| DD aktif < 5 | 1.369 | −0,25% | 0,70 | −3,16% | 38% |
+| IHSG > MA50 & DD < 5 | 950 | −0,10% | 0,85 | −3,41% | 37% |
+| Breadth > 50% | 1.301 | −0,51% | 0,76 | −3,64% | 37% |
+| IHSG > MA50 & breadth > 50% | 1.130 | −0,08% | 0,70 | −3,50% | 37% |
 
 ### Cara membacanya
 
-1. **Tidak ada yang jelas lebih baik dari MA50.** Tidak satu pun lolos kriteria di atas. MA50 tetap aturan beli; DD, FTD, dan breadth hanya ditampilkan sebagai konteks.
-2. **Sebagai pengganti MA50, ketiganya lebih buruk.** FTD sendirian (−33,5%, total −25%), DD < 5 sendirian (−45,5%, −33%), breadth sendirian (−41,2%, +22%) — semuanya drawdown lebih dalam *dan* hasil lebih rendah.
+1. **Tidak ada yang jelas lebih baik dari MA50.** Tidak satu pun lolos kriteria di atas, termasuk FTD tanpa batas. MA50 tetap aturan beli; DD, FTD, dan breadth hanya ditampilkan sebagai konteks.
+2. **Sebagai pengganti MA50, semuanya lebih buruk.** FTD sendirian (−33,5%, total −25%), FTD tanpa batas sendirian (−47,9%, −38%), DD < 5 sendirian (−45,1%, −30%), breadth sendirian (−41,2%, +22%) — semuanya drawdown lebih dalam *dan* hasil lebih rendah.
 3. **"Tahan bila DD ≥ 5" di atas MA50 justru memperburuk:** drawdown sedikit lebih dalam (−25,2% vs −23,4%), total turun dari +111% ke +22%. DD ≥ 5 terjadi di 39% hari bursa — terlalu sering untuk jadi penanda bahaya di IHSG; ia juga menahan beli di reli.
-4. **MA50 + FTD memangkas drawdown ke −7,5%, tapi dengan cara yang murah:** beli hanya diizinkan di 11% hari bursa, total hasil turun ke +33% (CAGR 11,5% vs 32,9%), dan portofolio saham acak dengan filter yang sama juga turun ke −8,5%. Itu efek "jarang di pasar", bukan pembacaan yang lebih tajam. Selisih per sinyalnya +2,44% ± 1,95 — sekitar 1,25 SE, 175 posisi dari 56 tanggal beli, belum bisa dibedakan dari nol. Drawdown per satuan hasil (CAGR/drawdown 1,53 vs 1,41) kira-kira setara.
-5. **MA50 + breadth > 50% paling mendekati:** drawdown −18,9% vs −23,4% dengan total hampir sama (+107% vs +111%), dan beli diizinkan di 48% vs 49% hari. Tapi rentang antar-urutannya tumpang tindih lebar (−24…−12 vs −30…−15), dan pada saham acak perbaikannya cuma −20,5% vs −21,8%. Arahnya menarik, besarnya masih di dalam derau satu siklus pasar.
-6. **Tidak ada filter yang membuat pemilihan sahamnya lebih pintar.** Median selisih per sinyal tetap negatif di semua filter; temuan lama (daftar swing ≈ saham acak) tidak berubah.
+4. **MA50 + FTD memangkas drawdown ke −7,5%, tapi dengan cara yang murah:** beli hanya diizinkan di 11% hari bursa, total hasil turun ke +33% (CAGR 11,5% vs 32,7%), dan portofolio saham acak dengan filter yang sama juga turun ke −9,0%. Itu efek "jarang di pasar", bukan pembacaan yang lebih tajam. Selisih per sinyalnya +2,44% ± 1,95 — sekitar 1,25 SE, 175 posisi dari 56 tanggal beli, belum bisa dibedakan dari nol. Drawdown per satuan hasil (CAGR/drawdown 1,53 vs 1,40) kira-kira setara.
+5. **MA50 + FTD tanpa batas kalah dari MA50 saja di dua-duanya:** drawdown tidak membaik (−24,9% vs −23,4%, rentangnya tumpang tindih), total turun dari +111% ke +35%. Varian ini memang menangkap sebagian besar reli 2025 (lihat di bawah), tapi menambah satu FTD palsu di tengah kejatuhan 2026, dan di atas MA50 ia terutama memotong hari beli (36% vs 49%) yang ternyata menguntungkan.
+6. **MA50 + breadth > 50% paling mendekati:** drawdown −18,9% vs −23,4% dengan total hampir sama (+107% vs +111%), dan beli diizinkan di 48% vs 49% hari. Tapi rentang antar-urutannya tumpang tindih lebar (−24…−12 vs −30…−15), dan pada saham acak perbaikannya cuma −20,5% vs −22,1%. Arahnya menarik, besarnya masih di dalam derau satu siklus pasar.
+7. **Tidak ada filter yang membuat pemilihan sahamnya lebih pintar.** Median selisih per sinyal tetap negatif di semua filter; temuan lama (daftar swing ≈ saham acak) tidak berubah.
 
 ### Kelemahan FTD versi ini — penting dibaca
 
-Dengan aturan "FTD hanya di hari ke-4–7, sesudah itu tunggu titik terendah baru", IHSG cuma berkeadaan NAIK 20,5% dari periode uji, dalam enam blok: 28 Jun – 2 Agu 2024, 25–28 Nov 2024, 17–26 Feb 2025, 1–29 Apr 2026, 12 Jun – 21 Sep 2026, dan sejak 12 Nov 2026. **Seluruh reli Mei 2025 – Januari 2026 (IHSG ±6.500 → 9.135) terlewat**: percobaan rally sesudah titik terendah awal April 2025 habis di hari ke-7 (21 April) tanpa hari yang naik ≥ 1,25% bervolume lebih tinggi; satu percobaan lagi (24 Juni – 3 Juli 2025) juga habis tanpa FTD; sesudah itu IHSG naik sampai puncaknya 20 Januari 2026 tanpa mencetak titik terendah 25 sesi yang baru — jadi tidak ada percobaan rally untuk dihitung. Praktik IBD sendiri masih mengakui FTD sesudah hari ke-7; versi itu belum diuji di sini karena di luar definisi yang diminta. Angka "sejak FTD" di atas karena itu adalah hasil definisi ini, bukan vonis atas metode O'Neil secara umum.
+Dengan aturan "FTD hanya di hari ke-4–7, sesudah itu tunggu titik terendah baru", IHSG cuma berkeadaan NAIK 20,8% dari periode uji, dalam enam blok: 28 Jun – 2 Agu 2024, 25–28 Nov 2024, 17–26 Feb 2025, 1–29 Apr 2026, 12 Jun – 21 Sep 2026, dan sejak 12 Nov 2026. **Seluruh reli Mei 2025 – Januari 2026 (IHSG ±6.500 → 9.135) terlewat**: percobaan rally sesudah titik terendah awal April 2025 habis di hari ke-7 (21 April) tanpa hari yang naik ≥ 1,25% bervolume lebih tinggi; satu percobaan lagi (24 Juni – 3 Juli 2025) juga habis tanpa FTD; sesudah itu IHSG naik sampai puncaknya 20 Januari 2026 tanpa mencetak titik terendah 25 sesi yang baru — jadi tidak ada percobaan rally untuk dihitung.
+
+**Varian tanpa batas hari ke-7 (diuji 18 Nov 2026)** — praktik IBD, yang masih mengakui FTD sesudah hari ke-7 — memperbaiki persis kelemahan itu: FTD naik dari 6 ke 11 kali dan keadaan NAIK dari 20,8% ke 51,0% hari bursa. Reli 2025 sebagian besar tertangkap: 22 Apr – 20 Jun 2025 (IHSG +5,6%) dan 12 Agu 2025 – 27 Jan 2026 (+15,3%). Tapi ia juga menyalakan FTD 11 Februari 2026, di tengah kejatuhan IHSG dari 9.135 (20 Januari) ke ±5.300 (keadaan NAIK sampai 6 Maret, IHSG 8.291 → 7.586, −8,5%), plus dua FTD lain (15 Mei 2024 dan 15 Januari 2025) yang hanya bertahan 2–3 minggu dengan IHSG sedikit turun. Hasil akhirnya [di tabel di atas](#portofolio-10-posisi-tahan-21-hari-bursa): sendirian lebih buruk dari FTD lama, dan di atas MA50 lebih buruk dari MA50 saja. Jadi angka "sejak FTD" yang buruk bukan semata akibat batas hari ke-7; di IHSG periode ini, FTD dalam kedua versinya tidak menambah apa pun di atas MA50.
 
 Batas lain sama dengan uji ulang Tren vs Swing: bias survivorship (universe hari ini), satu siklus pasar, portofolio tanpa pembulatan lot. Matematikanya — DD, umur 25 sesi, gugur 5%, hari rally, FTD, tembus titik terendah, tanpa look-ahead, dan filter gabungan = irisan — diuji terhadap deret buatan di `scripts/uji_pasar.py`.
 
