@@ -945,7 +945,7 @@ FTD_HARI_MIN, FTD_HARI_MAKS = 4, 7
 JENDELA_RENDAH = 25
 
 
-def hitung_dd_ftd(bar: pd.DataFrame) -> pd.DataFrame:
+def hitung_dd_ftd(bar: pd.DataFrame, hari_maks: int | None = FTD_HARI_MAKS) -> pd.DataFrame:
     """Distribution day dan follow-through day IHSG, per hari bursa.
 
     `bar` berindeks tanggal, kolom Close, Low, Volume, urut naik, tanpa bar
@@ -972,6 +972,12 @@ def hitung_dd_ftd(bar: pd.DataFrame) -> pd.DataFrame:
         ada titik terendah baru.
       - Lewat hari ke-7 tanpa FTD: percobaan rally habis, keadaan KOREKSI
         menunggu titik terendah baru untuk percobaan berikutnya.
+
+    `hari_maks` mengganti batas hari ke-7 itu. None = tanpa batas: percobaan
+    rally baru habis kalau titik terendahnya ditembus (titik terendah 25 sesi
+    baru), mendekati praktik IBD yang masih mengakui FTD sesudah hari ke-7.
+    Dipakai uji_ulang_pasar.py untuk membandingkan keduanya; dashboard dan
+    pasar.json tetap memakai bawaan 7.
 
     Kolom keluaran: DD (bool), DDAktif (int), Keadaan (KOREKSI/RALLY/NAIK),
     HariRally (0 bila tidak sedang rally), FTD (bool), TitikRendah (tanggal
@@ -1008,10 +1014,10 @@ def hitung_dd_ftd(bar: pd.DataFrame) -> pd.DataFrame:
                     hari, keadaan = 1, "RALLY"
             else:
                 hari += 1
-                if (FTD_HARI_MIN <= hari <= FTD_HARI_MAKS
-                        and naik >= FTD_NAIK_PCT / 100 and vol_naik):
+                dalam_jendela = FTD_HARI_MIN <= hari and (hari_maks is None or hari <= hari_maks)
+                if dalam_jendela and naik >= FTD_NAIK_PCT / 100 and vol_naik:
                     ftd, keadaan, menunggu, ftd_terakhir = True, "NAIK", False, i
-                elif hari > FTD_HARI_MAKS:
+                elif hari_maks is not None and hari > hari_maks:
                     keadaan, hari, menunggu = "KOREKSI", 0, False
         baris.append({
             "DD": dd,

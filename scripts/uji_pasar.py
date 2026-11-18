@@ -155,7 +155,7 @@ turun = [1000 * 0.99 ** i for i in range(30)]
 cL = turun[-1]
 
 
-def rally(naik: list[float], vol: list[float], low=None):
+def rally(naik: list[float], vol: list[float], low=None, **kw):
     c = list(turun)
     for r in naik:
         c.append(c[-1] * (1 + r))
@@ -165,7 +165,7 @@ def rally(naik: list[float], vol: list[float], low=None):
         lo = list(np.asarray(c) * 0.995)
         for i, x in low.items():
             lo[30 + i] = x
-    return hitung_dd_ftd(seri(c, vv, lo))
+    return hitung_dd_ftd(seri(c, vv, lo), **kw)
 
 
 h = rally([0.005, 0.003, 0.003, 0.013], [100, 100, 100, 150])
@@ -192,6 +192,23 @@ h = rally([0.005, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.02],
 periksa("hari ke-7 masih RALLY", (h["Keadaan"].iloc[36], int(h["HariRally"].iloc[36])), ("RALLY", 7))
 periksa("hari ke-8 naik 2% bukan FTD (lewat jendela)", bool(h["FTD"].iloc[37]), False)
 periksa("percobaan habis -> KOREKSI", h["Keadaan"].iloc[37], "KOREKSI")
+c_lambat = [0.005, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.02]
+v_lambat = [100, 100, 100, 100, 100, 100, 100, 200]
+hb = rally(c_lambat, v_lambat, hari_maks=None)
+periksa("tanpa batas: hari ke-8 naik 2% + volume naik = FTD", bool(hb["FTD"].iloc[37]), True)
+periksa("tanpa batas: keadaan NAIK", hb["Keadaan"].iloc[37], "NAIK")
+kol = ["DD", "DDAktif", "Keadaan", "HariRally", "FTD"]
+periksa("tanpa batas: hari 1-7 sama persis dengan bawaan",
+        hb[kol].iloc[:37].equals(h[kol].iloc[:37]), True)
+periksa("hari_maks=7 = bawaan", rally(c_lambat, v_lambat, hari_maks=7)[kol].equals(h[kol]), True)
+
+# Tanpa batas pun, rally yang titik terendahnya ditembus diulang dari nol.
+c_tembus = [0.005] + [0.001] * 9 + [-0.06] + [0.004, 0.003, 0.003, 0.013]
+hb = rally(c_tembus, [100] * 14 + [150], hari_maks=None)
+periksa("tanpa batas: hari ke-10 masih RALLY", (hb["Keadaan"].iloc[39], int(hb["HariRally"].iloc[39])),
+        ("RALLY", 10))
+periksa("tanpa batas: tembus titik terendah -> KOREKSI", hb["Keadaan"].iloc[40], "KOREKSI")
+periksa("tanpa batas: FTD di hari ke-4 dari titik baru", bool(hb["FTD"].iloc[44]), True)
 
 # Hari pertama sesudah titik terendah turun (tanpa titik terendah baru):
 # hitungan belum mulai.
@@ -289,6 +306,10 @@ periksa("filter tanpa selalu boleh", all(peta["tanpa"].values()), True)
 periksa("breadth sempat di atas dan di bawah 50%",
         (keadaan["Breadth%"] > 50).any() and (keadaan["Breadth%"] < 50).any(), True)
 periksa("ada FTD di data buatan", bool(keadaan["FTD"].any()), True)
+periksa("ma50+ftd-bebas = irisan", all(peta["ma50+ftd-bebas"][t] == (peta["ma50"][t] and peta["ftd-bebas"][t])
+                                       for t in peta["ftd-bebas"]), True)
+periksa("FTD tanpa batas tidak pernah lebih sedikit", int(keadaan["FTDBebas"].sum()) >= int(keadaan["FTD"].sum()),
+        True)
 
 with tempfile.TemporaryDirectory() as dd:
     dd = Path(dd)
@@ -307,9 +328,9 @@ with tempfile.TemporaryDirectory() as dd:
         "uji_ulang_pasar_harian.csv", "uji_ulang_pasar_meta.json", "uji_ulang_pasar.md"})
     if "uji_ulang_pasar_portofolio.csv" in ada:
         po = pd.read_csv(dd / "keluar/uji_ulang_pasar_portofolio.csv")
-        periksa("portofolio: swing + acak × 8 filter", len(po), 16)
+        periksa("portofolio: swing + acak × 10 filter", len(po), 20)
         sn = pd.read_csv(dd / "keluar/uji_ulang_pasar_sinyal.csv")
-        periksa("sinyal: 8 filter × 3 hari", len(sn), 24)
+        periksa("sinyal: 10 filter × 3 hari", len(sn), 30)
         tanpa = int(sn[(sn["Kode"] == "tanpa") & (sn["Hari"] == 5)]["Posisi"].iloc[0])
         lain = sn[(sn["Kode"] != "tanpa") & (sn["Hari"] == 5)]["Posisi"].fillna(0)
         periksa("filter tidak pernah menambah posisi", bool((lain <= tanpa).all()), True)
