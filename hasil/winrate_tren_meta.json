@@ -1,5 +1,5 @@
 {
-  "diperbarui": "2026-11-19T02:56:09Z",
+  "diperbarui": "2026-11-19T19:30:38Z",
   "daftar": "tren",
   "berkasPick": "hasil/tren.csv",
   "modal": 10000000,
@@ -9,7 +9,7 @@
   "lembarPerLot": 100,
   "posisi": 24,
   "posisiSelesai": 0,
-  "hariScreening": 3,
+  "hariScreening": 4,
   "pickPertama": "2026-11-17",
   "pickTerakhir": "2026-11-18",
   "posisiUlang": 12,

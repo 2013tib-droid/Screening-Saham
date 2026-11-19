@@ -1,5 +1,5 @@
 {
-  "diperbarui": "2026-11-19T02:56:08Z",
+  "diperbarui": "2026-11-19T19:30:37Z",
   "daftar": "swing",
   "berkasPick": "hasil/swing.csv",
   "modal": 10000000,
@@ -9,7 +9,7 @@
   "lembarPerLot": 100,
   "posisi": 535,
   "posisiSelesai": 415,
-  "hariScreening": 62,
+  "hariScreening": 63,
   "pickPertama": "2026-08-11",
   "pickTerakhir": "2026-11-18",
   "posisiUlang": 381,
