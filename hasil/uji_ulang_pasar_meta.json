@@ -1,10 +1,10 @@
 {
-  "diperbarui": "2026-11-16T22:19:42Z",
+  "diperbarui": "2026-11-18T14:14:17Z",
   "mulai": "2024-04-01",
   "sampai": null,
   "sinyalPertama": "2024-04-01",
-  "sinyalTerakhir": "2026-11-16",
-  "hariBursa": 623,
+  "sinyalTerakhir": "2026-11-18",
+  "hariBursa": 625,
   "universe": 402,
   "emitenDenganHarga": 402,
   "modal": 10000000,
@@ -18,13 +18,15 @@
   "breadthMin": 50.0,
   "hariBoleh%": {
     "tanpa": 100.0,
-    "ma50": 49.1,
-    "ftd": 20.5,
-    "ma50+ftd": 11.1,
-    "dd5": 61.0,
-    "ma50+dd5": 38.8,
-    "breadth": 53.6,
-    "ma50+breadth": 48.2
+    "ma50": 49.0,
+    "ftd": 20.8,
+    "ma50+ftd": 11.0,
+    "ftd-bebas": 51.0,
+    "ma50+ftd-bebas": 35.8,
+    "dd5": 60.8,
+    "ma50+dd5": 38.7,
+    "breadth": 53.4,
+    "ma50+breadth": 48.0
   },
   "keadaan": {
     "jumlahFTD": 6,
@@ -36,23 +38,38 @@
       "2026-06-12",
       "2026-11-12"
     ],
-    "jumlahDD": 116,
-    "hariNaik%": 20.5,
-    "hariDD5%": 39.0,
-    "hariMA50%": 49.1,
-    "hariBreadth%": 53.6
+    "jumlahDD": 117,
+    "hariNaik%": 20.8,
+    "jumlahFTDBebas": 11,
+    "tanggalFTDBebas": [
+      "2024-05-15",
+      "2024-06-28",
+      "2024-11-25",
+      "2025-01-15",
+      "2025-02-17",
+      "2025-04-22",
+      "2025-08-12",
+      "2026-02-11",
+      "2026-04-01",
+      "2026-06-12",
+      "2026-11-12"
+    ],
+    "hariNaikBebas%": 51.0,
+    "hariDD5%": 39.2,
+    "hariMA50%": 49.0,
+    "hariBreadth%": 53.4
   },
   "ihsg": {
-    "Total%": -26.68,
+    "Total%": -28.0,
     "MaxDD%": -46.31,
     "Puncak": "2026-01-20",
     "Lembah": "2026-11-03"
   },
   "cekBreadth": {
-    "tanggal": 423,
+    "tanggal": 425,
     "dari": "2025-02-05",
-    "sampai": "2026-11-13",
-    "rataSelisihPoin": 0.06,
+    "sampai": "2026-11-17",
+    "rataSelisihPoin": 0.04,
     "maksSelisihPoin": 2.8,
     "sisiSamaTerhadap50%": 100.0
   },

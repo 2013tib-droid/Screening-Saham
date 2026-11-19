@@ -9,6 +9,10 @@ atas MA50-nya (README "Kondisi Pasar"). Berkas ini menguji apakah filter lain
     ma50          IHSG > MA50                         (aturan sekarang)
     ftd           keadaan NAIK sejak follow-through day terakhir
     ma50+ftd      keduanya
+    ftd-bebas     seperti ftd, tapi FTD diakui di hari ke-4 dan SESUDAHNYA —
+                  tanpa batas hari ke-7 (praktik IBD). Percobaan rally baru
+                  habis kalau titik terendahnya ditembus.
+    ma50+ftd-bebas keduanya
     dd5           distribution day aktif < 5          ("tahan bila DD ≥ 5")
     ma50+dd5      keduanya
     breadth       > 50% saham likuid di atas MA50-nya
@@ -57,7 +61,7 @@ import numpy as np
 import pandas as pd
 
 from screener import (
-    DAFTAR_DEFAULT, DD_BATAS, baca_daftar_ticker, hitung_breadth, hitung_dd_ftd,
+    DAFTAR_DEFAULT, DD_BATAS, FTD_HARI_MAKS, baca_daftar_ticker, hitung_breadth, hitung_dd_ftd,
 )
 from uji_ulang_tren import (
     ACAK, ATURAN, MUNDUR_HARI, NILAI_MIN, SEED_DEFAULT, SLOT, Pasar, _angka_id,
@@ -77,6 +81,8 @@ FILTER = {
     "ma50": "IHSG > MA50",
     "ftd": "Sejak FTD",
     "ma50+ftd": "IHSG > MA50 & sejak FTD",
+    "ftd-bebas": "Sejak FTD (tanpa batas hari ke-7)",
+    "ma50+ftd-bebas": "IHSG > MA50 & sejak FTD (tanpa batas)",
     "dd5": f"DD aktif < {DD_BATAS}",
     "ma50+dd5": f"IHSG > MA50 & DD < {DD_BATAS}",
     "breadth": f"Breadth > {BREADTH_MIN:g}%",
@@ -85,13 +91,13 @@ FILTER = {
 
 
 # ------------------------------------------------------------------ keadaan pasar
-def keadaan_ihsg(ihsg: pd.DataFrame) -> pd.DataFrame:
+def keadaan_ihsg(ihsg: pd.DataFrame, hari_maks: int | None = FTD_HARI_MAKS) -> pd.DataFrame:
     """hitung_dd_ftd() atas bar IHSG format uji_winrate (kolom Tanggal ISO)."""
     b = ihsg.copy()
     b["Volume"] = pd.to_numeric(b["Volume"], errors="coerce")
     b = b[b["Close"].notna() & b["Low"].notna() & (b["Volume"] > 0)]
     b = b.set_index(pd.DatetimeIndex(pd.to_datetime(b["Tanggal"])))[["Close", "Low", "Volume"]]
-    return hitung_dd_ftd(b)
+    return hitung_dd_ftd(b, hari_maks)
 
 
 def breadth_harian(bars: dict[str, pd.DataFrame]) -> pd.Series:
@@ -117,6 +123,7 @@ def susun_filter(bars: dict[str, pd.DataFrame]) -> tuple[pd.DataFrame, dict[str,
     ihsg = bars[KODE_IHSG]
     ma = pasar_di_atas_ma(ihsg)
     kd = keadaan_ihsg(ihsg)
+    kb = keadaan_ihsg(ihsg, None)
     br = breadth_harian(bars)
     tgl = [t.date().isoformat() for t in kd.index]
     h = pd.DataFrame({
@@ -128,17 +135,21 @@ def susun_filter(bars: dict[str, pd.DataFrame]) -> tuple[pd.DataFrame, dict[str,
         "Keadaan": kd["Keadaan"].to_numpy(),
         "HariRally": kd["HariRally"].to_numpy(),
         "FTD": kd["FTD"].to_numpy(),
+        "KeadaanBebas": kb["Keadaan"].to_numpy(),
+        "FTDBebas": kb["FTD"].to_numpy(),
         "Breadth%": br.reindex(tgl).to_numpy(),
     })
     # Komponen yang belum bisa dihitung (MA50 belum 50 bar, breadth belum
     # terisi) dianggap TIDAK boleh — sama dengan pasar_di_atas_ma().
     m = h["DiAtasMA50"].fillna(False).astype(bool)
     f = h["Keadaan"] == "NAIK"
+    fb = h["KeadaanBebas"] == "NAIK"
     d = h["DDAktif"] < DD_BATAS
     b = (h["Breadth%"] > BREADTH_MIN).fillna(False)
     syarat = {
         "tanpa": pd.Series(True, index=h.index),
         "ma50": m, "ftd": f, "ma50+ftd": m & f,
+        "ftd-bebas": fb, "ma50+ftd-bebas": m & fb,
         "dd5": d, "ma50+dd5": m & d,
         "breadth": b, "ma50+breadth": m & b,
     }
@@ -197,6 +208,9 @@ def tulis_md(path: Path, meta: dict, sinyal_df: pd.DataFrame, porto_df: pd.DataF
     k = meta["keadaan"]
     baris += ["## Keadaan pasar di periode uji", "",
               f"- Follow-through day: {k['jumlahFTD']} kali ({', '.join(k['tanggalFTD']) or '–'}).",
+              f"- Follow-through day tanpa batas hari ke-7: {k['jumlahFTDBebas']} kali "
+              f"({', '.join(k['tanggalFTDBebas']) or '–'}); hari berkeadaan NAIK "
+              f"{_angka_id(k['hariNaikBebas%'], 1, False)}%.",
               f"- Hari bursa berkeadaan NAIK (sejak FTD): {_angka_id(k['hariNaik%'], 1, False)}%; "
               f"DD aktif ≥ {DD_BATAS}: {_angka_id(k['hariDD5%'], 1, False)}% hari; "
               f"distribution day: {k['jumlahDD']}.",
@@ -343,6 +357,9 @@ def main() -> int:
             "tanggalFTD": list(periode.loc[periode["FTD"], "Tanggal"]),
             "jumlahDD": int(periode["DD"].sum()),
             "hariNaik%": round(float((periode["Keadaan"] == "NAIK").mean() * 100), 1),
+            "jumlahFTDBebas": int(periode["FTDBebas"].sum()),
+            "tanggalFTDBebas": list(periode.loc[periode["FTDBebas"], "Tanggal"]),
+            "hariNaikBebas%": round(float((periode["KeadaanBebas"] == "NAIK").mean() * 100), 1),
             "hariDD5%": round(float((periode["DDAktif"] >= DD_BATAS).mean() * 100), 1),
             "hariMA50%": boleh_pct["ma50"],
             "hariBreadth%": boleh_pct["breadth"],
@@ -373,6 +390,7 @@ def main() -> int:
               f"{g(ac, 'MaxDD%Median'):>+9.1f}{g(ac, 'Total%Median'):>+10.1f}"
               f"{g(sn, 'Selisih%'):>+8.2f}{g(sn, 'SelisihSE%'):>6.2f}", file=sys.stderr)
     print(f"\nFTD: {meta['keadaan']['tanggalFTD']}", file=sys.stderr)
+    print(f"FTD tanpa batas hari ke-7: {meta['keadaan']['tanggalFTDBebas']}", file=sys.stderr)
     print(f"Disimpan di {keluar}/{awal}_*", file=sys.stderr)
     return 0
 
