@@ -1,3 +1,4 @@
 Ticker,Nama,Harga,Bandar,Dominasi%,NetBeliTop3(M),NetJualTop3(M),TopBeli,TopJual,AvgBeliTop3,JarakAvg%,Mulai,Akhir,Catatan
-AUTO,Astra Otoparts Tbk,3170,Netral,45.7,7.3,-8.6,"EL 2,8 · KK 2,3 · KZ 2,1","YU -4,0 · PD -2,6 · TP -2,0",3163,0.2,2026-11-13,2026-11-19,
-SGER,Sumber Global Energy Tbk.,630,Netral,45.3,8.4,-10.1,"BQ 3,7 · XA 3,2 · MI 1,5","YU -4,5 · RO -3,6 · CC -2,0",635,-0.8,2026-11-13,2026-11-19,
+AUTO,Astra Otoparts Tbk,3040,Netral,42.9,8.2,-11.0,"EL 3,1 · IN 2,6 · KK 2,5","YU -6,6 · PD -2,4 · TP -2,0",3077,-1.2,2026-11-16,2026-11-20,
+INDF,Indofood Sukses Makmur Tbk,7175,Netral,56.6,92.4,-70.7,"KZ 40,4 · AK 26,4 · ZP 25,7","BK -27,3 · CC -22,0 · NI -21,5",7197,-0.3,2026-11-16,2026-11-20,
+SGER,Sumber Global Energy Tbk.,625,Netral,47.8,8.3,-9.1,"BQ 3,7 · ZP 2,4 · FS 2,2","YU -3,7 · CC -3,2 · IH -2,2",629,-0.7,2026-11-16,2026-11-20,

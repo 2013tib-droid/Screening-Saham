@@ -1,3 +1,4 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,Lot,NilaiPosisi,PorsiModal%,RisikoRp,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-AUTO,Astra Otoparts Tbk,82,BOW,3170,down,PREMIUM,78,BOS bear,down,down,,,,,,,,,,,,3.2,SSL raid @ 3150,HINDARI,struktur D1 masih bearish
-SGER,Sumber Global Energy Tbk.,37,BOW,630,down,PREMIUM,63,BOS bear,down,up,,,,,,,,,,,,7.9,BSL raid @ 620,HINDARI,struktur D1 masih bearish
+INDF,Indofood Sukses Makmur Tbk,74,BUY,7175,up,PREMIUM,79,CHoCH bull,up,up,,,,,,,,,,,,2.7,BSL raid @ 7225,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+AUTO,Astra Otoparts Tbk,83,BOW,3040,down,PREMIUM,68,BOS bear,down,down,OB SESI,2840,2800,2480,3340,1.53,2,568000,5.7,72000,6.6,3.4,SSL raid @ 3150,HINDARI,struktur D1 masih bearish
+SGER,Sumber Global Energy Tbk.,37,BOW,625,down,PREMIUM,63,BOS bear,down,down,,,,,,,,,,,,8.0,SSL raid @ 595,HINDARI,struktur D1 masih bearish
