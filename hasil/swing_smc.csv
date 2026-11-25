@@ -1,5 +1,6 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,Lot,NilaiPosisi,PorsiModal%,RisikoRp,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-INDF,Indofood Sukses Makmur Tbk,74,BUY,6950,up,PREMIUM,67,CHoCH bull,up,down,,,,,,,,,,,,3.0,BSL raid @ 7225,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-ASGR,Astra Graphia Tbk,75,BUY,2490,up,PREMIUM,94,BOS bull,up,down,,,,,,,,,,,,3.8,BSL raid @ 2570,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-MARK,Mark Dynamics Indonesia Tbk.,79,BOW,915,down,EQUILIBRIUM,45,BOS bear,down,down,FVG SESI,900,875,695,,,,,,,1.6,3.6,BSL raid @ 930,HINDARI,struktur D1 masih bearish
-SGER,Sumber Global Energy Tbk.,37,BOW,590,down,EQUILIBRIUM,57,BOS bear,down,down,,,,,,,,,,,,8.2,SSL raid @ 595,HINDARI,struktur D1 masih bearish
+INDF,Indofood Sukses Makmur Tbk,74,BUY,7175,up,PREMIUM,79,CHoCH bull,up,down,,,,,,,,,,,,2.8,BSL raid @ 7225,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+ASGR,Astra Graphia Tbk,74,BUY,2570,up,PREMIUM,93,BOS bull,up,down,,,,,,,,,,,,4.0,BSL raid @ 2570,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+TAPG,Triputra Agro Persada Tbk.,82,BOW,1710,down,EQUILIBRIUM,44,BOS bear,down,down,OB SESI,1620,1605,1565,,,,,,,5.3,2.5,SSL raid @ 1775,HINDARI,struktur D1 masih bearish
+TEBE,Dana Brata Luhur Tbk.,61,BOW,1545,down,DISCOUNT,34,BOS bear,down,up,FVG SESI,1435,1380,1250,,,,,,,7.1,8.9,BSL raid @ 1450,HINDARI,struktur D1 masih bearish
+PACK,Abadi Nusantara Hijau Invest,50,BOW,336,down,EQUILIBRIUM,38,BOS bear,up,up,,,,,,,,,,,,9.7,BSL raid @ 358,HINDARI,struktur D1 masih bearish
