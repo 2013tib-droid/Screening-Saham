@@ -1,5 +1,5 @@
 {
-  "diperbarui": "2026-11-25T20:29:55Z",
+  "diperbarui": "2026-11-26T20:11:28Z",
   "daftar": "tren",
   "berkasPick": "hasil/tren.csv",
   "modal": 10000000,
@@ -7,12 +7,12 @@
   "feeBeli": 0.15,
   "feeJual": 0.25,
   "lembarPerLot": 100,
-  "posisi": 55,
+  "posisi": 63,
   "posisiSelesai": 0,
-  "hariScreening": 8,
+  "hariScreening": 9,
   "pickPertama": "2026-11-17",
-  "pickTerakhir": "2026-11-24",
-  "posisiUlang": 41,
+  "pickTerakhir": "2026-11-25",
+  "posisiUlang": 49,
   "pembanding": {
     "universe": 402,
     "nilaiMin": 5.0,

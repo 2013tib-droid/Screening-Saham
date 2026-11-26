@@ -1,6 +1,8 @@
 Ticker,Nama,Harga,Bandar,Dominasi%,NetBeliTop3(M),NetJualTop3(M),TopBeli,TopJual,AvgBeliTop3,JarakAvg%,Mulai,Akhir,Catatan
-INDF,Indofood Sukses Makmur Tbk,7175,Netral,54.7,66.4,-55.0,"OD 24,6 · YU 24,0 · AK 17,9","BB -19,0 · PD -18,8 · NI -17,2",7106,1.0,2026-11-19,2026-11-25,
-TAPG,Triputra Agro Persada Tbk.,1710,Netral,45.9,17.7,-20.8,"XL 7,6 · AK 7,4 · SQ 2,6","ZP -13,7 · TP -3,7 · CC -3,5",1729,-1.1,2026-11-19,2026-11-25,
-ASGR,Astra Graphia Tbk,2570,Netral,46.8,16.5,-18.8,"XL 12,1 · NI 2,3 · GR 2,1","CC -9,1 · ZP -8,0 · CD -1,7",2549,0.8,2026-11-19,2026-11-25,
-TEBE,Dana Brata Luhur Tbk.,1545,Distribusi,39.2,5.3,-8.2,"AI 2,1 · GR 1,7 · XC 1,5","NI -6,9 · AK -0,7 · TP -0,6",1546,-0.1,2026-11-19,2026-11-25,
-PACK,Abadi Nusantara Hijau Invest,336,Netral,46.8,29.7,-33.8,"XL 17,1 · MG 7,4 · YP 5,2","GR -16,0 · SQ -11,2 · QA -6,6",335,0.2,2026-11-19,2026-11-25,
+INDF,Indofood Sukses Makmur Tbk,7025,Netral,52.6,64.2,-57.9,"OD 31,0 · ZP 16,9 · AK 16,3","KZ -28,2 · BB -19,0 · NI -10,6",7078,-0.7,2026-11-20,2026-11-26,
+INTP,Indocement Tunggal Prakarsa ,6225,Netral,54.5,15.6,-13.1,"ZP 7,4 · DX 4,6 · AK 3,7","KZ -5,6 · BB -4,8 · SS -2,7",6195,0.5,2026-11-20,2026-11-26,
+BDMN,Bank Danamon Indonesia Tbk.,4780,Netral,59.0,8.8,-6.1,"XL 5,8 · MG 2,1 · ZP 0,9","AI -3,1 · BK -1,6 · YJ -1,4",4779,0.0,2026-11-20,2026-11-26,
+ASGR,Astra Graphia Tbk,2560,Netral,44.5,19.1,-23.8,"XL 14,2 · NI 2,5 · AI 2,4","ZP -11,5 · CC -8,8 · CD -3,4",2549,0.4,2026-11-20,2026-11-26,
+TEBE,Dana Brata Luhur Tbk.,1520,Distribusi,39.4,5.7,-8.8,"CC 2,7 · AI 1,9 · XC 1,1","NI -7,7 · TP -0,7 · YP -0,4",1540,-1.3,2026-11-20,2026-11-26,
+SMIL,Sarana Mitra Luas Tbk.,398,Netral,47.9,4.2,-4.5,"HD 1,6 · AK 1,3 · CC 1,3","OD -2,5 · PC -1,1 · SF -0,9",412,-3.4,2026-11-20,2026-11-26,
+AYAM,Janu Putra Sejahtera Tbk.,520,Netral,46.5,8.6,-9.9,"AK 4,6 · ZP 2,0 · KI 1,9","XA -6,0 · CC -2,1 · AG -1,8",514,1.2,2026-11-20,2026-11-26,
