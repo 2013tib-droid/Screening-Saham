@@ -1,13 +1,13 @@
 {
-  "tanggal": "2026-11-25",
-  "ihsg": 5197.61,
-  "ma50": 5591.87,
-  "ma200": 6524.16,
+  "tanggal": "2026-11-26",
+  "ihsg": 5242.17,
+  "ma50": 5567.47,
+  "ma200": 6505.47,
   "diAtasMA50": false,
   "diAtasMA200": false,
   "sejak": "2026-09-22",
   "sejakPasti": true,
-  "hariBursa": 47,
+  "hariBursa": 48,
   "maPasar": 50,
   "distribusi": {
     "aktif": 3,

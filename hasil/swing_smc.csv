@@ -1,8 +1,3 @@
 Ticker,Nama,Skor,StatusScreener,Harga,TrenD1,ZonaD1,PosisiD1%,EventD1,TrenSesi,TrenH1,TipeEntri,EntriAtas,EntriBawah,Stop,Target,RR,Lot,NilaiPosisi,PorsiModal%,RisikoRp,JarakEntri%,ATR_D1%,SweepTerakhir,Sinyal,Catatan
-AYAM,Janu Putra Sejahtera Tbk.,19,BUY,520,up,PREMIUM,87,BOS bull,up,up,OB SESI,482,474,462,555,4.81,50,2410000,24.1,100000,7.3,2.9,BSL raid @ 496,TUNGGU,harga di premium — tunggu pullback ke zona
-INTP,Indocement Tunggal Prakarsa ,82,BUY,6225,up,PREMIUM,112,BOS bull,up,up,FVG D1,5900,5825,5600,6425,2.14,3,1770000,17.7,90000,5.2,3.0,SSL raid @ 6100,TUNGGU,harga di premium — tunggu pullback ke zona
-INDF,Indofood Sukses Makmur Tbk,74,BUY,7025,up,PREMIUM,71,CHoCH bull,up,down,,,,,,,,,,,,2.9,BSL raid @ 7225,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-BDMN,Bank Danamon Indonesia Tbk.,63,BUY,4780,up,PREMIUM,92,CHoCH bull,up,up,,,,,,,,,,,,2.5,SSL raid @ 4600,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-ASGR,Astra Graphia Tbk,74,BUY,2560,up,PREMIUM,92,BOS bull,up,down,,,,,,,,,,,,4.1,BSL raid @ 2570,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
-TEBE,Dana Brata Luhur Tbk.,62,BOW,1520,down,DISCOUNT,32,BOS bear,down,up,FVG SESI,1435,1380,1250,,,,,,,5.6,9.2,BSL raid @ 1450,HINDARI,struktur D1 masih bearish
-SMIL,Sarana Mitra Luas Tbk.,50,BOW,398,down,PREMIUM,64,BOS bear,down,down,FVG SESI,382,376,352,,,,,,,4.0,3.6,SSL raid @ 398,HINDARI,struktur D1 masih bearish
+ASGR,Astra Graphia Tbk,75,BUY,2520,up,PREMIUM,90,BOS bull,up,down,,,,,,,,,,,,3.9,BSL raid @ 2570,TUNGGU,tidak ada OB fresh / FVG terbuka dalam jangkauan pullback
+AADI,Adaro Andalan Indonesia Tbk.,78,BOW,10450,down,PREMIUM,62,BOS bear,down,up,FVG D1,10300,10100,9850,12925,7.79,2,2060000,20.6,90000,1.4,3.2,SSL raid @ 11000,HINDARI,struktur D1 masih bearish
